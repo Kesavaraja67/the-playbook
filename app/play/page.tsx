@@ -66,6 +66,11 @@ function getDetectiveSuspicionDelta(rand: () => number = Math.random) {
   return rand() > 0.5 ? 12 : -8
 }
 
+function getDetectiveTimeCostHours(action: Action | null): number | null {
+  const timeCost = action?.costs?.find((cost) => cost.resource === "Time")?.amount ?? null
+  return typeof timeCost === "number" ? timeCost : null
+}
+
 function getDetectiveInitialEvidence(): EvidenceItem[] {
   return [
     {
@@ -496,6 +501,8 @@ function PlayPageContent() {
   const resetVersionRef = React.useRef(0)
   const detectiveEvidenceRef = React.useRef<EvidenceItem[]>(detectiveEvidence)
   const detectiveSuspectsRef = React.useRef<Suspect[]>(detectiveSuspects)
+  const detectiveTimerRef = React.useRef<ReturnType<typeof setInterval> | null>(null)
+  const detectiveOutOfTimeAlertShownRef = React.useRef(false)
 
   React.useEffect(() => {
     return () => {
@@ -504,6 +511,11 @@ function PlayPageContent() {
 
       for (const id of actionTimeoutsRef.current) clearTimeout(id)
       actionTimeoutsRef.current = []
+
+      if (detectiveTimerRef.current) {
+        clearInterval(detectiveTimerRef.current)
+        detectiveTimerRef.current = null
+      }
     }
   }, [])
 
@@ -516,18 +528,45 @@ function PlayPageContent() {
   }, [detectiveSuspects])
 
   React.useEffect(() => {
-    if (scenarioId !== "detective-mystery") return
+    if (scenarioId !== "detective-mystery") {
+      detectiveOutOfTimeAlertShownRef.current = false
 
-    const id = setInterval(() => {
+      if (detectiveTimerRef.current) {
+        clearInterval(detectiveTimerRef.current)
+        detectiveTimerRef.current = null
+      }
+
+      return
+    }
+
+    if (detectiveTimeRemainingSeconds <= 0) {
+      if (detectiveTimerRef.current) {
+        clearInterval(detectiveTimerRef.current)
+        detectiveTimerRef.current = null
+      }
+
+      if (!detectiveOutOfTimeAlertShownRef.current) {
+        detectiveOutOfTimeAlertShownRef.current = true
+        setAlert({
+          type: "warning",
+          title: "Case went cold",
+          message: "You ran out of time. Reset the case file to try again.",
+        })
+      }
+
+      return
+    }
+
+    detectiveOutOfTimeAlertShownRef.current = false
+
+    if (detectiveTimerRef.current) return
+
+    detectiveTimerRef.current = setInterval(() => {
       setDetectiveTimeRemainingSeconds((prev) =>
         prev > 0 ? Math.max(0, prev - DETECTIVE_SECONDS_PER_TICK) : prev
       )
     }, 1000)
-
-    return () => {
-      clearInterval(id)
-    }
-  }, [scenarioId])
+  }, [scenarioId, detectiveTimeRemainingSeconds, setAlert])
 
   const reset = React.useCallback(() => {
     resetVersionRef.current += 1
@@ -640,6 +679,8 @@ function PlayPageContent() {
   const effectiveIsLoadingBoard = isBoardScenario && isLoadingBoard
   const isInitializing = effectiveIsLoadingBoard || isLoadingResources || isLoadingActions
   const isBusy = isProcessing || isInitializing
+  const isDetectiveOutOfTime =
+    scenarioId === "detective-mystery" && detectiveTimeRemainingSeconds <= 0
   const canReset = !isBusy
 
   type ActionInput = string | { id: string; suspectId?: string }
@@ -651,6 +692,15 @@ function PlayPageContent() {
         typeof actionInput === "string" ? null : actionInput.suspectId ?? null
 
       if (!actionIdOrText.trim() || isBusy) return
+
+      if (scenarioId === "detective-mystery" && detectiveTimeRemainingSeconds <= 0) {
+        setAlert({
+          type: "warning",
+          title: "Case went cold",
+          message: "You ran out of time. Reset the case file to try again.",
+        })
+        return
+      }
 
       const scenarioAtCall = scenarioId
       const totalDaysAtCall = totalDays
@@ -684,8 +734,7 @@ function PlayPageContent() {
             actions.find((action) => action.label.toLowerCase() === normalized.trim()) ??
             null
 
-          const timeCostHours =
-            actionDef?.costs?.find((cost) => cost.resource === "Time")?.amount ?? null
+          const timeCostHours = getDetectiveTimeCostHours(actionDef)
 
           if (typeof timeCostHours === "number") {
             setDetectiveTimeRemainingSeconds((prev) =>
@@ -694,17 +743,19 @@ function PlayPageContent() {
           }
 
           const revealNextEvidence = (timestamp: string) => {
-            const nextEvidence = detectiveEvidenceRef.current.find(
-              (item) => !item.collected
-            )
-            if (!nextEvidence) return false
+            if (!detectiveEvidenceRef.current.some((item) => !item.collected)) return false
 
             setDetectiveEvidence((prev) =>
-              prev.map((item) =>
-                item.id === nextEvidence.id
-                  ? { ...item, collected: true, timestamp }
-                  : item
-              )
+              (() => {
+                const nextEvidence = prev.find((item) => !item.collected)
+                if (!nextEvidence) return prev
+
+                return prev.map((item) =>
+                  item.id === nextEvidence.id
+                    ? { ...item, collected: true, timestamp }
+                    : item
+                )
+              })()
             )
 
             return true
@@ -892,6 +943,7 @@ function PlayPageContent() {
     },
     [
       actions,
+      detectiveTimeRemainingSeconds,
       isBusy,
       nudgePlayer,
       scenarioId,
@@ -1014,9 +1066,9 @@ function PlayPageContent() {
               <SuspectCards
                 className="mt-4"
                 suspects={detectiveSuspects}
-                disabled={isBusy}
+                disabled={isBusy || isDetectiveOutOfTime}
                 onInterviewSuspect={(suspectId) => {
-                  if (isBusy) return
+                  if (isBusy || isDetectiveOutOfTime) return
                   runAction({ id: "interview", suspectId })
                 }}
               />
@@ -1054,7 +1106,7 @@ function PlayPageContent() {
             <InvestigationActions
               actions={actions}
               onActionClick={runAction}
-              disabled={isBusy}
+              disabled={isBusy || isDetectiveOutOfTime}
             />
           ) : (
             <ActionMatrix
@@ -1105,7 +1157,7 @@ function PlayPageContent() {
               e.preventDefault()
               runAction(input)
             }}
-            disabled={isBusy}
+            disabled={isBusy || isDetectiveOutOfTime}
             placeholder="Type your action..."
             className={cn(
               "h-12 flex-1 rounded-full border-2 border-[#D2D2D7] bg-white px-4",
@@ -1117,9 +1169,9 @@ function PlayPageContent() {
           <button
             type="button"
             onClick={() => {
-              if (!isBusy) runAction(input)
+              if (!isBusy && !isDetectiveOutOfTime) runAction(input)
             }}
-            disabled={isBusy}
+            disabled={isBusy || isDetectiveOutOfTime}
             className={cn(
               "grid size-12 place-items-center rounded-lg",
               "bg-[#0071E3] text-white",
