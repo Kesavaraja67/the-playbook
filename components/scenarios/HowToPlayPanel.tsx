@@ -8,55 +8,49 @@ import { cn } from "@/lib/utils"
 
 const defaultStorageKey = "playbook.zombieSurvival.howToPlay.isOpen"
 
-type HowToPlayPanelProps = {
-  storageKey?: string
-  className?: string
-}
-
-export function HowToPlayPanel({
-  storageKey = defaultStorageKey,
-  className,
-}: HowToPlayPanelProps) {
+export function HowToPlayPanel() {
   const [isOpen, setIsOpen] = React.useState(true)
+  const panelId = React.useId()
+  const labelId = `${panelId}-label`
+  const contentId = `${panelId}-content`
 
   React.useEffect(() => {
     try {
-      const stored = window.localStorage.getItem(storageKey)
+      const stored = window.localStorage.getItem(defaultStorageKey)
       if (stored === "0") setIsOpen(false)
       if (stored === "1") setIsOpen(true)
     } catch {
       // Ignore storage errors (private mode, blocked, etc.)
     }
-  }, [storageKey])
+  }, [])
 
   const toggle = React.useCallback(() => {
     setIsOpen((prev) => {
       const next = !prev
       try {
-        window.localStorage.setItem(storageKey, next ? "1" : "0")
+        window.localStorage.setItem(defaultStorageKey, next ? "1" : "0")
       } catch {
         // Ignore storage errors (private mode, blocked, etc.)
       }
       return next
     })
-  }, [storageKey])
+  }, [])
 
   return (
     <section
       className={cn(
         componentCardClassName,
-        "border-[#0071E3] bg-[#E8F4FD] p-4",
-        className
+        "border-accent-primary bg-[#E8F4FD] p-4"
       )}
     >
       <button
         type="button"
         className={cn(
           "flex w-full items-center justify-between gap-3 rounded-[10px] px-2 py-2",
-          "text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3] focus-visible:ring-offset-2"
+          "text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary focus-visible:ring-offset-2"
         )}
         aria-expanded={isOpen}
-        aria-controls="how-to-play-panel-content"
+        aria-controls={contentId}
         onClick={toggle}
       >
         <div className="flex items-center gap-3">
@@ -64,23 +58,30 @@ export function HowToPlayPanel({
             ℹ️
           </span>
           <div>
-            <div className="text-sm font-bold text-[#1D1D1F]">How to Play</div>
-            <div className="text-xs text-[#6E6E73]">
+            <div id={labelId} className="text-sm font-bold text-text-primary">
+              How to Play
+            </div>
+            <div className="text-xs text-text-secondary">
               {isOpen ? "Click to collapse" : "Click to expand"}
             </div>
           </div>
         </div>
 
         {isOpen ? (
-          <ChevronDown className="size-4 text-[#0071E3]" aria-hidden />
+          <ChevronDown className="size-4 text-accent-primary" aria-hidden />
         ) : (
-          <ChevronRight className="size-4 text-[#0071E3]" aria-hidden />
+          <ChevronRight className="size-4 text-accent-primary" aria-hidden />
         )}
       </button>
 
       {isOpen && (
-        <div id="how-to-play-panel-content" className="mt-2 px-2">
-          <ul className="space-y-1 text-sm text-[#1D1D1F]">
+        <div
+          id={contentId}
+          role="region"
+          aria-labelledby={labelId}
+          className="mt-2 px-2"
+        >
+          <ul className="space-y-1 text-sm text-text-primary">
             <li>
               <span className="mr-2" aria-hidden>
                 🎯
