@@ -401,6 +401,7 @@ function PlayPageContent() {
   const effectiveIsLoadingBoard = isBoardScenario && isLoadingBoard
   const isInitializing = effectiveIsLoadingBoard || isLoadingResources || isLoadingActions
   const isBusy = isProcessing || isInitializing
+  // Disable reset while busy to avoid racing in-flight actions.
   const canReset = !isBusy
 
   const runAction = React.useCallback(
@@ -522,8 +523,6 @@ function PlayPageContent() {
     )
   }
 
-  const resolvedScenario = scenario
-
   return (
     <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F]">
       <header className="sticky top-0 z-40 h-[60px] bg-white border-b-2 border-[#D2D2D7]">
@@ -538,7 +537,7 @@ function PlayPageContent() {
           </button>
 
           <div className="text-center">
-            <div className="text-sm font-bold">{resolvedScenario.title}</div>
+            <div className="text-sm font-bold">{scenario.title}</div>
             {progressLabel && (
               <div className="text-xs text-[#6E6E73]">{progressLabel}</div>
             )}
@@ -583,7 +582,7 @@ function PlayPageContent() {
           ) : scenarioId === "detective-mystery" ? (
             <DetectiveMysteryBriefing scenario={scenario} />
           ) : (
-            <ScenarioBriefingCard scenario={resolvedScenario} />
+            <ScenarioBriefingCard scenario={scenario} />
           )}
 
           {isLoadingResources ? (
@@ -680,6 +679,7 @@ function PlayPageContent() {
 
               if (!isPlainEnter) return
               if (e.nativeEvent.isComposing) return
+              if (isBusy) return
               if (!input.trim()) return
 
               e.preventDefault()
