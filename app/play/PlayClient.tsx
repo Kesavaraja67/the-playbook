@@ -130,9 +130,9 @@ function PlayThreadUI({
 
   const handleSubmit = React.useCallback(() => {
     if (!value.trim()) return
-    if (!canSubmit) return
+    if (!isIdle || isPending) return
     void submit()
-  }, [canSubmit, submit, value])
+  }, [isIdle, isPending, submit, value])
 
   const renderedComponents = React.useMemo(() => {
     const componentsForRender = thread.messages
