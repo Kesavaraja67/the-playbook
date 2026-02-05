@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { useRef } from "react"
 
 interface Action {
   id: string
@@ -30,11 +31,17 @@ interface ActionMatrixProps {
  */
 export function ActionMatrix({ actions, onActionClick }: ActionMatrixProps) {
   const gridCols = actions.length <= 2 ? 2 : actions.length <= 4 ? 2 : 3
+  const hasWarnedMissingHandlerRef = useRef(false)
 
   const safeOnActionClick = (actionId: string) => {
     if (!onActionClick) {
       if (process.env.NODE_ENV !== "production") {
-        console.warn("ActionMatrix: onActionClick is not provided; clicks are ignored.")
+        if (!hasWarnedMissingHandlerRef.current) {
+          console.warn(
+            "ActionMatrix: onActionClick is not provided; clicks are ignored."
+          )
+          hasWarnedMissingHandlerRef.current = true
+        }
       }
       return
     }

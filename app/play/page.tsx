@@ -168,7 +168,8 @@ function PlayUI({ scenarioId }: { scenarioId: string }) {
                 }`}
               >
                 <p className="text-xs whitespace-pre-wrap">
-                  {extractText(msg.content) || (msg.role === "assistant" ? "…" : "")}
+                  {extractText(msg.content, Boolean(msg.renderedComponent)) ||
+                    (msg.role === "assistant" ? "…" : "")}
                 </p>
               </div>
             </div>
@@ -211,9 +212,13 @@ function PlayUI({ scenarioId }: { scenarioId: string }) {
   )
 }
 
-function extractText(content: unknown): string {
+function extractText(content: unknown, hasRenderedComponent: boolean): string {
   if (typeof content === "string") return content
-  if (!Array.isArray(content)) return "[Unsupported message format]"
+  if (!Array.isArray(content)) {
+    return hasRenderedComponent
+      ? "[visual component rendered]"
+      : "[Unsupported message format]"
+  }
 
   const textParts = content
     .map((part) => {
@@ -226,6 +231,7 @@ function extractText(content: unknown): string {
     .filter(Boolean)
 
   if (textParts.length === 0) {
+    if (hasRenderedComponent) return "[visual component rendered]"
     return content.length > 0 ? "[Non-text response omitted]" : ""
   }
 
