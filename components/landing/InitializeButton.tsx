@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import { useEffect, useRef, useState } from "react"
 
 type InitializeButtonProps = {
@@ -11,6 +11,7 @@ type InitializeButtonProps = {
 export function InitializeButton({ onClick, disabled }: InitializeButtonProps) {
   const [isPressed, setIsPressed] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const shouldReduceMotion = useReducedMotion()
   const allowHover = !disabled && !isPressed
 
   useEffect(() => {
@@ -25,7 +26,7 @@ export function InitializeButton({ onClick, disabled }: InitializeButtonProps) {
       type="button"
       disabled={disabled}
       aria-disabled={disabled}
-      aria-label="Initialize"
+      aria-label="Initialize and view scenarios"
       onClick={() => {
         if (disabled) return
         setIsPressed(true)
@@ -54,13 +55,13 @@ export function InitializeButton({ onClick, disabled }: InitializeButtonProps) {
         boxShadow: isPressed ? "0px 0px 0px #1D1D1F" : "8px 8px 0px #1D1D1F",
         x: isPressed ? 8 : 0,
         y: isPressed ? 8 : 0,
-        scale: disabled ? 1 : [1, 1.02, 1],
+        scale: disabled || shouldReduceMotion ? 1 : [1, 1.02, 1],
       }}
       transition={{
         boxShadow: { duration: 0.1 },
         x: { duration: 0.1 },
         y: { duration: 0.1 },
-        scale: disabled
+        scale: disabled || shouldReduceMotion
           ? { duration: 0 }
           : {
               duration: 2,
