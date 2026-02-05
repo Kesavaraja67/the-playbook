@@ -102,6 +102,7 @@ const tutorialSteps: TutorialStepConfig[] = [
     ].join("\n"),
     hint: "You can print a variable by putting its name inside `print(...)`: `print(favorite_color)`.",
     validate: (code) => {
+      const normalized = stripPythonComments(code)
       if (!hasStringAssignment(code, "favorite_color")) {
         return {
           ok: false,
@@ -109,7 +110,7 @@ const tutorialSteps: TutorialStepConfig[] = [
         }
       }
 
-      if (!/print\s*\(\s*favorite_color\s*\)/m.test(code)) {
+      if (!/print\s*\(\s*favorite_color\s*\)/m.test(normalized)) {
         return {
           ok: false,
           message: "Almost — I’m looking for `print(favorite_color)`.",
