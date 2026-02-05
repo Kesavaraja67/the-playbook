@@ -21,7 +21,7 @@
   }
 }
 
-@keyframes voice-pulse-ring {
+@keyframes voice-input-pulse-ring {
   0% {
     opacity: 1;
     transform: scale(1);
@@ -32,6 +32,6 @@
   }
 }
 
-.animate-voice-ping {
-  animation: voice-pulse-ring 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+.animate-voice-input-ping {
+  animation: voice-input-pulse-ring 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
 }

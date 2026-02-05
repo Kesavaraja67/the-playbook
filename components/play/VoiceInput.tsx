@@ -220,10 +220,16 @@ export function VoiceInput({
     if (e.altKey || e.ctrlKey || e.metaKey) return
 
     e.preventDefault()
-    if (!isBusy && !isListening && value.trim()) onSubmit(value)
+
+    const trimmed = value.trim()
+    if (!trimmed) return
+    if (isBusy || isListening) return
+
+    onSubmit(trimmed)
   }
 
-  const canSubmit = Boolean(value.trim()) && !isBusy && !isListening
+  const trimmedValue = value.trim()
+  const canSubmit = Boolean(trimmedValue) && !isBusy && !isListening
 
   return (
     <div className={className}>
@@ -283,7 +289,10 @@ export function VoiceInput({
         <Button
           type="button"
           size={sendLabel ? "default" : "icon-lg"}
-          onClick={() => onSubmit(value)}
+          onClick={() => {
+            if (!canSubmit) return
+            onSubmit(trimmedValue)
+          }}
           disabled={!canSubmit}
           aria-label="Send"
         >
@@ -292,11 +301,11 @@ export function VoiceInput({
       </div>
 
       {isListening ? (
-        <div className="mt-3 rounded-lg border-2 border-accent-danger bg-tertiary p-3">
+        <div className="mt-3 rounded-lg border-2 border-accent-info bg-tertiary p-3">
           <div className="flex items-center gap-3">
             <div className="relative flex items-center justify-center">
-              <div className="size-2 rounded-full bg-accent-danger animate-pulse" />
-              <div className="absolute size-2 rounded-full bg-accent-danger animate-voice-ping" />
+              <div className="size-2 rounded-full bg-accent-info animate-pulse" />
+              <div className="absolute size-2 rounded-full bg-accent-info animate-voice-input-ping" />
             </div>
             <div>
               <p className="text-xs font-semibold text-primary">Listening…</p>
@@ -317,8 +326,7 @@ export function VoiceInput({
             <div className="text-xs">
               <p className="font-semibold text-primary">Voice input is unavailable</p>
               <p className="mt-1 text-secondary">
-                Enable speech recognition in your browser, or set `NEXT_PUBLIC_TAMBO_API_KEY` to
-                use server-backed transcription.
+                Try Chrome, Edge, or Safari, and confirm microphone permissions are allowed.
               </p>
             </div>
           </div>
