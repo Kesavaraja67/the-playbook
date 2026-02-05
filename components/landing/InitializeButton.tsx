@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 type InitializeButtonProps = {
   onClick: () => void
@@ -10,7 +10,15 @@ type InitializeButtonProps = {
 
 export function InitializeButton({ onClick, disabled }: InitializeButtonProps) {
   const [isPressed, setIsPressed] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const allowHover = !disabled && !isPressed
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current === null) return
+      clearTimeout(timeoutRef.current)
+    }
+  }, [])
 
   return (
     <motion.button
@@ -21,7 +29,11 @@ export function InitializeButton({ onClick, disabled }: InitializeButtonProps) {
       onClick={() => {
         if (disabled) return
         setIsPressed(true)
-        setTimeout(onClick, 100)
+
+        if (timeoutRef.current !== null) {
+          clearTimeout(timeoutRef.current)
+        }
+        timeoutRef.current = setTimeout(onClick, 100)
       }}
       className="relative rounded-full border-4 font-bold text-2xl text-white select-none w-[160px] h-[160px] md:w-[200px] md:h-[200px]"
       style={{

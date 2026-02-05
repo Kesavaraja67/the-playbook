@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { scenarios, getDifficultyColor } from "@/lib/scenarios"
+import { consumePlaybookTransitionFlag } from "@/lib/transitionOverlay"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 
@@ -13,15 +14,8 @@ export default function ScenariosPage() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      try {
-        const shouldShow = window.sessionStorage.getItem("playbook:transition") === "1"
-        if (!shouldShow) return
-
-        window.sessionStorage.removeItem("playbook:transition")
-        setShowTransitionOverlay(true)
-      } catch {
-        // Ignore storage failures.
-      }
+      if (!consumePlaybookTransitionFlag()) return
+      setShowTransitionOverlay(true)
     }, 0)
 
     return () => window.clearTimeout(timer)

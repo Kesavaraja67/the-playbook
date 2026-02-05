@@ -5,6 +5,7 @@ import { Inter } from "next/font/google"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { InitializeButton } from "@/components/landing/InitializeButton"
+import { setPlaybookTransitionFlag } from "@/lib/transitionOverlay"
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "700", "900"] })
 
@@ -20,11 +21,7 @@ export function CleanPortal() {
     if (isTransitioning) return
     setIsTransitioning(true)
 
-    try {
-      window.sessionStorage.setItem("playbook:transition", "1")
-    } catch {
-      // Ignore storage failures (private mode, disabled cookies, etc.)
-    }
+    setPlaybookTransitionFlag()
 
     setTimeout(() => {
       router.push("/scenarios")
