@@ -494,7 +494,6 @@ function PlayPageContent() {
   const initTimeoutsRef = React.useRef<Array<ReturnType<typeof setTimeout>>>([])
   const actionTimeoutsRef = React.useRef<Array<ReturnType<typeof setTimeout>>>([])
   const resetVersionRef = React.useRef(0)
-  const pendingInterviewSuspectIdRef = React.useRef<string | null>(null)
   const detectiveEvidenceRef = React.useRef<EvidenceItem[]>(detectiveEvidence)
   const detectiveSuspectsRef = React.useRef<Suspect[]>(detectiveSuspects)
 
@@ -553,8 +552,6 @@ function PlayPageContent() {
     setAlert(init.alert)
     setInput("")
     setIsProcessing(false)
-
-    pendingInterviewSuspectIdRef.current = null
 
     if (scenarioId === "detective-mystery") {
       setDetectiveEvidence(getDetectiveInitialEvidence())
@@ -645,8 +642,14 @@ function PlayPageContent() {
   const isBusy = isProcessing || isInitializing
   const canReset = !isBusy
 
+  type ActionInput = string | { id: string; suspectId?: string }
+
   const runAction = React.useCallback(
-    (actionIdOrText: string) => {
+    (actionInput: ActionInput) => {
+      const actionIdOrText = typeof actionInput === "string" ? actionInput : actionInput.id
+      const interviewSuspectIdAtCall =
+        typeof actionInput === "string" ? null : actionInput.suspectId ?? null
+
       if (!actionIdOrText.trim() || isBusy) return
 
       const scenarioAtCall = scenarioId
@@ -709,11 +712,9 @@ function PlayPageContent() {
 
           if (actionDef?.id === "interview") {
             const suspectId =
-              pendingInterviewSuspectIdRef.current ??
+              interviewSuspectIdAtCall ??
               detectiveSuspectsRef.current.find((suspect) => !suspect.interviewed)?.id ??
               detectiveSuspectsRef.current[0]?.id
-
-            pendingInterviewSuspectIdRef.current = null
 
             if (suspectId) {
               setDetectiveSuspects((prev) =>
@@ -1016,8 +1017,7 @@ function PlayPageContent() {
                 disabled={isBusy}
                 onInterviewSuspect={(suspectId) => {
                   if (isBusy) return
-                  pendingInterviewSuspectIdRef.current = suspectId
-                  runAction("interview")
+                  runAction({ id: "interview", suspectId })
                 }}
               />
             </>
