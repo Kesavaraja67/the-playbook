@@ -85,7 +85,10 @@ function stripPythonComments(code: string) {
 function hasStringAssignment(code: string, variableName: string) {
   const normalized = stripPythonComments(code)
   const name = escapeRegExp(variableName)
-  const re = new RegExp(`(^|\\n)\\s*${name}\\s*=\\s*(['\"])(?:\\\\.|[^\\n])+\\2`, "m")
+  const re = new RegExp(
+    `(^|\\n)\\s*${name}\\s*=\\s*(['\"])(?:\\\\.|[^\\n])+\\2`,
+    "m"
+  )
   return re.test(normalized)
 }
 
@@ -140,6 +143,7 @@ const tutorialSteps: TutorialStepConfig[] = [
     hint: "You can print a variable by putting its name inside `print(...)`: `print(favorite_color)`.",
     validate: (code) => {
       const normalized = stripPythonComments(code)
+
       if (!hasStringAssignment(code, "favorite_color")) {
         return {
           ok: false,
@@ -185,14 +189,14 @@ const tutorialSteps: TutorialStepConfig[] = [
         }
       }
 
-      if (!/^\s*return\s+/m.test(normalized)) {
+      if (!/^\s+return/m.test(normalized)) {
         return {
           ok: false,
           message: "Add a `return ...` line so the function gives back a greeting.",
         }
       }
 
-      if (!/^\s*return[^\n]*\bname\b/m.test(normalized)) {
+      if (!/^\s+return[^\n]*\bname\b/m.test(normalized)) {
         return {
           ok: false,
           message: "Use the `name` parameter in the value you return.",
@@ -308,7 +312,7 @@ const tutorialSteps: TutorialStepConfig[] = [
         return { ok: false, message: "Define `add(a, b)` using `def add(a, b):`." }
       }
 
-      if (!/^\s*return\s*\(?\s*a\s*\+\s*b\s*\)?\s*$/m.test(normalized)) {
+      if (!/^\s+return\s*\(?\s*a\s*\+\s*b\s*\)?\s*$/m.test(normalized)) {
         return { ok: false, message: "Inside `add`, return `a + b`." }
       }
 
