@@ -1,11 +1,11 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
 
-export default {
+const config = {
   content: [
-    "./app/**/*.{ts,tsx,mdx}",
-    "./components/**/*.{ts,tsx,mdx}",
-    "./lib/**/*.{ts,tsx,mdx}",
-    "./src/**/*.{ts,tsx,css}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./lib/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/**/*.{js,ts,jsx,tsx,mdx,css}",
   ],
   theme: {
     extend: {
@@ -51,4 +51,6 @@ export default {
     },
   },
   plugins: [],
-} satisfies Config
+} satisfies Config;
+
+export default config;

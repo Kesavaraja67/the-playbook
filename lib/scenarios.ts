@@ -1,22 +1,47 @@
 /**
- * Scenario types and utilities for The Playbook
- */
+* Scenario types and utilities for The Playbook
+*/
 
 export interface Scenario {
   id: string
   title: string
   description: string
+  category: ScenarioCategory
+  tags: string[]
   difficulty: "easy" | "medium" | "hard" | "extreme"
   objectives: string[]
   initialState: Record<string, unknown>
   icon: string
 }
 
+export type ScenarioCategory =
+  | "game"
+  | "professional"
+  | "simulation"
+  | "educational"
+
+export const scenarioCategoryOrder: readonly ScenarioCategory[] = [
+  "game",
+  "professional",
+  "simulation",
+  "educational",
+]
+
+export const scenarioCategoryMeta = {
+  game: { label: "Games", color: "#5E5CE6" },
+  professional: { label: "Professional", color: "#0071E3" },
+  simulation: { label: "Simulation", color: "#34C759" },
+  educational: { label: "Educational", color: "#FF9F0A" },
+} satisfies Record<ScenarioCategory, { label: string; color: string }>
+
 export const scenarios: Scenario[] = [
   {
     id: "zombie-survival",
     title: "Zombie Survival",
-    description: "Navigate a post-apocalyptic city overrun by the undead. Manage resources, find survivors, and make it to the evacuation point.",
+    description:
+      "Navigate a post-apocalyptic city overrun by the undead. Manage resources, find survivors, and make it to the evacuation point.",
+    category: "game",
+    tags: ["Survival", "Strategy", "Resources"],
     difficulty: "hard",
     objectives: [
       "Find medical supplies",
@@ -37,7 +62,10 @@ export const scenarios: Scenario[] = [
   {
     id: "salary-negotiation",
     title: "Salary Negotiation",
-    description: "You've received a job offer. Navigate the delicate art of negotiation to maximize your compensation package.",
+    description:
+      "You've received a job offer. Navigate the delicate art of negotiation to maximize your compensation package.",
+    category: "professional",
+    tags: ["Negotiation", "Career", "Communication"],
     difficulty: "medium",
     objectives: [
       "Research market rates",
@@ -58,7 +86,10 @@ export const scenarios: Scenario[] = [
   {
     id: "space-station",
     title: "Space Station Crisis",
-    description: "A critical malfunction threatens the ISS. Coordinate with mission control and your crew to prevent disaster.",
+    description:
+      "A critical malfunction threatens the ISS. Coordinate with mission control and your crew to prevent disaster.",
+    category: "simulation",
+    tags: ["Crisis", "Engineering", "Teamwork"],
     difficulty: "extreme",
     objectives: [
       "Diagnose the malfunction",
@@ -79,7 +110,10 @@ export const scenarios: Scenario[] = [
   {
     id: "detective-mystery",
     title: "Detective Mystery",
-    description: "A high-profile murder case lands on your desk. Interview suspects, gather evidence, and solve the crime before the trail goes cold.",
+    description:
+      "A high-profile murder case lands on your desk. Interview suspects, gather evidence, and solve the crime before the trail goes cold.",
+    category: "game",
+    tags: ["Mystery", "Investigation", "Logic"],
     difficulty: "medium",
     objectives: [
       "Interview all suspects",
@@ -100,15 +134,15 @@ export const scenarios: Scenario[] = [
 ]
 
 /**
- * Get scenario by ID
- */
+* Get scenario by ID
+*/
 export function getScenarioById(id: string): Scenario | undefined {
   return scenarios.find((s) => s.id === id)
 }
 
 /**
- * Get difficulty color
- */
+* Get difficulty color
+*/
 export function getDifficultyColor(difficulty: Scenario["difficulty"]): string {
   const colors = {
     easy: "text-accent-success",
@@ -120,8 +154,8 @@ export function getDifficultyColor(difficulty: Scenario["difficulty"]): string {
 }
 
 /**
- * Get difficulty badge variant
- */
+* Get difficulty badge variant
+*/
 export function getDifficultyVariant(
   difficulty: Scenario["difficulty"]
 ): "default" | "secondary" | "destructive" | "outline" {
