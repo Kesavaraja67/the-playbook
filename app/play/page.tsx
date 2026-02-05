@@ -98,6 +98,11 @@ function PlayUI({ scenarioId }: { scenarioId: string }) {
   const { thread, streaming } = useTamboThread()
   const { value, setValue, submit, isPending } = useTamboThreadInput()
 
+  const handleSubmit = () => {
+    if (!value.trim() || isPending || streaming) return
+    void submit()
+  }
+
   const canvasComponents = useMemo(() => {
     return thread.messages
       .filter((m) => m.role === "assistant" && m.renderedComponent)
@@ -178,14 +183,14 @@ function PlayUI({ scenarioId }: { scenarioId: string }) {
               value={value}
               onChange={(e) => setValue(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") void submit()
+                if (e.key === "Enter") handleSubmit()
               }}
               placeholder={streaming ? "Generating…" : "Type your action…"}
               disabled={isPending || streaming}
               className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-cyan-500 disabled:opacity-60"
             />
             <Button
-              onClick={() => void submit()}
+              onClick={handleSubmit}
               size="sm"
               className="bg-cyan-600 hover:bg-cyan-700"
               disabled={isPending || streaming}
@@ -208,7 +213,7 @@ function PlayUI({ scenarioId }: { scenarioId: string }) {
 
 function extractText(content: unknown): string {
   if (typeof content === "string") return content
-  if (!Array.isArray(content)) return ""
+  if (!Array.isArray(content)) return "[Unsupported message format]"
 
   const textParts = content
     .map((part) => {
@@ -220,12 +225,11 @@ function extractText(content: unknown): string {
     })
     .filter(Boolean)
 
-  if (textParts.length === 0 && content.length > 0) {
-    return "[Non-text response omitted]"
+  if (textParts.length === 0) {
+    return content.length > 0 ? "[Non-text response omitted]" : ""
   }
 
-  return textParts
-    .join("")
+  return textParts.join(" ")
 }
 
 export default function PlayPage() {

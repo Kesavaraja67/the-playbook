@@ -155,12 +155,7 @@ function renderGenericState(state: Record<string, unknown>) {
   return (
     <div className="space-y-2">
       {Object.entries(state).map(([key, value]) => {
-        const displayValue =
-          value == null
-            ? "—"
-            : typeof value === "object"
-              ? JSON.stringify(value)
-              : String(value)
+        const displayValue = formatValue(value)
 
         return (
           <div key={key} className="flex justify-between items-center p-2 bg-slate-800/50 rounded">
@@ -171,6 +166,22 @@ function renderGenericState(state: Record<string, unknown>) {
       })}
     </div>
   )
+}
+
+function formatValue(value: unknown): string {
+  if (value == null) return "—"
+
+  if (typeof value === "object") {
+    try {
+      const json = JSON.stringify(value)
+      return json.length > 120 ? `${json.slice(0, 117)}…` : json
+    } catch {
+      return "[object]"
+    }
+  }
+
+  const str = String(value)
+  return str.length > 120 ? `${str.slice(0, 117)}…` : str
 }
 
 function getNumber(
