@@ -16,24 +16,6 @@
   --warning-amber: #ffa94d;
 }
 
-.dark {
-  /* Primary Colors */
-  --electric-cyan: #00f0ff;
-  --neon-magenta: #ff006e;
-  --plasma-purple: #b537f2;
-  --quantum-gold: #ffd60a;
-
-  /* Backgrounds */
-  --void-dark: #0a0e27;
-  --space-blue: #151b3d;
-  --nebula-purple: #1f1535;
-
-  /* Accents */
-  --glow-white: #ffffff;
-  --frost-blue: #a5d8ff;
-  --warning-amber: #ffa94d;
-}
-
 @keyframes holographic-shift {
   0% {
     background-position: 0 0, 0% 50%;
@@ -125,6 +107,7 @@
   }
 
   /* Holographic Border */
+  /* `holo-border` is a short alias for `holographic-border`. */
   .holographic-border,
   .holo-border {
     border: 2px solid transparent;

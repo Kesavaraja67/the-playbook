@@ -3,6 +3,7 @@
 
 @import "tailwindcss";
 @import "tw-animate-css";
+/* Cyber Dreamscape tokens + utilities (CSS variables, glass, glow, holographic borders). */
 @import "../src/styles/design-system.css";
 
 
