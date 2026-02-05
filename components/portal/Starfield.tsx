@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { motion, useMotionValue, useSpring } from "framer-motion"
 
 interface Star {
@@ -12,17 +12,17 @@ interface Star {
   twinkleDuration: number
 }
 
-const defaultStars: Star[] = Array.from({ length: 200 }, (_, i) => ({
-  id: i,
-  x: Math.random() * 100,
-  y: Math.random() * 100,
-  size: Math.random() * 2 + 1,
-  opacity: Math.random() * 0.5 + 0.3,
-  twinkleDuration: 2 + Math.random() * 3,
-}))
-
 export function Starfield() {
-  const stars = defaultStars
+  const [stars] = useState<Star[]>(() =>
+    Array.from({ length: 200 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 2 + 1,
+      opacity: Math.random() * 0.5 + 0.3,
+      twinkleDuration: 2 + Math.random() * 3,
+    }))
+  )
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
   

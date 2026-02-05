@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { motion } from "framer-motion"
 import { generateParticles, type Particle } from "@/lib/animations/particles"
 
@@ -7,10 +8,8 @@ interface ParticleSystemProps {
   isActive: boolean
 }
 
-const particles60: Particle[] = generateParticles(60)
-
 export function ParticleSystem({ isActive }: ParticleSystemProps) {
-  const particles = particles60
+  const [particles] = useState<Particle[]>(() => generateParticles(60))
 
   if (!isActive) return null
 

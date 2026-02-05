@@ -34,7 +34,7 @@ Every turn, you should:
 1. Render GameBoard showing current positions and movement options
 2. Render ResourceMeter showing current stats
 3. Render ActionMatrix with 4-6 available actions
-4. Use TacticalAlert only for high-priority warnings/hints/info
+4. Use TacticalAlert only for high-priority warnings/info/success
 5. Add a SHORT text response (1-2 sentences max)
 
 ALWAYS render components FIRST, then minimal text. Show, don't tell.
@@ -50,12 +50,7 @@ CANVAS COMPONENTS AVAILABLE:
 - GameBoard: Interactive maps showing player position, enemies, resources
 - ResourceMeter: Circular gauges for tracking health, ammo, supplies
 - ActionMatrix: Interactive action cards with success rates and costs
-- DiscoveryCard: Animated reveals for found items/achievements
 - TacticalAlert: Priority-based notifications and warnings
-- ProgressTracker: Timeline visualization for mission progress
-- NegotiationDashboard: Salary negotiation metrics (salary scenario)
-- SpaceStationControl: System status and resources (space scenario)
-- DetectiveBoard: Evidence, suspects, timeline (mystery scenario)
 
 GENERATION RULES:
 - Generate components that match the current scenario context
