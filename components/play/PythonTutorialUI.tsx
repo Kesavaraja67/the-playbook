@@ -42,44 +42,7 @@ function escapeRegExp(value: string) {
 }
 
 function stripPythonComments(code: string) {
-  return code
-    .split("\n")
-    .map((line) => {
-      let inSingleQuote = false
-      let inDoubleQuote = false
-      let isEscaped = false
-
-      for (let index = 0; index < line.length; index += 1) {
-        const char = line[index]
-
-        if (isEscaped) {
-          isEscaped = false
-          continue
-        }
-
-        if (char === "\\") {
-          isEscaped = true
-          continue
-        }
-
-        if (!inDoubleQuote && char === "'") {
-          inSingleQuote = !inSingleQuote
-          continue
-        }
-
-        if (!inSingleQuote && char === '"') {
-          inDoubleQuote = !inDoubleQuote
-          continue
-        }
-
-        if (!inSingleQuote && !inDoubleQuote && char === "#") {
-          return line.slice(0, index)
-        }
-      }
-
-      return line
-    })
-    .join("\n")
+  return code.replace(/^\s*#.*/gm, "")
 }
 
 function hasStringAssignment(code: string, variableName: string) {
@@ -250,7 +213,7 @@ const tutorialSteps: TutorialStepConfig[] = [
       }
 
       const assignmentMatch = normalized.match(
-        /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*greet\s*\(\s*(['"])Alice\2\s*\)\s*$/m
+        /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*greet\s*\(\s*(['"])Alice\2\s*\)\s*(?:#.*)?$/m
       )
       if (assignmentMatch) {
         const variableName = assignmentMatch[1]
@@ -308,7 +271,7 @@ const tutorialSteps: TutorialStepConfig[] = [
         return { ok: false, message: "Define `add(a, b)` using `def add(a, b):`." }
       }
 
-      if (!/^\s*return\s*\(?\s*a\s*\+\s*b\s*\)?\s*$/m.test(normalized)) {
+      if (!/^\s*return\s*\(?\s*a\s*\+\s*b\s*\)?\s*(?:#.*)?$/m.test(normalized)) {
         return { ok: false, message: "Inside `add`, return `a + b`." }
       }
 
@@ -321,7 +284,7 @@ const tutorialSteps: TutorialStepConfig[] = [
       }
 
       const assignmentMatch = normalized.match(
-        /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*add\s*\(\s*10\s*,\s*5\s*\)\s*$/m
+        /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*add\s*\(\s*10\s*,\s*5\s*\)\s*(?:#.*)?$/m
       )
       if (assignmentMatch) {
         const variableName = assignmentMatch[1]
