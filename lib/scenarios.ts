@@ -7,11 +7,14 @@ export interface Scenario {
   category: ScenarioCategory
   tags: string[]
   difficulty: "easy" | "medium" | "hard" | "extreme"
-  layout: "board" | "briefing"
-  objectives: string[]
+  layout: ScenarioLayout
+  // Optional: some scenarios may rely on implicit or dynamically generated objectives.
+  objectives?: string[]
   initialState: Record<string, unknown>
   icon: string
 }
+
+export type ScenarioLayout = "board" | "briefing"
 
 export type ScenarioCategory =
   | "game"

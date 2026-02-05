@@ -243,6 +243,10 @@ function ScenarioBriefingCard({ scenario }: { scenario: Scenario }) {
               </ul>
             </div>
           )}
+
+          <div className="mt-5 text-xs text-[#6E6E73]">
+            Use the actions below or type your next move in the command bar to continue.
+          </div>
         </div>
       </div>
     </section>
@@ -382,7 +386,7 @@ function PlayPageContent() {
   const effectiveIsLoadingBoard = isBoardScenario && isLoadingBoard
   const isInitializing = effectiveIsLoadingBoard || isLoadingResources || isLoadingActions
   const isBusy = isProcessing || isInitializing
-  const canReset = !isInitializing
+  const canReset = !isBusy
 
   const runAction = React.useCallback(
     (actionIdOrText: string) => {
@@ -503,6 +507,8 @@ function PlayPageContent() {
     )
   }
 
+  const resolvedScenario = scenario
+
   return (
     <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F]">
       <header className="sticky top-0 z-40 h-[60px] bg-white border-b-2 border-[#D2D2D7]">
@@ -517,7 +523,7 @@ function PlayPageContent() {
           </button>
 
           <div className="text-center">
-            <div className="text-sm font-bold">{scenario.title}</div>
+            <div className="text-sm font-bold">{resolvedScenario.title}</div>
             {progressLabel && (
               <div className="text-xs text-[#6E6E73]">{progressLabel}</div>
             )}
@@ -527,7 +533,6 @@ function PlayPageContent() {
             type="button"
             onClick={reset}
             disabled={!canReset}
-            aria-disabled={!canReset || undefined}
             className={cn(
               "inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F]",
               !canReset ? "cursor-not-allowed opacity-60" : "hover:text-[#0071E3]"
@@ -557,7 +562,7 @@ function PlayPageContent() {
               <GameBoard {...board} />
             )
           ) : (
-            <ScenarioBriefingCard scenario={scenario} />
+            <ScenarioBriefingCard scenario={resolvedScenario} />
           )}
 
           {isLoadingResources ? (
@@ -607,8 +612,8 @@ function PlayPageContent() {
                 !e.metaKey
 
               if (!isPlainEnter) return
-              if (isBusy) return
               if (e.nativeEvent.isComposing) return
+              if (!input.trim()) return
 
               e.preventDefault()
               runAction(input)
