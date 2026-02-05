@@ -375,7 +375,7 @@ export function PythonTutorialUI({ scenario }: { scenario: Scenario }) {
     []
   )
 
-  const totalSteps = starterCodes.length
+  const totalSteps = tutorialSteps.length
 
   const [stepIndex, setStepIndex] = React.useState(0)
   const [completedSteps, setCompletedSteps] = React.useState<boolean[]>(() =>
