@@ -59,7 +59,11 @@ export function ActionMatrix({ actions, onActionClick, disabled = false }: Actio
         {actions.map((action) => {
           const isActive = action.id === activeActionId
           const costs = formatCosts(action.costs)
-          const successRate = action.successRate
+          const rawSuccessRate = action.successRate
+          const successRate =
+            typeof rawSuccessRate === "number"
+              ? Math.max(0, Math.min(100, rawSuccessRate))
+              : null
 
           return (
             <button
@@ -112,7 +116,7 @@ export function ActionMatrix({ actions, onActionClick, disabled = false }: Actio
                         "h-2 rounded-full",
                         isActive ? "bg-white" : "bg-[#0071E3]"
                       )}
-                      style={{ width: `${Math.max(0, Math.min(100, successRate))}%` }}
+                      style={{ width: `${successRate}%` }}
                     />
                   </div>
                 </div>

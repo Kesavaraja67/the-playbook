@@ -62,6 +62,7 @@ export function GameBoard({
   }
 
   const colors = themeColors[theme]
+  const safeGridSize = Math.max(2, Math.min(20, Math.floor(gridSize)))
 
   return (
     <motion.div
@@ -81,13 +82,13 @@ export function GameBoard({
         <defs>
           <pattern
             id={`grid-${theme}`}
-            width={500 / gridSize}
-            height={500 / gridSize}
+            width={500 / safeGridSize}
+            height={500 / safeGridSize}
             patternUnits="userSpaceOnUse"
           >
             <rect
-              width={500 / gridSize}
-              height={500 / gridSize}
+              width={500 / safeGridSize}
+              height={500 / safeGridSize}
               fill="none"
               stroke={colors.grid}
               strokeWidth="1"
