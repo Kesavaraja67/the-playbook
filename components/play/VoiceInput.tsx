@@ -74,13 +74,14 @@ export function VoiceInput({
   const [speechError, setSpeechError] = React.useState<string | null>(null)
 
   React.useEffect(() => {
+    if (typeof window === "undefined") return
     setSpeechSupported(Boolean(getSpeechRecognitionCtor()))
-    setMediaRecorderSupported(typeof window !== "undefined" && "MediaRecorder" in window)
+    setMediaRecorderSupported("MediaRecorder" in window)
   }, [])
 
   const voiceMode = React.useMemo<"speech" | "tambo" | "none">(() => {
-    if (speechSupported) return "speech"
     if (HAS_TAMBO_API_KEY && mediaRecorderSupported) return "tambo"
+    if (speechSupported) return "speech"
     return "none"
   }, [mediaRecorderSupported, speechSupported])
 

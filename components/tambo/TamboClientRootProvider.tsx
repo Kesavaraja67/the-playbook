@@ -6,6 +6,7 @@ import { TamboClientProvider } from "@tambo-ai/react"
 
 import { TAMBO_API_KEY } from "@/lib/config"
 
+// This must wrap any part of the app that uses `@tambo-ai/react` hooks.
 export function TamboClientRootProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (TAMBO_API_KEY) return
