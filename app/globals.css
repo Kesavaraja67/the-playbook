@@ -20,3 +20,18 @@
     color: var(--text-primary);
   }
 }
+
+@keyframes voice-pulse-ring {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+.animate-voice-ping {
+  animation: voice-pulse-ring 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
