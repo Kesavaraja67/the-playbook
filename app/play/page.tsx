@@ -5,6 +5,21 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft, RotateCcw, Send } from "lucide-react"
 
 import { ComponentCanvas, componentCardClassName } from "@/components/play/ComponentCanvas"
+import {
+  DetectiveMysteryActions,
+  DetectiveMysteryBriefing,
+  DetectiveMysteryMetrics,
+} from "@/components/play/DetectiveMysteryUI"
+import {
+  SalaryNegotiationActions,
+  SalaryNegotiationBriefing,
+  SalaryNegotiationMetrics,
+} from "@/components/play/SalaryNegotiationUI"
+import {
+  SpaceStationBriefing,
+  SpaceStationCommands,
+  SpaceStationTelemetry,
+} from "@/components/play/SpaceStationUI"
 import { ActionMatrix } from "@/components/tambo/ActionMatrix"
 import { GameBoard } from "@/components/tambo/GameBoard"
 import { ResourceMeter } from "@/components/tambo/ResourceMeter"
@@ -561,18 +576,70 @@ function PlayPageContent() {
             ) : (
               <GameBoard {...board} />
             )
+          ) : scenarioId === "salary-negotiation" ? (
+            <SalaryNegotiationBriefing scenario={scenario} />
+          ) : scenarioId === "space-station" ? (
+            <SpaceStationBriefing scenario={scenario} />
+          ) : scenarioId === "detective-mystery" ? (
+            <DetectiveMysteryBriefing scenario={scenario} />
           ) : (
             <ScenarioBriefingCard scenario={resolvedScenario} />
           )}
 
           {isLoadingResources ? (
-            <LoadingCard title="Resources" height="h-[220px]" />
+            <LoadingCard
+              title={
+                isBoardScenario
+                  ? "Resources"
+                  : scenarioId === "salary-negotiation"
+                    ? "Negotiation Signals"
+                    : scenarioId === "space-station"
+                      ? "Station Telemetry"
+                      : scenarioId === "detective-mystery"
+                        ? "Case Metrics"
+                        : "Resources"
+              }
+              height="h-[220px]"
+            />
+          ) : isBoardScenario ? (
+            <ResourceMeter resources={resources} />
+          ) : scenarioId === "salary-negotiation" ? (
+            <SalaryNegotiationMetrics resources={resources} />
+          ) : scenarioId === "space-station" ? (
+            <SpaceStationTelemetry resources={resources} />
+          ) : scenarioId === "detective-mystery" ? (
+            <DetectiveMysteryMetrics resources={resources} />
           ) : (
             <ResourceMeter resources={resources} />
           )}
 
           {isLoadingActions ? (
-            <LoadingCard title="Actions" height="h-[220px]" />
+            <LoadingCard
+              title={
+                isBoardScenario
+                  ? "Actions"
+                  : scenarioId === "salary-negotiation"
+                    ? "Talking Points"
+                    : scenarioId === "space-station"
+                      ? "Command Deck"
+                      : scenarioId === "detective-mystery"
+                        ? "Investigation Notebook"
+                        : "Actions"
+              }
+              height="h-[220px]"
+            />
+          ) : isBoardScenario ? (
+            <ActionMatrix
+              actions={actions}
+              onActionClick={runAction}
+              disabled={isBusy}
+            />
+          ) : scenarioId === "salary-negotiation" ? (
+            <SalaryNegotiationActions actions={actions} onActionClick={runAction} disabled={isBusy} />
+          ) : scenarioId === "space-station" ? (
+            <SpaceStationCommands actions={actions} onActionClick={runAction} disabled={isBusy} />
+          ) : scenarioId === "detective-mystery" ? (
+            <DetectiveMysteryActions actions={actions} onActionClick={runAction} disabled={isBusy} />
           ) : (
             <ActionMatrix
               actions={actions}
