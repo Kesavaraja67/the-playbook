@@ -571,6 +571,7 @@ function PlayPageContent() {
             type="button"
             onClick={reset}
             disabled={!canReset}
+            aria-disabled={!canReset || undefined}
             className={cn(
               "inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F]",
               !canReset ? "cursor-not-allowed opacity-60" : "hover:text-[#0071E3]"
