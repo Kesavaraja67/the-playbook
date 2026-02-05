@@ -26,10 +26,7 @@ const alertStyles: Record<
 }
 
 export function TacticalAlert({ type, title, message, onDismiss }: TacticalAlertProps) {
-  const [open, setOpen] = React.useState(true)
   const style = alertStyles[type]
-
-  if (!open) return null
 
   return (
     <aside
@@ -45,7 +42,6 @@ export function TacticalAlert({ type, title, message, onDismiss }: TacticalAlert
         <button
           type="button"
           onClick={() => {
-            setOpen(false)
             onDismiss?.()
           }}
           className={cn(

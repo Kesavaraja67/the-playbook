@@ -18,17 +18,30 @@ type ChatMessage = {
   content: string
 }
 
+const MAX_MESSAGES = 100
+
 type TacticalAlertState = Omit<React.ComponentProps<typeof TacticalAlert>, "onDismiss">
 
 type BoardState = React.ComponentProps<typeof GameBoard>
 type Resource = React.ComponentProps<typeof ResourceMeter>["resources"][number]
 type Action = React.ComponentProps<typeof ActionMatrix>["actions"][number]
 
+type InitialState = {
+  day: number
+  totalDays: number
+  board: BoardState
+  resources: Resource[]
+  actions: Action[]
+  messages: ChatMessage[]
+  alert: TacticalAlertState | null
+}
+
 function clamp(min: number, value: number, max: number) {
+  if (!Number.isFinite(value)) return min
   return Math.max(min, Math.min(max, value))
 }
 
-function getZombieInitialState() {
+function getZombieInitialState(): InitialState {
   const board: BoardState = {
     gridSize: 10,
     playerPosition: { x: 5, y: 5 },
@@ -92,11 +105,11 @@ function getZombieInitialState() {
     resources,
     actions,
     messages: [initialAssistantMessage],
-    alert: null as TacticalAlertState | null,
+    alert: null,
   }
 }
 
-function getInitialState(scenarioId: string) {
+function getInitialState(scenarioId: string): InitialState {
   if (scenarioId === "zombie-survival") return getZombieInitialState()
 
   if (scenarioId === "salary-negotiation") {
@@ -127,7 +140,7 @@ function getInitialState(scenarioId: string) {
         { id: "accept", label: "Accept", icon: "✅", successRate: 40 },
       ] as Action[],
       messages: [initialAssistantMessage],
-      alert: null as TacticalAlertState | null,
+      alert: null,
     }
   }
 
@@ -159,7 +172,7 @@ function getInitialState(scenarioId: string) {
         { id: "report", label: "Report", icon: "📞", successRate: 95 },
       ] as Action[],
       messages: [initialAssistantMessage],
-      alert: null as TacticalAlertState | null,
+      alert: null,
     }
   }
 
@@ -190,7 +203,7 @@ function getInitialState(scenarioId: string) {
       { id: "accuse", label: "Accuse", icon: "⚖️", successRate: 35 },
     ] as Action[],
     messages: [initialAssistantMessage],
-    alert: null as TacticalAlertState | null,
+    alert: null,
   }
 }
 
@@ -217,11 +230,28 @@ function PlayPageContent() {
   const [messages, setMessages] = React.useState<ChatMessage[]>([])
   const [alert, setAlert] = React.useState<TacticalAlertState | null>(null)
   const [input, setInput] = React.useState("")
+  const [isProcessing, setIsProcessing] = React.useState(false)
   const [isLoadingBoard, setIsLoadingBoard] = React.useState(true)
   const [isLoadingResources, setIsLoadingResources] = React.useState(true)
   const [isLoadingActions, setIsLoadingActions] = React.useState(true)
 
+  const initTimeoutsRef = React.useRef<Array<ReturnType<typeof setTimeout>>>([])
+  const resetVersionRef = React.useRef(0)
+
+  React.useEffect(() => {
+    return () => {
+      for (const id of initTimeoutsRef.current) clearTimeout(id)
+      initTimeoutsRef.current = []
+    }
+  }, [])
+
   const reset = React.useCallback(() => {
+    resetVersionRef.current += 1
+    const resetVersion = resetVersionRef.current
+
+    for (const id of initTimeoutsRef.current) clearTimeout(id)
+    initTimeoutsRef.current = []
+
     const init = getInitialState(scenarioId)
 
     setDay(init.day)
@@ -232,25 +262,38 @@ function PlayPageContent() {
     setMessages(init.messages)
     setAlert(init.alert)
     setInput("")
+    setIsProcessing(false)
 
     setIsLoadingBoard(true)
     setIsLoadingResources(true)
     setIsLoadingActions(true)
 
-    window.setTimeout(() => {
+    initTimeoutsRef.current.push(
+      setTimeout(() => {
+        if (resetVersionRef.current !== resetVersion) return
+
       setBoard(init.board)
       setIsLoadingBoard(false)
-    }, 350)
+      }, 350)
+    )
 
-    window.setTimeout(() => {
+    initTimeoutsRef.current.push(
+      setTimeout(() => {
+        if (resetVersionRef.current !== resetVersion) return
+
       setResources(init.resources)
       setIsLoadingResources(false)
-    }, 450)
+      }, 450)
+    )
 
-    window.setTimeout(() => {
+    initTimeoutsRef.current.push(
+      setTimeout(() => {
+        if (resetVersionRef.current !== resetVersion) return
+
       setActions(init.actions)
       setIsLoadingActions(false)
-    }, 550)
+      }, 550)
+    )
   }, [scenarioId])
 
   React.useEffect(() => {
@@ -261,8 +304,10 @@ function PlayPageContent() {
   const progressLabel = scenarioId === "zombie-survival" ? `Day ${day}/${totalDays}` : ""
 
   const latestAssistantText = React.useMemo(() => {
-    const last = [...messages].reverse().find((m) => m.role === "assistant")
-    return last?.content ?? ""
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i].role === "assistant") return messages[i].content
+    }
+    return ""
   }, [messages])
 
   const updateResource = React.useCallback((name: string, delta: number) => {
@@ -291,20 +336,32 @@ function PlayPageContent() {
 
   const runAction = React.useCallback(
     (actionIdOrText: string) => {
-      if (!actionIdOrText.trim()) return
+      if (!actionIdOrText.trim() || isProcessing) return
 
+      const scenarioAtCall = scenarioId
+      const totalDaysAtCall = totalDays
+      const resetVersionAtCall = resetVersionRef.current
       const normalized = actionIdOrText.toLowerCase()
       const userText =
         actions.find((a) => a.id === actionIdOrText)?.label ?? actionIdOrText
 
-      setMessages((prev) => [...prev, { role: "user", content: userText }])
+      setMessages((prev) => {
+        const next = [...prev, { role: "user" as const, content: userText }]
+        return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
+      })
       setInput("")
+      setIsProcessing(true)
 
-      window.setTimeout(() => {
-        const aiResponse = generateMockResponse(userText)
-        setMessages((prev) => [...prev, { role: "assistant", content: aiResponse }])
+      setTimeout(() => {
+        if (resetVersionRef.current !== resetVersionAtCall) return
 
-        if (scenarioId !== "zombie-survival") {
+        const aiResponse = generateMockResponse(userText, scenarioAtCall)
+        setMessages((prev) => {
+          const next = [...prev, { role: "assistant" as const, content: aiResponse }]
+          return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
+        })
+
+        if (scenarioAtCall !== "zombie-survival") {
           if (Math.random() > 0.65) {
             setAlert({
               type: "info",
@@ -312,6 +369,7 @@ function PlayPageContent() {
               message: "New information comes in. Adjust your plan.",
             })
           }
+          setIsProcessing(false)
           return
         }
 
@@ -323,6 +381,7 @@ function PlayPageContent() {
             title: "Relocated",
             message: "You changed position. Stay quiet and keep moving.",
           })
+          setIsProcessing(false)
           return
         }
 
@@ -334,17 +393,19 @@ function PlayPageContent() {
             title: "Supplies Found",
             message: "You found usable supplies in the area.",
           })
+          setIsProcessing(false)
           return
         }
 
         if (normalized.includes("rest")) {
           updateResource("Health", +10)
-          setDay((d) => clamp(1, d + 1, totalDays))
+          setDay((d) => clamp(1, d + 1, totalDaysAtCall))
           setAlert({
             type: "hint",
             title: "Regroup",
             message: "Resting helps, but time is still passing.",
           })
+          setIsProcessing(false)
           return
         }
 
@@ -355,6 +416,7 @@ function PlayPageContent() {
             title: "Noise",
             message: "Fortifying draws attention. Stay alert.",
           })
+          setIsProcessing(false)
           return
         }
 
@@ -365,9 +427,11 @@ function PlayPageContent() {
             message: "You hear shuffling footsteps close by.",
           })
         }
+
+        setIsProcessing(false)
       }, 650)
     },
-    [actions, nudgePlayer, scenarioId, totalDays, updateResource]
+    [actions, isProcessing, nudgePlayer, scenarioId, totalDays, updateResource]
   )
 
   if (!scenario) {
@@ -471,21 +535,25 @@ function PlayPageContent() {
             onKeyDown={(e) => {
               if (e.key === "Enter") runAction(input)
             }}
+            disabled={isProcessing}
             placeholder="Type your action..."
             className={cn(
               "h-12 flex-1 rounded-full border-2 border-[#D2D2D7] bg-white px-4",
               "text-sm text-[#1D1D1F] placeholder:text-[#6E6E73]",
-              "focus:outline-none focus:border-[#0071E3]"
+              "focus:outline-none focus:border-[#0071E3]",
+              "disabled:cursor-not-allowed disabled:opacity-60"
             )}
           />
           <button
             type="button"
             onClick={() => runAction(input)}
+            disabled={isProcessing}
             className={cn(
               "grid size-12 place-items-center rounded-lg",
               "bg-[#0071E3] text-white",
               "shadow-[2px_2px_0px_#1D1D1F]",
-              "hover:bg-[#005BB5]"
+              "hover:bg-[#005BB5]",
+              "disabled:bg-[#0071E3]/60 disabled:cursor-not-allowed"
             )}
             aria-label="Send"
           >
@@ -511,8 +579,50 @@ export default function PlayPage() {
   )
 }
 
-function generateMockResponse(input: string) {
+function generateMockResponse(input: string, scenarioId: string) {
   const normalized = input.toLowerCase()
+
+  if (scenarioId === "salary-negotiation") {
+    if (normalized.includes("counter")) return "You counter with a clear, confident number."
+    if (normalized.includes("benefit")) return "You ask about benefits and flexibility instead of only salary."
+    if (normalized.includes("pause")) return "You take a beat to gather your leverage and stay composed."
+    if (normalized.includes("accept")) return "You accept, but you note the key terms you want in writing."
+
+    const responses = [
+      "You keep the conversation friendly and focused.",
+      "They listen closely and consider your reasoning.",
+      "You ask a direct question and wait for their response.",
+    ]
+    return responses[Math.floor(Math.random() * responses.length)]
+  }
+
+  if (scenarioId === "space-station") {
+    if (normalized.includes("repair")) return "You start repairs and monitor the system readouts."
+    if (normalized.includes("reroute")) return "You reroute power and stabilize the most critical subsystem."
+    if (normalized.includes("scan")) return "Diagnostics reveal more issues than expected."
+    if (normalized.includes("report")) return "Mission control acknowledges and requests updated telemetry."
+
+    const responses = [
+      "Alarms fade for a moment, then another warning comes online.",
+      "The station shudders slightly as systems re-balance.",
+      "You prioritize based on risk and available resources.",
+    ]
+    return responses[Math.floor(Math.random() * responses.length)]
+  }
+
+  if (scenarioId === "detective-mystery") {
+    if (normalized.includes("interview")) return "You press for details and watch for inconsistencies."
+    if (normalized.includes("analyze")) return "You analyze the evidence and identify a useful pattern."
+    if (normalized.includes("stakeout")) return "You wait it out. Someone slips up."
+    if (normalized.includes("accuse")) return "You make your accusation and gauge the reaction."
+
+    const responses = [
+      "A new clue narrows the timeline.",
+      "One lead goes cold, but another gets hotter.",
+      "You connect two facts that didn’t seem related before.",
+    ]
+    return responses[Math.floor(Math.random() * responses.length)]
+  }
 
   if (normalized.includes("move")) {
     return "You move carefully. The city feels too quiet."

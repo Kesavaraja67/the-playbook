@@ -7,8 +7,8 @@ import { componentCardClassName } from "@/components/play/ComponentCanvas"
 import { cn } from "@/lib/utils"
 
 const positionSchema = z.object({
-  x: z.number(),
-  y: z.number(),
+  x: z.number().int(),
+  y: z.number().int(),
 })
 
 const markerSchema = positionSchema.extend({

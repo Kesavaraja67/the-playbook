@@ -71,7 +71,7 @@ export const PLAYBOOK_TOOLS = [
   },
   {
     name: "generate_game_board",
-    description: "Generate an interactive game board showing player position, enemies, and resources",
+    description: "Generate an interactive game board. Props: playerPosition, enemies, resources, gridSize.",
     parameters: {
       type: "object",
       properties: {
@@ -192,7 +192,7 @@ export const PLAYBOOK_TOOLS = [
   },
   {
     name: "generate_tactical_alert",
-    description: "Generate priority-based notifications and warnings",
+    description: "Generate a tactical alert (type: warning|hint|info|success).",
     parameters: {
       type: "object",
       properties: {
@@ -201,11 +201,7 @@ export const PLAYBOOK_TOOLS = [
           enum: ["warning", "hint", "info", "success"]
         },
         title: { type: "string" },
-        message: { type: "string" },
-        priority: {
-          type: "string",
-          enum: ["low", "medium", "high", "critical"]
-        }
+        message: { type: "string" }
       },
       required: ["type", "title", "message"]
     }
