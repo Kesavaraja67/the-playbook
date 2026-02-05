@@ -8,8 +8,8 @@ import { ResourceMeter, resourceMeterSchema } from "@/components/tambo/ResourceM
 import { TacticalAlert, tacticalAlertSchema } from "@/components/tambo/TacticalAlert"
 
 /**
-* Tambo SDK Configuration
-*/
+  * Tambo SDK Configuration
+  */
 
 // Ensure API key is available
 // NOTE: NEXT_PUBLIC_* env vars are inlined at build time.
@@ -66,8 +66,8 @@ USER ACTION FORMAT:
 Be creative, visually engaging, and maintain immersion with the chosen scenario.`
 
 /**
-* Registered visual components for Tambo.
-*/
+  * Registered visual components for Tambo.
+  */
 export const components: TamboComponent[] = [
   {
     name: "GameBoard",
