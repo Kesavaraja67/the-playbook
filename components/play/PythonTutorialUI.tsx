@@ -277,7 +277,7 @@ const tutorialSteps: TutorialStepConfig[] = [
       return {
         ok: false,
         message:
-          "Almost — print the result of `greet(\"Alice\")` (either directly, or by storing it in a variable first).",
+          "You’re printing something, but not the result of `greet(\"Alice\")`. Print that result directly, or store it in a variable and print the variable.",
       }
     },
   },
@@ -345,7 +345,7 @@ const tutorialSteps: TutorialStepConfig[] = [
       return {
         ok: false,
         message:
-          "Almost — print the result of `add(10, 5)` (either directly, or by storing it in a variable first).",
+          "You’re printing something, but not the result of `add(10, 5)`. Print that result directly, or store it in a variable and print the variable.",
       }
     },
   },
