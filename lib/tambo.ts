@@ -28,7 +28,9 @@ CANVAS COMPONENTS AVAILABLE:
 - DiscoveryCard: Significant events and findings
 - TacticalAlert: Priority-based notifications and warnings
 - ProgressTracker: Timeline visualization for mission progress
-- NegotiationDashboard: Salary negotiation metrics (salary scenario)
+- ConversationThread: Chat-style message thread (salary negotiation)
+- QuickResponseButtons: Suggested reply pills (salary negotiation)
+- NegotiationDashboard: Simplified salary negotiation snapshot (salary negotiation)
 - SpaceStationControl: System status and resources (space scenario)
 - DetectiveBoard: Evidence, suspects, timeline (mystery scenario)
 - LearningObjectives: Collapsible list of beginner-friendly learning goals (python tutorial scenario)
@@ -250,6 +252,76 @@ export const PLAYBOOK_TOOLS = [
       },
       required: ["milestones"]
     }
+  },
+  {
+    name: "generate_conversation_thread",
+    description: "Generate a professional conversation thread (for salary negotiation scenario)",
+    parameters: {
+      type: "object",
+      properties: {
+        messages: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              sender: {
+                type: "string",
+                enum: ["recruiter", "you"],
+              },
+              id: {
+                type: "string",
+                description: "Stable identifier for rendering (recommended if messages can be re-ordered)",
+              },
+              avatar: {
+                type: "string",
+                description: "Optional avatar glyph",
+              },
+              content: { type: "string" },
+              time: {
+                type: "string",
+                description: "Optional human-readable time label, e.g. '2:35 PM'",
+              },
+            },
+            required: ["sender", "content"],
+          },
+        },
+      },
+      required: ["messages"],
+    },
+  },
+  {
+    name: "generate_quick_response_buttons",
+    description: "Generate suggested quick reply buttons (for salary negotiation scenario)",
+    parameters: {
+      type: "object",
+      properties: {
+        actions: {
+          type: "array",
+          description: "Canonical list of quick response actions. If present, takes precedence over responses.",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              label: { type: "string" },
+            },
+            required: ["id", "label"],
+          },
+        },
+        responses: {
+          type: "array",
+          description: "Legacy alias for actions. Ignored when actions is present.",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              label: { type: "string" },
+            },
+            required: ["id", "label"],
+          },
+        },
+      },
+      anyOf: [{ required: ["actions"] }, { required: ["responses"] }],
+    },
   },
   {
     name: "generate_negotiation_dashboard",
