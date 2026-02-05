@@ -10,7 +10,7 @@ import { GameBoard } from "@/components/tambo/GameBoard"
 import { ResourceMeter } from "@/components/tambo/ResourceMeter"
 import { TacticalAlert } from "@/components/tambo/TacticalAlert"
 import { Button } from "@/components/ui/button"
-import { getScenarioById } from "@/lib/scenarios"
+import { getScenarioById, type Scenario } from "@/lib/scenarios"
 import { cn } from "@/lib/utils"
 
 type ChatMessage = {
@@ -218,6 +218,32 @@ function LoadingCard({ title, height }: { title: string; height: string }) {
   )
 }
 
+function ScenarioBriefingCard({ scenario }: { scenario: Scenario }) {
+  return (
+    <section className={componentCardClassName}>
+      <div className="flex items-start gap-4">
+        <div className="text-4xl" aria-hidden>
+          {scenario.icon}
+        </div>
+        <div className="flex-1">
+          <h3 className="text-xl font-bold">Briefing</h3>
+          <div className="mt-1 text-sm font-semibold">{scenario.title}</div>
+          <div className="mt-3 text-sm text-[#6E6E73]">{scenario.description}</div>
+
+          <div className="mt-5">
+            <div className="text-xs font-semibold text-[#6E6E73]">Objectives</div>
+            <ul className="mt-2 list-disc pl-5 text-sm">
+              {scenario.objectives.map((objective) => (
+                <li key={objective}>{objective}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function PlayPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -255,6 +281,8 @@ function PlayPageContent() {
     resetVersionRef.current += 1
     const resetVersion = resetVersionRef.current
 
+    const shouldLoadBoard = scenarioId === "zombie-survival"
+
     for (const id of initTimeoutsRef.current) clearTimeout(id)
     initTimeoutsRef.current = []
 
@@ -273,18 +301,20 @@ function PlayPageContent() {
     setInput("")
     setIsProcessing(false)
 
-    setIsLoadingBoard(true)
+    setIsLoadingBoard(shouldLoadBoard)
     setIsLoadingResources(true)
     setIsLoadingActions(true)
 
-    initTimeoutsRef.current.push(
-      setTimeout(() => {
-        if (resetVersionRef.current !== resetVersion) return
+    if (shouldLoadBoard) {
+      initTimeoutsRef.current.push(
+        setTimeout(() => {
+          if (resetVersionRef.current !== resetVersion) return
 
-        setBoard(init.board)
-        setIsLoadingBoard(false)
-      }, 350)
-    )
+          setBoard(init.board)
+          setIsLoadingBoard(false)
+        }, 350)
+      )
+    }
 
     initTimeoutsRef.current.push(
       setTimeout(() => {
@@ -343,7 +373,10 @@ function PlayPageContent() {
     })
   }, [])
 
-  const isInitializing = isLoadingBoard || isLoadingResources || isLoadingActions
+  const isInitializing =
+    (scenarioId === "zombie-survival" && isLoadingBoard) ||
+    isLoadingResources ||
+    isLoadingActions
   const isBusy = isProcessing || isInitializing
 
   const runAction = React.useCallback(
@@ -488,7 +521,12 @@ function PlayPageContent() {
           <button
             type="button"
             onClick={reset}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F] hover:text-[#0071E3]"
+            disabled={isBusy}
+            aria-disabled={isBusy || undefined}
+            className={cn(
+              "inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F]",
+              isBusy ? "cursor-not-allowed opacity-60" : "hover:text-[#0071E3]"
+            )}
           >
             <RotateCcw className="size-4" />
             Reset
@@ -507,10 +545,14 @@ function PlayPageContent() {
 
       <main className="pb-[96px]">
         <ComponentCanvas>
-          {isLoadingBoard || !board ? (
-            <LoadingCard title="Game Board" height="h-[520px]" />
+          {scenarioId === "zombie-survival" ? (
+            isLoadingBoard || !board ? (
+              <LoadingCard title="Game Board" height="h-[520px]" />
+            ) : (
+              <GameBoard {...board} />
+            )
           ) : (
-            <GameBoard {...board} />
+            <ScenarioBriefingCard scenario={scenario} />
           )}
 
           {isLoadingResources ? (
@@ -552,7 +594,13 @@ function PlayPageContent() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !isBusy) runAction(input)
+              if (e.key !== "Enter") return
+              if (isBusy) return
+              if (e.nativeEvent.isComposing) return
+              if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return
+
+              e.preventDefault()
+              runAction(input)
             }}
             disabled={isBusy}
             placeholder="Type your action..."
