@@ -3,21 +3,7 @@
 import { motion } from "framer-motion"
 import { ArrowRight } from "lucide-react"
 
-import type { ScenarioCategory } from "@/lib/scenarios"
-
-const categoryColors: Record<ScenarioCategory, string> = {
-  game: "#5E5CE6",
-  professional: "#0071E3",
-  simulation: "#34C759",
-  educational: "#FF9F0A",
-}
-
-const categoryLabels: Record<ScenarioCategory, string> = {
-  game: "Games",
-  professional: "Professional",
-  simulation: "Simulation",
-  educational: "Educational",
-}
+import { scenarioCategoryMeta, type ScenarioCategory } from "@/lib/scenarios"
 
 interface ScenarioCardProps {
   title: string
@@ -51,10 +37,10 @@ export function ScenarioCard({
       <div className="flex h-full flex-col">
         <div
           className="inline-flex w-fit items-center rounded-[8px] border-2 border-[#1D1D1F] px-4 py-2"
-          style={{ backgroundColor: categoryColors[category] }}
+          style={{ backgroundColor: scenarioCategoryMeta[category].color }}
         >
           <span className="text-[12px] font-bold uppercase tracking-wide text-white">
-            {categoryLabels[category]}
+            {scenarioCategoryMeta[category].label}
           </span>
         </div>
 
@@ -66,9 +52,9 @@ export function ScenarioCard({
 
         <div className="mt-auto">
           <div className="mb-4 flex flex-wrap gap-2">
-            {tags.slice(0, 3).map((tag) => (
+            {tags.slice(0, 3).map((tag, i) => (
               <span
-                key={tag}
+                key={`${tag}-${i}`}
                 className="rounded-[6px] border border-[#D2D2D7] bg-[#F5F5F7] px-3 py-1 text-[12px] text-[#6E6E73]"
               >
                 {tag}
@@ -86,32 +72,5 @@ export function ScenarioCard({
         </div>
       </div>
     </motion.button>
-  )
-}
-
-export function ScenarioCardSkeleton() {
-  return (
-    <div
-      className="h-[400px] w-full max-w-[320px] rounded-[16px] border-2 border-[#D2D2D7] bg-white p-6"
-      style={{ boxShadow: "4px 4px 0px #1D1D1F" }}
-    >
-      <div className="flex h-full animate-pulse flex-col">
-        <div className="h-8 w-28 rounded-[8px] border-2 border-[#1D1D1F] bg-[#D2D2D7]" />
-
-        <div className="mt-4 h-7 w-3/4 rounded bg-[#F5F5F7]" />
-        <div className="mt-3 h-4 w-full rounded bg-[#F5F5F7]" />
-        <div className="mt-2 h-4 w-11/12 rounded bg-[#F5F5F7]" />
-        <div className="mt-2 h-4 w-2/3 rounded bg-[#F5F5F7]" />
-
-        <div className="mt-auto">
-          <div className="mb-4 flex gap-2">
-            <div className="h-6 w-16 rounded-[6px] border border-[#D2D2D7] bg-[#F5F5F7]" />
-            <div className="h-6 w-20 rounded-[6px] border border-[#D2D2D7] bg-[#F5F5F7]" />
-            <div className="h-6 w-14 rounded-[6px] border border-[#D2D2D7] bg-[#F5F5F7]" />
-          </div>
-          <div className="h-12 w-full rounded-[8px] bg-[#1D1D1F]" />
-        </div>
-      </div>
-    </div>
   )
 }

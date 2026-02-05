@@ -2,10 +2,10 @@
 
 import { Inter } from "next/font/google"
 import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 
 import { CategoryFilter, type ScenarioCategoryFilter } from "@/components/scenarios/CategoryFilter"
-import { ScenarioCard, ScenarioCardSkeleton } from "@/components/scenarios/ScenarioCard"
+import { ScenarioCard } from "@/components/scenarios/ScenarioCard"
 import { scenarios } from "@/lib/scenarios"
 
 const inter = Inter({
@@ -17,20 +17,6 @@ export default function ScenariosPage() {
   const router = useRouter()
 
   const [category, setCategory] = useState<ScenarioCategoryFilter>("all")
-  const [isLoading, setIsLoading] = useState(true)
-  const [isFiltering, setIsFiltering] = useState(false)
-  const filterTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    const timeout = setTimeout(() => setIsLoading(false), 250)
-    return () => {
-      clearTimeout(timeout)
-      if (filterTimeoutRef.current) {
-        clearTimeout(filterTimeoutRef.current)
-        filterTimeoutRef.current = null
-      }
-    }
-  }, [])
 
   const filteredScenarios = useMemo(() => {
     if (category === "all") return scenarios
@@ -42,20 +28,17 @@ export default function ScenariosPage() {
   }
 
   const handleCategoryChange = (nextCategory: ScenarioCategoryFilter) => {
-    if (filterTimeoutRef.current) {
-      clearTimeout(filterTimeoutRef.current)
-      filterTimeoutRef.current = null
-    }
-    setIsFiltering(true)
     setCategory(nextCategory)
-
-    filterTimeoutRef.current = setTimeout(() => {
-      setIsFiltering(false)
-      filterTimeoutRef.current = null
-    }, 150)
   }
 
-  const showSkeletons = isLoading || isFiltering
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back()
+      return
+    }
+
+    router.push("/")
+  }
 
   return (
     <div className={`${inter.className} min-h-screen bg-[#F5F5F7] px-6 py-8`}>
@@ -71,7 +54,7 @@ export default function ScenariosPage() {
 
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={handleBack}
             className="text-[14px] font-semibold text-[#1D1D1F] transition-colors hover:text-[#0071E3]"
           >
             ← Back
@@ -93,23 +76,19 @@ export default function ScenariosPage() {
 
         <main>
           <div className="grid grid-cols-1 justify-items-center gap-8 md:grid-cols-2 xl:grid-cols-3">
-            {showSkeletons
-              ? Array.from({ length: 6 }).map((_, i) => (
-                  <ScenarioCardSkeleton key={i} />
-                ))
-              : filteredScenarios.map((scenario) => (
-                  <ScenarioCard
-                    key={scenario.id}
-                    title={scenario.title}
-                    description={scenario.description}
-                    category={scenario.category}
-                    tags={scenario.tags}
-                    onClick={() => handleSelectScenario(scenario.id)}
-                  />
-                ))}
+            {filteredScenarios.map((scenario) => (
+              <ScenarioCard
+                key={scenario.id}
+                title={scenario.title}
+                description={scenario.description}
+                category={scenario.category}
+                tags={scenario.tags}
+                onClick={() => handleSelectScenario(scenario.id)}
+              />
+            ))}
           </div>
 
-          {!showSkeletons && filteredScenarios.length === 0 && (
+          {filteredScenarios.length === 0 && (
             <div className="py-16 text-center">
               <p className="text-[16px] font-medium text-[#6E6E73]">
                 No scenarios in this category yet.

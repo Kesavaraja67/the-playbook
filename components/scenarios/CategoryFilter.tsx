@@ -1,15 +1,19 @@
 "use client"
 
-import type { ScenarioCategory } from "@/lib/scenarios"
+import {
+  scenarioCategoryMeta,
+  scenarioCategoryOrder,
+  type ScenarioCategory,
+} from "@/lib/scenarios"
 
 export type ScenarioCategoryFilter = "all" | ScenarioCategory
 
 const categories: Array<{ value: ScenarioCategoryFilter; label: string }> = [
   { value: "all", label: "All" },
-  { value: "game", label: "Games" },
-  { value: "professional", label: "Professional" },
-  { value: "simulation", label: "Simulation" },
-  { value: "educational", label: "Educational" },
+  ...scenarioCategoryOrder.map((value) => ({
+    value,
+    label: scenarioCategoryMeta[value].label,
+  })),
 ]
 
 interface CategoryFilterProps {

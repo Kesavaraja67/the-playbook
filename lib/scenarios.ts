@@ -21,6 +21,20 @@ export type ScenarioCategory =
   | "simulation"
   | "educational"
 
+export const scenarioCategoryOrder: readonly ScenarioCategory[] = [
+  "game",
+  "professional",
+  "simulation",
+  "educational",
+]
+
+export const scenarioCategoryMeta = {
+  game: { label: "Games", color: "#5E5CE6" },
+  professional: { label: "Professional", color: "#0071E3" },
+  simulation: { label: "Simulation", color: "#34C759" },
+  educational: { label: "Educational", color: "#FF9F0A" },
+} satisfies Record<ScenarioCategory, { label: string; color: string }>
+
 export const scenarios: Scenario[] = [
   {
     id: "zombie-survival",
