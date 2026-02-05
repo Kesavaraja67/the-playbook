@@ -6,7 +6,10 @@ import { ChevronDown, ChevronRight } from "lucide-react"
 import { componentCardClassName } from "@/components/play/ComponentCanvas"
 import { cn } from "@/lib/utils"
 
-const defaultStorageKey = "playbook.zombieSurvival.howToPlay.isOpen"
+const howToPlayStorageKey = "playbook.zombieSurvival.howToPlay.isOpen"
+
+const useIsomorphicLayoutEffect =
+  typeof window === "undefined" ? React.useEffect : React.useLayoutEffect
 
 export function HowToPlayPanel() {
   const [isOpen, setIsOpen] = React.useState(true)
@@ -14,9 +17,9 @@ export function HowToPlayPanel() {
   const labelId = `${panelId}-label`
   const contentId = `${panelId}-content`
 
-  React.useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     try {
-      const stored = window.localStorage.getItem(defaultStorageKey)
+      const stored = window.localStorage.getItem(howToPlayStorageKey)
       if (stored === "0") setIsOpen(false)
       if (stored === "1") setIsOpen(true)
     } catch {
@@ -28,7 +31,7 @@ export function HowToPlayPanel() {
     setIsOpen((prev) => {
       const next = !prev
       try {
-        window.localStorage.setItem(defaultStorageKey, next ? "1" : "0")
+        window.localStorage.setItem(howToPlayStorageKey, next ? "1" : "0")
       } catch {
         // Ignore storage errors (private mode, blocked, etc.)
       }
