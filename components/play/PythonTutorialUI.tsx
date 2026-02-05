@@ -37,8 +37,13 @@ type TutorialStepConfig = {
   validate: (code: string) => TutorialValidatorResult
 }
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
 function hasStringAssignment(code: string, variableName: string) {
-  const re = new RegExp(`(^|\\n)\\s*${variableName}\\s*=\\s*(['\"]).*\\2`, "m")
+  const name = escapeRegExp(variableName)
+  const re = new RegExp(`(^|\\n)\\s*${name}\\s*=\\s*(['\"]).*\\2`, "m")
   return re.test(code)
 }
 
