@@ -454,21 +454,27 @@ function PlayPageContent() {
   const isBusy = isProcessing || isInitializing
   const canReset = !isBusy
 
-  const runAction = (actionIdOrText: string) => {
-    if (!actionIdOrText.trim() || isBusy) return
+  const runAction = (
+    actionIdOrText: string,
+    options?: {
+      clearInput?: boolean
+    }
+  ) => {
+    const trimmed = actionIdOrText.trim()
+    if (!trimmed || isBusy) return
 
     const scenarioAtCall = scenarioId
       const totalDaysAtCall = totalDays
       const resetVersionAtCall = resetVersionRef.current
-      const normalized = actionIdOrText.toLowerCase()
+      const normalized = trimmed.toLowerCase()
       const userText =
-        actions.find((a) => a.id === actionIdOrText)?.label ?? actionIdOrText
+        actions.find((a) => a.id === actionIdOrText)?.label ?? trimmed
 
       setMessages((prev) => {
         const next = [...prev, { role: "user" as const, content: userText }]
         return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
       })
-      setInput("")
+      if (options?.clearInput !== false) setInput("")
       setIsProcessing(true)
 
       const timeoutId = setTimeout(() => {
@@ -552,6 +558,15 @@ function PlayPageContent() {
       }, 650)
 
       actionTimeoutsRef.current.push(timeoutId)
+  }
+
+  const trySubmitNegotiationInput = (e?: React.SyntheticEvent) => {
+    const text = input.trim()
+    if (!text || isBusy) return
+
+    e?.preventDefault()
+    setInput("")
+    runAction(text, { clearInput: false })
   }
 
   if (!scenario) {
@@ -736,10 +751,7 @@ function PlayPageContent() {
 
                         if (!isPlainEnter) return
                         if (e.nativeEvent.isComposing) return
-                        if (!input.trim()) return
-
-                        e.preventDefault()
-                        runAction(input)
+                        trySubmitNegotiationInput(e)
                       }}
                       disabled={isBusy}
                       placeholder="Write your response…"
@@ -747,9 +759,7 @@ function PlayPageContent() {
                     />
                     <button
                       type="button"
-                      onClick={() => {
-                        if (!isBusy) runAction(input)
-                      }}
+                      onClick={trySubmitNegotiationInput}
                       disabled={isBusy || !input.trim()}
                       className={cn(
                         "grid size-12 place-items-center rounded-lg",
