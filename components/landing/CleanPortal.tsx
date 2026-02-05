@@ -1,6 +1,6 @@
 "use client"
 
-import { AnimatePresence, motion } from "framer-motion"
+import { motion } from "framer-motion"
 import { Inter } from "next/font/google"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -23,9 +23,7 @@ export function CleanPortal() {
 
     setPlaybookTransitionFlag()
 
-    setTimeout(() => {
-      router.push("/scenarios")
-    }, 200)
+    router.push("/scenarios")
   }
 
   return (
@@ -72,19 +70,6 @@ export function CleanPortal() {
       >
         Powered by Tambo AI
       </motion.p>
-
-      <AnimatePresence>
-        {isTransitioning && (
-          <motion.div
-            key="transition"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 bg-white"
-          />
-        )}
-      </AnimatePresence>
     </div>
   )
 }

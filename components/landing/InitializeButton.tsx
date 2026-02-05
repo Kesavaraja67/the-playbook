@@ -12,7 +12,8 @@ export function InitializeButton({ onClick, disabled }: InitializeButtonProps) {
   const [isPressed, setIsPressed] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const shouldReduceMotion = useReducedMotion()
-  const allowHover = !disabled && !isPressed
+  const isButtonDisabled = Boolean(disabled) || isPressed
+  const allowHover = !isButtonDisabled
 
   useEffect(() => {
     return () => {
@@ -24,17 +25,22 @@ export function InitializeButton({ onClick, disabled }: InitializeButtonProps) {
   return (
     <motion.button
       type="button"
-      disabled={disabled}
-      aria-disabled={disabled}
+      disabled={isButtonDisabled}
       aria-label="Initialize and view scenarios"
       onClick={() => {
-        if (disabled) return
+        if (isButtonDisabled) return
         setIsPressed(true)
 
         if (timeoutRef.current !== null) {
           clearTimeout(timeoutRef.current)
         }
-        timeoutRef.current = setTimeout(onClick, 100)
+        timeoutRef.current = setTimeout(() => {
+          try {
+            onClick()
+          } finally {
+            setIsPressed(false)
+          }
+        }, 100)
       }}
       className="relative rounded-full border-4 font-bold text-2xl text-white select-none w-[160px] h-[160px] md:w-[200px] md:h-[200px]"
       style={{
@@ -55,13 +61,13 @@ export function InitializeButton({ onClick, disabled }: InitializeButtonProps) {
         boxShadow: isPressed ? "0px 0px 0px #1D1D1F" : "8px 8px 0px #1D1D1F",
         x: isPressed ? 8 : 0,
         y: isPressed ? 8 : 0,
-        scale: disabled || shouldReduceMotion ? 1 : [1, 1.02, 1],
+        scale: disabled || shouldReduceMotion || isPressed ? 1 : [1, 1.02, 1],
       }}
       transition={{
         boxShadow: { duration: 0.1 },
         x: { duration: 0.1 },
         y: { duration: 0.1 },
-        scale: disabled || shouldReduceMotion
+        scale: disabled || shouldReduceMotion || isPressed
           ? { duration: 0 }
           : {
               duration: 2,

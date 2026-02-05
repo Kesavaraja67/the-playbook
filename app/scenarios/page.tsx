@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { scenarios, getDifficultyColor } from "@/lib/scenarios"
 import { consumePlaybookTransitionFlag } from "@/lib/transitionOverlay"
 import { Badge } from "@/components/ui/badge"
@@ -10,16 +10,9 @@ import { Card } from "@/components/ui/card"
 
 export default function ScenariosPage() {
   const router = useRouter()
-  const [showTransitionOverlay, setShowTransitionOverlay] = useState(false)
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      if (!consumePlaybookTransitionFlag()) return
-      setShowTransitionOverlay(true)
-    }, 0)
-
-    return () => window.clearTimeout(timer)
-  }, [])
+  const [showTransitionOverlay, setShowTransitionOverlay] = useState(() =>
+    consumePlaybookTransitionFlag(),
+  )
 
   const handleSelectScenario = (scenarioId: string) => {
     router.push(`/play?scenario=${scenarioId}`)

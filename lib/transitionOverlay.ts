@@ -1,4 +1,4 @@
-export const PLAYBOOK_TRANSITION_STORAGE_KEY = "playbook:transition"
+export const PLAYBOOK_TRANSITION_STORAGE_KEY = "the-playbook:transition-overlay:v1"
 
 export function setPlaybookTransitionFlag() {
   if (typeof window === "undefined") return
