@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { useEffect, useRef } from "react"
+import { useRef } from "react"
 
 interface Position {
   x: number

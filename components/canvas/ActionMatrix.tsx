@@ -1,7 +1,6 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
 
 interface Action {
   id: string
@@ -14,7 +13,7 @@ interface Action {
 
 interface ActionMatrixProps {
   actions: Action[]
-  onActionClick: (actionId: string) => void
+  onActionClick?: (actionId: string) => void
 }
 
 /**
@@ -55,7 +54,7 @@ export function ActionMatrix({ actions, onActionClick }: ActionMatrixProps) {
             key={action.id}
             action={action}
             index={index}
-            onClick={() => onActionClick(action.id)}
+            onClick={() => onActionClick?.(action.id)}
           />
         ))}
       </div>

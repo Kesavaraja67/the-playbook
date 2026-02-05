@@ -1,11 +1,24 @@
+"use client"
+
+import type { TamboComponent } from "@tambo-ai/react"
+
+import { ActionMatrix, actionMatrixSchema } from "@/components/tambo/ActionMatrix"
+import { GameBoard, gameBoardSchema } from "@/components/tambo/GameBoard"
+import { ResourceMeter, resourceMeterSchema } from "@/components/tambo/ResourceMeter"
+import { TacticalAlert, tacticalAlertSchema } from "@/components/tambo/TacticalAlert"
+
 /**
- * Tambo SDK Configuration
- */
+* Tambo SDK Configuration
+*/
 
 // Ensure API key is available
 export const TAMBO_API_KEY = process.env.NEXT_PUBLIC_TAMBO_API_KEY
 
-if (!TAMBO_API_KEY && typeof window === "undefined") {
+if (
+  !TAMBO_API_KEY &&
+  process.env.NODE_ENV !== "production" &&
+  typeof window === "undefined"
+) {
   console.warn("NEXT_PUBLIC_TAMBO_API_KEY is not set in environment variables")
 }
 
@@ -13,6 +26,17 @@ if (!TAMBO_API_KEY && typeof window === "undefined") {
  * System prompt for The Playbook - Reality Forge V4.0
  */
 export const PLAYBOOK_SYSTEM_PROMPT = `You are the AI Game Master for "Reality Forge V4.0" - a generative UI simulation engine.
+
+CRITICAL: You MUST render visual components, not just text.
+
+Every turn, you should:
+1. Render GameBoard showing current positions and movement options
+2. Render ResourceMeter showing current stats
+3. Render ActionMatrix with 4-6 available actions
+4. Use TacticalAlert only for high-priority warnings/hints/info
+5. Add a SHORT text response (1-2 sentences max)
+
+ALWAYS render components FIRST, then minimal text. Show, don't tell.
 
 Your role is to:
 1. Generate visual canvas components dynamically based on user actions
@@ -40,6 +64,85 @@ GENERATION RULES:
 - Provide meaningful data that advances the narrative
 
 Be creative, visually engaging, and maintain immersion with the chosen scenario.`
+
+/**
+* Registered visual components for Tambo.
+*/
+export const components: TamboComponent[] = [
+  {
+    name: "GameBoard",
+    description: `Render a visual game board showing spatial relationships.
+
+ALWAYS use this component to show:
+- Player current position
+- Enemy/zombie locations
+- Resource/loot locations
+- Movement options
+
+Update this component EVERY turn to show new positions.
+
+Example usage:
+User: "I move to the building"
+You should:
+1. Render GameBoard with updated playerPosition
+2. Show enemies between player and destination
+3. Then add short text: "You move cautiously..."`,
+    component: GameBoard,
+    propsSchema: gameBoardSchema,
+  },
+  {
+    name: "ResourceMeter",
+    description: `Display current resource levels as circular gauges.
+
+ALWAYS use this component to show:
+- Health (red)
+- Ammo/Power (orange)
+- Food (green)
+- Water (blue)
+
+Update this component EVERY time resources change.
+
+Example:
+User: "I eat some food"
+You should:
+1. Render ResourceMeter with food -1, health +5
+2. Then text: "You feel slightly better"`,
+    component: ResourceMeter,
+    propsSchema: resourceMeterSchema,
+  },
+  {
+    name: "ActionMatrix",
+    description: `Display available actions as an interactive button grid.
+
+Show 4-6 actions with:
+- Icon
+- Name
+- Resource costs
+- Success probability
+
+Update when context changes.
+
+Example:
+In combat: [Attack] [Defend] [Flee] [Use Item]
+Exploring: [Scavenge] [Rest] [Move] [Craft]`,
+    component: ActionMatrix,
+    propsSchema: actionMatrixSchema,
+  },
+  {
+    name: "TacticalAlert",
+    description: `Show urgent warnings or tips.
+
+Types:
+- warning: Immediate danger
+- info: Mechanics explanation
+- danger: Immediate threat requiring action
+- success: Achievement unlocked
+
+Use sparingly for HIGH PRIORITY info.`,
+    component: TacticalAlert,
+    propsSchema: tacticalAlertSchema,
+  },
+]
 
 /**
  * MCP Resource definitions

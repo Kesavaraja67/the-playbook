@@ -122,7 +122,7 @@ function SuspectCard({
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1">
           <h5 className="text-sm font-semibold text-white mb-1">{suspect.name}</h5>
-          <p className="text-xs text-slate-400 italic">"{suspect.alibi}"</p>
+          <p className="text-xs text-slate-400 italic">“{suspect.alibi}”</p>
         </div>
         <div className="flex flex-col items-end gap-1">
           <span className="text-xs text-slate-500">Suspicion</span>
