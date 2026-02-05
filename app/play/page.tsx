@@ -51,6 +51,21 @@ type InitialState = {
   alert: TacticalAlertState | null
 }
 
+const panelTitlesByScenarioId: Record<string, { resources: string; actions: string }> = {
+  "salary-negotiation": {
+    resources: "Negotiation Signals",
+    actions: "Talking Points",
+  },
+  "space-station": {
+    resources: "Station Telemetry",
+    actions: "Command Deck",
+  },
+  "detective-mystery": {
+    resources: "Case Metrics",
+    actions: "Investigation Notebook",
+  },
+}
+
 function clamp(min: number, value: number, max: number) {
   if (!Number.isFinite(value)) return min
   return Math.max(min, Math.min(max, value))
@@ -274,6 +289,9 @@ function PlayPageContent() {
   const scenarioId = searchParams.get("scenario") || "zombie-survival"
   const scenario = getScenarioById(scenarioId)
   const isBoardScenario = scenario?.layout === "board"
+  const panelTitles = panelTitlesByScenarioId[scenarioId]
+  const resourcesPanelTitle = isBoardScenario ? "Resources" : (panelTitles?.resources ?? "Resources")
+  const actionsPanelTitle = isBoardScenario ? "Actions" : (panelTitles?.actions ?? "Actions")
 
   const [day, setDay] = React.useState(1)
   const [totalDays, setTotalDays] = React.useState(7)
@@ -587,17 +605,7 @@ function PlayPageContent() {
 
           {isLoadingResources ? (
             <LoadingCard
-              title={
-                isBoardScenario
-                  ? "Resources"
-                  : scenarioId === "salary-negotiation"
-                    ? "Negotiation Signals"
-                    : scenarioId === "space-station"
-                      ? "Station Telemetry"
-                      : scenarioId === "detective-mystery"
-                        ? "Case Metrics"
-                        : "Resources"
-              }
+              title={resourcesPanelTitle}
               height="h-[220px]"
             />
           ) : isBoardScenario ? (
@@ -614,17 +622,7 @@ function PlayPageContent() {
 
           {isLoadingActions ? (
             <LoadingCard
-              title={
-                isBoardScenario
-                  ? "Actions"
-                  : scenarioId === "salary-negotiation"
-                    ? "Talking Points"
-                    : scenarioId === "space-station"
-                      ? "Command Deck"
-                      : scenarioId === "detective-mystery"
-                        ? "Investigation Notebook"
-                        : "Actions"
-              }
+              title={actionsPanelTitle}
               height="h-[220px]"
             />
           ) : isBoardScenario ? (

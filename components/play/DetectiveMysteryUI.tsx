@@ -173,51 +173,59 @@ export function DetectiveMysteryActions({
       </div>
 
       <div className="mt-4 space-y-3">
-        {actions.map((action) => (
-          <button
-            key={action.id}
-            type="button"
-            disabled={disabled}
-            onClick={() => {
-              if (disabled) return
-              onActionClick(action.id)
-            }}
-            className={cn(
-              "w-full rounded-lg border-2 border-[#D2D2D7] bg-[#F5F5F7] p-4 text-left",
-              "shadow-[2px_2px_0px_#1D1D1F] transition-all",
-              disabled
-                ? "cursor-not-allowed opacity-60"
-                : "hover:border-[#0071E3] hover:-translate-y-0.5"
-            )}
-          >
-            <div className="flex items-start gap-3">
-              <div
-                className="mt-1 grid size-6 place-items-center rounded-md border-2 border-[#1D1D1F] bg-white text-sm font-bold"
-                aria-hidden
-              >
-                ✓
-              </div>
-              <div className="flex-1">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-bold text-[#1D1D1F]">
-                      {action.icon} {action.label}
+        {actions.map((action) => {
+          const rawSuccessRate = action.successRate
+          const successRate =
+            typeof rawSuccessRate === "number" && Number.isFinite(rawSuccessRate)
+              ? Math.max(0, Math.min(100, rawSuccessRate))
+              : null
+
+          return (
+            <button
+              key={action.id}
+              type="button"
+              disabled={disabled}
+              onClick={() => {
+                if (disabled) return
+                onActionClick(action.id)
+              }}
+              className={cn(
+                "w-full rounded-lg border-2 border-[#D2D2D7] bg-[#F5F5F7] p-4 text-left",
+                "shadow-[2px_2px_0px_#1D1D1F] transition-all",
+                disabled
+                  ? "cursor-not-allowed opacity-60"
+                  : "hover:border-[#0071E3] hover:-translate-y-0.5"
+              )}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className="mt-1 grid size-6 place-items-center rounded-md border-2 border-[#1D1D1F] bg-white text-sm font-bold"
+                  aria-hidden
+                >
+                  ✓
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-bold text-[#1D1D1F]">
+                        {action.icon} {action.label}
+                      </div>
+                      <div className="mt-1 text-xs text-[#6E6E73]">
+                        {actionHints[action.id] ?? "Document what you learn and follow the trail."}
+                      </div>
                     </div>
-                    <div className="mt-1 text-xs text-[#6E6E73]">
-                      {actionHints[action.id] ?? "Document what you learn and follow the trail."}
-                    </div>
+                    {typeof successRate === "number" && (
+                      <div className="shrink-0 text-right">
+                        <div className="text-[11px] font-semibold text-[#6E6E73]">Success</div>
+                        <div className="text-sm font-bold text-[#1D1D1F]">{Math.round(successRate)}%</div>
+                      </div>
+                    )}
                   </div>
-                  {typeof action.successRate === "number" && (
-                    <div className="shrink-0 text-right">
-                      <div className="text-[11px] font-semibold text-[#6E6E73]">Success</div>
-                      <div className="text-sm font-bold text-[#1D1D1F]">{Math.round(action.successRate)}%</div>
-                    </div>
-                  )}
                 </div>
               </div>
-            </div>
-          </button>
-        ))}
+            </button>
+          )
+        })}
       </div>
     </section>
   )
