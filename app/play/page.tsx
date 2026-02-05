@@ -1396,7 +1396,7 @@ function StandardPlayPageContent({
                     className="mt-4"
                     value={input}
                     onChange={setInput}
-                    onSubmit={() => runAction(input)}
+                    onSubmit={(value) => runAction(value)}
                     disabled={isBusy}
                     placeholder="Write your response…"
                     multiline
@@ -1536,7 +1536,7 @@ function StandardPlayPageContent({
             <VoiceInput
               value={input}
               onChange={setInput}
-              onSubmit={() => runAction(input)}
+              onSubmit={(value) => runAction(value)}
               disabled={isBusy}
               placeholder={scenarioId === "space-station" ? "Type your decision..." : "Type your action..."}
               inputClassName="rounded-full bg-white border-[#D2D2D7] focus:border-[#0071E3]"

@@ -7,12 +7,13 @@ import { useTamboVoice } from "@tambo-ai/react"
 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { HAS_TAMBO_API_KEY } from "@/lib/config"
 import { cn } from "@/lib/utils"
 
 type VoiceInputProps = {
   value: string
   onChange: (value: string) => void
-  onSubmit: () => void
+  onSubmit: (value: string) => void
   disabled?: boolean
   placeholder?: string
   multiline?: boolean
@@ -77,8 +78,12 @@ export function VoiceInput({
     setMediaRecorderSupported(typeof window !== "undefined" && "MediaRecorder" in window)
   }, [])
 
-  const hasTamboApiKey = Boolean(process.env.NEXT_PUBLIC_TAMBO_API_KEY)
-  const voiceMode = speechSupported ? "speech" : hasTamboApiKey && mediaRecorderSupported ? "tambo" : "none"
+  const voiceMode = React.useMemo<"speech" | "tambo" | "none">(() => {
+    if (speechSupported) return "speech"
+    if (HAS_TAMBO_API_KEY && mediaRecorderSupported) return "tambo"
+    return "none"
+  }, [mediaRecorderSupported, speechSupported])
+
   const isListening = isSpeechListening || isRecording
   const isBusy = disabled || isTranscribing
 
@@ -208,15 +213,14 @@ export function VoiceInput({
   }, [stopRecording, stopSpeechRecognition, voiceMode])
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const isPlainEnter =
-      e.key === "Enter" && !e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey
-
-    if (!isPlainEnter) return
-    if (multiline && e.shiftKey) return
     if (e.nativeEvent.isComposing) return
 
+    if (e.key !== "Enter") return
+    if (e.shiftKey) return
+    if (e.altKey || e.ctrlKey || e.metaKey) return
+
     e.preventDefault()
-    if (!isBusy && !isListening && value.trim()) onSubmit()
+    if (!isBusy && !isListening && value.trim()) onSubmit(value)
   }
 
   const canSubmit = Boolean(value.trim()) && !isBusy && !isListening
@@ -251,7 +255,7 @@ export function VoiceInput({
             />
           )}
 
-          {value && !isBusy && !isListening && (
+          {!multiline && value && !isBusy && !isListening && (
             <button
               type="button"
               onClick={() => onChange("")}
@@ -279,7 +283,7 @@ export function VoiceInput({
         <Button
           type="button"
           size={sendLabel ? "default" : "icon-lg"}
-          onClick={onSubmit}
+          onClick={() => onSubmit(value)}
           disabled={!canSubmit}
           aria-label="Send"
         >

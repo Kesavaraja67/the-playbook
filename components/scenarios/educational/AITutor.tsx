@@ -123,7 +123,7 @@ export function AITutor({ stepIndex, stepTitle, stepHint }: AITutorProps) {
         className="mt-4"
         value={input}
         onChange={setInput}
-        onSubmit={() => send(input)}
+        onSubmit={(value) => send(value)}
         placeholder="Ask a question…"
         sendLabel="Send"
         inputClassName={cn(
