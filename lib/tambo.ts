@@ -74,9 +74,11 @@ export const PLAYBOOK_TOOLS = [
     description: "Generate an interactive game board. Props: playerPosition, enemies, resources, gridSize.",
     parameters: {
       type: "object",
+      additionalProperties: false,
       properties: {
         playerPosition: {
           type: "object",
+          additionalProperties: false,
           properties: {
             x: { type: "number" },
             y: { type: "number" }
@@ -87,24 +89,28 @@ export const PLAYBOOK_TOOLS = [
           type: "array",
           items: {
             type: "object",
+            additionalProperties: false,
             properties: {
               x: { type: "number" },
               y: { type: "number" },
               type: { type: "string" },
               label: { type: "string" }
-            }
+            },
+            required: ["x", "y"]
           }
         },
         resources: {
           type: "array",
           items: {
             type: "object",
+            additionalProperties: false,
             properties: {
               x: { type: "number" },
               y: { type: "number" },
               type: { type: "string" },
               label: { type: "string" }
-            }
+            },
+            required: ["x", "y"]
           }
         },
         gridSize: { type: "number" }

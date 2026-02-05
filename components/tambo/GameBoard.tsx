@@ -38,6 +38,20 @@ function getMarkerLabel(marker: Marker, fallback: string) {
   return marker.label ?? marker.type ?? fallback
 }
 
+function iconForEnemy(marker: Marker) {
+  const t = `${marker.type ?? ""} ${marker.label ?? ""}`.toLowerCase()
+  if (t.includes("failure")) return "⚠️"
+  if (t.includes("suspect")) return "🕵️"
+  return "🧟"
+}
+
+function iconForResource(marker: Marker) {
+  const t = `${marker.type ?? ""} ${marker.label ?? ""}`.toLowerCase()
+  if (t.includes("spare") || t.includes("part")) return "🧰"
+  if (t.includes("evidence")) return "🧾"
+  return "📦"
+}
+
 function MarkerDot({
   x,
   y,
@@ -100,7 +114,7 @@ export function GameBoard({
   }
 
   return (
-    <section className={cn(componentCardClassName, "min-h-[600px]")}>
+    <section className={componentCardClassName}>
       <h3 className="text-[#1D1D1F] text-xl font-bold mb-4">🎮 Game Board</h3>
 
       <div className="flex justify-center">
@@ -134,7 +148,7 @@ export function GameBoard({
                 x={clampToGrid(enemy.x, safeGridSize)}
                 y={clampToGrid(enemy.y, safeGridSize)}
                 cellSize={cellSize}
-                icon="🧟"
+                icon={iconForEnemy(enemy)}
                 bg="#FF3B30"
                 label={getMarkerLabel(enemy, "Enemy")}
                 className="animate-pulse"
@@ -147,7 +161,7 @@ export function GameBoard({
                 x={clampToGrid(resource.x, safeGridSize)}
                 y={clampToGrid(resource.y, safeGridSize)}
                 cellSize={cellSize}
-                icon="📦"
+                icon={iconForResource(resource)}
                 bg="#34C759"
                 label={getMarkerLabel(resource, "Loot")}
               />
@@ -176,7 +190,7 @@ export function GameBoard({
             className="size-6 rounded-full border-2 border-[#1D1D1F]"
             style={{ backgroundColor: "#34C759" }}
           />
-          <span>Loot</span>
+          <span>Resources</span>
         </div>
       </div>
     </section>

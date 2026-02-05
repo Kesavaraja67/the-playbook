@@ -26,6 +26,7 @@ export const actionMatrixSchema = z.object({
 
 export type ActionMatrixProps = z.input<typeof actionMatrixSchema> & {
   onActionClick?: (id: string) => void
+  disabled?: boolean
 }
 
 type Action = z.infer<typeof actionSchema>
@@ -35,8 +36,14 @@ function formatCosts(costs: Action["costs"]) {
   return costs.map((c) => `${c.resource} -${c.amount}`).join(" • ")
 }
 
-export function ActionMatrix({ actions, onActionClick }: ActionMatrixProps) {
+export function ActionMatrix({ actions, onActionClick, disabled = false }: ActionMatrixProps) {
   const [activeActionId, setActiveActionId] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    if (!activeActionId) return
+    if (actions.some((a) => a.id === activeActionId)) return
+    setActiveActionId(null)
+  }, [actions, activeActionId])
 
   return (
     <section className={componentCardClassName}>
@@ -52,6 +59,7 @@ export function ActionMatrix({ actions, onActionClick }: ActionMatrixProps) {
             <button
               key={action.id}
               type="button"
+              disabled={disabled}
               onClick={() => {
                 setActiveActionId(action.id)
                 onActionClick?.(action.id)
@@ -59,9 +67,12 @@ export function ActionMatrix({ actions, onActionClick }: ActionMatrixProps) {
               className={cn(
                 "rounded-lg border-2 p-4 text-left transition-all",
                 "shadow-[2px_2px_0px_#1D1D1F]",
+                disabled && "cursor-not-allowed opacity-60",
                 isActive
                   ? "border-[#0071E3] bg-[#0071E3] text-white"
-                  : "border-[#D2D2D7] bg-[#F5F5F7] text-[#1D1D1F] hover:border-[#0071E3] hover:-translate-y-0.5"
+                  : disabled
+                    ? "border-[#D2D2D7] bg-[#F5F5F7] text-[#1D1D1F]"
+                    : "border-[#D2D2D7] bg-[#F5F5F7] text-[#1D1D1F] hover:border-[#0071E3] hover:-translate-y-0.5"
               )}
             >
               <div className="flex items-start justify-between gap-2">

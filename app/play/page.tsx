@@ -57,6 +57,8 @@ function getZombieInitialState(): InitialState {
     { name: "Ammo", value: 12, color: "#FF9F0A", icon: "🔫" },
     { name: "Food", value: 3, color: "#34C759", icon: "🍖" },
     { name: "Water", value: 2, color: "#0071E3", icon: "💧" },
+    { name: "Energy", value: 70, color: "#AF52DE", icon: "⚡" },
+    { name: "Materials", value: 40, color: "#8E8E93", icon: "🧱" },
   ]
 
   const actions: Action[] = [
@@ -236,12 +238,16 @@ function PlayPageContent() {
   const [isLoadingActions, setIsLoadingActions] = React.useState(true)
 
   const initTimeoutsRef = React.useRef<Array<ReturnType<typeof setTimeout>>>([])
+  const actionTimeoutsRef = React.useRef<Array<ReturnType<typeof setTimeout>>>([])
   const resetVersionRef = React.useRef(0)
 
   React.useEffect(() => {
     return () => {
       for (const id of initTimeoutsRef.current) clearTimeout(id)
       initTimeoutsRef.current = []
+
+      for (const id of actionTimeoutsRef.current) clearTimeout(id)
+      actionTimeoutsRef.current = []
     }
   }, [])
 
@@ -252,13 +258,16 @@ function PlayPageContent() {
     for (const id of initTimeoutsRef.current) clearTimeout(id)
     initTimeoutsRef.current = []
 
+    for (const id of actionTimeoutsRef.current) clearTimeout(id)
+    actionTimeoutsRef.current = []
+
     const init = getInitialState(scenarioId)
 
     setDay(init.day)
     setTotalDays(init.totalDays)
-    setBoard(null)
-    setResources([])
-    setActions([])
+    setBoard(init.board)
+    setResources(init.resources)
+    setActions(init.actions)
     setMessages(init.messages)
     setAlert(init.alert)
     setInput("")
@@ -272,8 +281,7 @@ function PlayPageContent() {
       setTimeout(() => {
         if (resetVersionRef.current !== resetVersion) return
 
-      setBoard(init.board)
-      setIsLoadingBoard(false)
+        setIsLoadingBoard(false)
       }, 350)
     )
 
@@ -281,8 +289,7 @@ function PlayPageContent() {
       setTimeout(() => {
         if (resetVersionRef.current !== resetVersion) return
 
-      setResources(init.resources)
-      setIsLoadingResources(false)
+        setIsLoadingResources(false)
       }, 450)
     )
 
@@ -290,8 +297,7 @@ function PlayPageContent() {
       setTimeout(() => {
         if (resetVersionRef.current !== resetVersion) return
 
-      setActions(init.actions)
-      setIsLoadingActions(false)
+        setIsLoadingActions(false)
       }, 550)
     )
   }, [scenarioId])
@@ -334,9 +340,11 @@ function PlayPageContent() {
     })
   }, [])
 
+  const isInitializing = isLoadingBoard || isLoadingResources || isLoadingActions
+
   const runAction = React.useCallback(
     (actionIdOrText: string) => {
-      if (!actionIdOrText.trim() || isProcessing) return
+      if (!actionIdOrText.trim() || isProcessing || isInitializing) return
 
       const scenarioAtCall = scenarioId
       const totalDaysAtCall = totalDays
@@ -352,7 +360,8 @@ function PlayPageContent() {
       setInput("")
       setIsProcessing(true)
 
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
+        actionTimeoutsRef.current = actionTimeoutsRef.current.filter((id) => id !== timeoutId)
         if (resetVersionRef.current !== resetVersionAtCall) return
 
         const aiResponse = generateMockResponse(userText, scenarioAtCall)
@@ -430,8 +439,10 @@ function PlayPageContent() {
 
         setIsProcessing(false)
       }, 650)
+
+      actionTimeoutsRef.current.push(timeoutId)
     },
-    [actions, isProcessing, nudgePlayer, scenarioId, totalDays, updateResource]
+    [actions, isInitializing, isProcessing, nudgePlayer, scenarioId, totalDays, updateResource]
   )
 
   if (!scenario) {
@@ -507,7 +518,11 @@ function PlayPageContent() {
           {isLoadingActions ? (
             <LoadingCard title="Actions" height="h-[220px]" />
           ) : (
-            <ActionMatrix actions={actions} onActionClick={runAction} />
+            <ActionMatrix
+              actions={actions}
+              onActionClick={runAction}
+              disabled={isProcessing || isInitializing}
+            />
           )}
 
           <section className={cn(componentCardClassName, "mt-4 p-4")}>
@@ -535,7 +550,7 @@ function PlayPageContent() {
             onKeyDown={(e) => {
               if (e.key === "Enter") runAction(input)
             }}
-            disabled={isProcessing}
+            disabled={isProcessing || isInitializing}
             placeholder="Type your action..."
             className={cn(
               "h-12 flex-1 rounded-full border-2 border-[#D2D2D7] bg-white px-4",
@@ -547,7 +562,7 @@ function PlayPageContent() {
           <button
             type="button"
             onClick={() => runAction(input)}
-            disabled={isProcessing}
+            disabled={isProcessing || isInitializing}
             className={cn(
               "grid size-12 place-items-center rounded-lg",
               "bg-[#0071E3] text-white",
