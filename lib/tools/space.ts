@@ -11,6 +11,8 @@ const stationSystemSchema = z.enum([
   "life_support",
 ])
 
+const systemStatusSchema = z.enum(["online", "degraded", "offline"])
+
 const commsStatusSchema = z.enum(["online", "degraded", "offline"])
 
 const rationLevelSchema = z.enum(["light", "moderate", "severe"])
@@ -25,7 +27,7 @@ export const repairSystemTool = defineTool({
   }),
   outputSchema: z.object({
     repairSuccess: z.boolean(),
-    systemStatus: z.enum(["online", "degraded", "offline"]),
+    systemStatus: systemStatusSchema,
     powerConsumed: z.number(),
     timeSpent: z.number(),
     crewMoraleImpact: z.number(),
@@ -44,7 +46,7 @@ export const repairSystemTool = defineTool({
     const successChance = needed <= 0 ? 0 : Math.min(0.95, powerAllocated / needed)
     const repairSuccess = successCheck(successChance)
 
-    let systemStatus: z.infer<typeof commsStatusSchema>
+    let systemStatus: z.infer<typeof systemStatusSchema>
     let description: string
 
     if (repairSuccess) {

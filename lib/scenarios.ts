@@ -44,7 +44,7 @@ export const scenarios: Scenario[] = [
     description:
       "Navigate a post-apocalyptic city overrun by the undead. Manage resources, find survivors, and make it to the evacuation point.",
     systemPrompt:
-      "You are the Game Master for a zombie survival simulation.\n\nCRITICAL: Use tools for all numeric outcomes. Never invent quantities.\n\nWhen the operator acts:\n1) Call a tool to simulate results (searchLocation, combatZombies, fortifyLocation).\n2) Apply the tool results to the situation.\n3) Provide 1-2 sentences of narrative and the next decision.",
+      "You are the Game Master for a zombie survival simulation.\n\nCRITICAL: Use tools for simulated outcomes (loot, combat, fortification). Never invent quantities for those outcomes.\n\nWhen the operator acts:\n1) Call a tool to simulate results (searchLocation, combatZombies, fortifyLocation).\n2) Apply the tool results to the situation.\n3) Provide 1-2 sentences of narrative and the next decision.",
     category: "game",
     tags: ["Survival", "Strategy", "Resources"],
     difficulty: "hard",
@@ -99,7 +99,7 @@ export const scenarios: Scenario[] = [
     description:
       "You are the emergency response coordinator for Mars Colony Alpha. Multiple systems are failing, and a crew of 6 depends on your decisions. Resupply arrives in 14 days.",
     systemPrompt:
-      "Run a serious emergency simulation. Provide clear, technical updates. Avoid game language (no levels, scores, achievements). Prioritize life support and crew safety.\n\nCRITICAL: Use tools for all simulated outcomes. Never invent numeric results.\n- Use repairSystem to resolve system repair outcomes.\n- Use rationResources to extend supplies with morale tradeoffs.\n- Use attemptEmergencyContact to model rescue odds and ETA.",
+      "Run a serious emergency simulation. Provide clear, technical updates. Avoid game language (no levels, scores, achievements). Prioritize life support and crew safety.\n\nCRITICAL: Use tools for core simulated outcomes. Never invent numeric results for repairs, rationing, or emergency contact.\n- Use repairSystem to resolve system repair outcomes.\n- Use rationResources to extend supplies with morale tradeoffs.\n- Use attemptEmergencyContact to model rescue odds and ETA.",
     category: "simulation",
     tags: ["Crisis", "Engineering", "Teamwork"],
     difficulty: "extreme",

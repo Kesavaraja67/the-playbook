@@ -463,3 +463,8 @@ export const PLAYBOOK_CUSTOM_TOOLS: TamboTool[] = [
   ...spaceTools,
 ]
 
+export const PLAYBOOK_TOOLSETS = {
+  componentToolSchemas: PLAYBOOK_TOOLS,
+  scenarioTools: PLAYBOOK_CUSTOM_TOOLS,
+} as const
+

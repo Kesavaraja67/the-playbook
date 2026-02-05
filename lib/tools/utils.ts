@@ -19,12 +19,20 @@ export function calculateDamage(base: number, variance: number): number {
   return Math.max(0, base + variation)
 }
 
+/**
+* Select an item by weight.
+*
+* `items` must be non-empty.
+*/
 export function weightedRandom<T>(items: Array<{ item: T; weight: number }>): T {
   if (items.length === 0) {
     throw new Error("weightedRandom: items must not be empty")
   }
 
   const totalWeight = items.reduce((sum, { weight }) => sum + weight, 0)
+  if (totalWeight <= 0) {
+    throw new Error("weightedRandom: total weight must be > 0")
+  }
   let random = Math.random() * totalWeight
 
   for (const { item, weight } of items) {
@@ -32,5 +40,5 @@ export function weightedRandom<T>(items: Array<{ item: T; weight: number }>): T 
     if (random <= 0) return item
   }
 
-  return items[0].item
+  return items[items.length - 1].item
 }

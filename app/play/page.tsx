@@ -1020,11 +1020,10 @@ function StandardPlayPageContent({
     const actionIdAtCall = interviewSuspectIdAtCall ? "interview" : trimmed
 
     const scenarioAtCall = scenarioId
-      const totalDaysAtCall = totalDays
-      const resetVersionAtCall = resetVersionRef.current
-      const normalized = actionIdAtCall.toLowerCase()
-      const userText =
-        actions.find((a) => a.id === actionIdAtCall)?.label ?? trimmed
+    const totalDaysAtCall = totalDays
+    const resetVersionAtCall = resetVersionRef.current
+    const normalized = actionIdAtCall.toLowerCase()
+    const userText = actions.find((a) => a.id === actionIdAtCall)?.label ?? trimmed
 
       setMessages((prev) => {
         const next = [...prev, { role: "user" as const, content: userText }]
@@ -1062,16 +1061,21 @@ function StandardPlayPageContent({
             const nextEnemies = [...(prev.enemies ?? [])]
 
             for (let i = 0; i < count; i += 1) {
+              let placed = false
               let x = 0
               let y = 0
-              for (let attempt = 0; attempt < 20; attempt += 1) {
+
+              for (let attempt = 0; attempt < 50; attempt += 1) {
                 x = randomInRange(0, gridSize - 1)
                 y = randomInRange(0, gridSize - 1)
                 const key = `${x},${y}`
                 if (existing.has(key)) continue
                 existing.add(key)
+                placed = true
                 break
               }
+
+              if (!placed) break
 
               nextEnemies.push({ x, y, type: "Zombie" })
             }
@@ -1087,9 +1091,10 @@ function StandardPlayPageContent({
           if (count <= 0) return
           setBoard((prev) => {
             if (!prev?.enemies?.length) return prev
+            const remaining = Math.max(0, prev.enemies.length - count)
             return {
               ...prev,
-              enemies: prev.enemies.slice(Math.min(count, prev.enemies.length)),
+              enemies: prev.enemies.slice(0, remaining),
             }
           })
         }
@@ -1282,6 +1287,9 @@ function StandardPlayPageContent({
               debugTool(rationResourcesTool.name, { rationLevel: level }, output)
 
               updateResource("Morale", output.crewMoraleImpact)
+              updateResource("Oxygen", output.dailyConsumptionReduction.oxygen)
+              updateResource("Power", output.dailyConsumptionReduction.power)
+              updateResource("Food", output.dailyConsumptionReduction.food)
               setTotalDays((prev) => prev + output.daysExtended)
 
               aiResponse = output.crewResponse
