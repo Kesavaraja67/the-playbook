@@ -30,14 +30,14 @@ function generateTutorReply(input: string, opts: { stepIndex: number; stepTitle:
 
   if (normalized.includes("example")) {
     if (opts.stepIndex <= 1) {
-      return "Example:\n\n```python\nfavorite_color = \"blue\"\nprint(favorite_color)\n```"
+      return "Example:\n\nfavorite_color = \"blue\"\nprint(favorite_color)"
     }
 
     if (opts.stepIndex <= 3) {
-      return "Example:\n\n```python\ndef greet(name):\n    return \"Hello, \" + name\n\nmessage = greet(\"Alice\")\nprint(message)\n```"
+      return "Example:\n\ndef greet(name):\n    return \"Hello, \" + name\n\nmessage = greet(\"Alice\")\nprint(message)"
     }
 
-    return "Example:\n\n```python\ndef add(a, b):\n    return a + b\n\nresult = add(2, 3)\nprint(result)\n```"
+    return "Example:\n\ndef add(a, b):\n    return a + b\n\nresult = add(2, 3)\nprint(result)"
   }
 
   if (normalized.includes("stuck") || normalized.includes("hint") || normalized.includes("i don't understand")) {
