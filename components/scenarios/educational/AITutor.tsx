@@ -1,11 +1,16 @@
 "use client"
 
 import * as React from "react"
+import dynamic from "next/dynamic"
 
 import { componentCardClassName } from "@/components/play/ComponentCanvas"
-import { VoiceInput } from "@/components/play/VoiceInput"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+
+const VoiceInput = dynamic(
+  () => import("@/components/play/VoiceInput").then((mod) => mod.VoiceInput),
+  { ssr: false }
+)
 
 type TutorMessage = {
   role: "student" | "tutor"

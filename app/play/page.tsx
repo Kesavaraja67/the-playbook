@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import dynamic from "next/dynamic"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft, RotateCcw } from "lucide-react"
 
@@ -16,7 +17,6 @@ import {
   SpaceStationTelemetry,
 } from "@/components/play/SpaceStationUI"
 import { PythonTutorialUI } from "@/components/play/PythonTutorialUI"
-import { VoiceInput } from "@/components/play/VoiceInput"
 import { HowToPlayPanel } from "@/components/scenarios/HowToPlayPanel"
 import { ConversationThread } from "@/components/scenarios/negotiation/ConversationThread"
 import { NegotiationDashboard } from "@/components/scenarios/negotiation/NegotiationDashboard"
@@ -28,6 +28,11 @@ import { TacticalAlert } from "@/components/tambo/TacticalAlert"
 import { Button } from "@/components/ui/button"
 import { getScenarioById, type Scenario } from "@/lib/scenarios"
 import { cn } from "@/lib/utils"
+
+const VoiceInput = dynamic(
+  () => import("@/components/play/VoiceInput").then((mod) => mod.VoiceInput),
+  { ssr: false }
+)
 
 type ChatMessage = {
   role: "user" | "assistant"

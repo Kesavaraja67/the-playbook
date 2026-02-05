@@ -27,8 +27,8 @@ type SpeechRecognitionLike = {
   lang: string
   start: () => void
   stop: () => void
-  onresult: ((event: any) => void) | null
-  onerror: ((event: any) => void) | null
+  onresult: ((event: unknown) => void) | null
+  onerror: ((event: unknown) => void) | null
   onend: (() => void) | null
 }
 
@@ -121,14 +121,21 @@ export function VoiceInput({
     recognition.lang = "en-US"
 
     recognition.onresult = (event) => {
+      const normalizedEvent = event as
+        | {
+            results?: Array<{ isFinal: boolean; 0: { transcript: string } }>
+            resultIndex?: number
+          }
+        | null
+
       let finalText = ""
       let interimText = ""
 
-      const results = event?.results as Array<{ isFinal: boolean; 0: { transcript: string } }> | undefined
+      const results = normalizedEvent?.results
 
       if (!results) return
 
-      for (let i = event.resultIndex ?? 0; i < results.length; i += 1) {
+      for (let i = normalizedEvent?.resultIndex ?? 0; i < results.length; i += 1) {
         const result = results[i]
         const transcriptValue = result?.[0]?.transcript ?? ""
         if (!transcriptValue) continue
@@ -147,7 +154,12 @@ export function VoiceInput({
     }
 
     recognition.onerror = (event) => {
-      setSpeechError(event?.error ? `Speech recognition error: ${event.error}` : "Speech recognition error")
+      const normalizedEvent = event as { error?: string } | null
+      const errorMessage = normalizedEvent?.error
+
+      setSpeechError(
+        errorMessage ? `Speech recognition error: ${errorMessage}` : "Speech recognition error"
+      )
       setIsSpeechListening(false)
     }
 
@@ -211,7 +223,7 @@ export function VoiceInput({
 
   return (
     <div className={className}>
-      <div className={cn("flex items-end gap-3", multiline ? "items-end" : "items-center")}> 
+      <div className={cn("flex items-end gap-3", multiline ? "items-end" : "items-center")}>
         <div className="relative flex-1">
           {multiline ? (
             <Textarea
