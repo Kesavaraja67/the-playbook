@@ -49,6 +49,12 @@ export function ActionMatrix({ actions, onActionClick, disabled = false }: Actio
     <section className={componentCardClassName}>
       <h3 className="text-[#1D1D1F] text-xl font-bold mb-4">⚡ Actions</h3>
 
+      {disabled && (
+        <div className="-mt-2 mb-4 text-xs text-[#6E6E73]">
+          Actions are temporarily disabled.
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {actions.map((action) => {
           const isActive = action.id === activeActionId
@@ -60,6 +66,7 @@ export function ActionMatrix({ actions, onActionClick, disabled = false }: Actio
               key={action.id}
               type="button"
               disabled={disabled}
+              aria-disabled={disabled || undefined}
               onClick={() => {
                 setActiveActionId(action.id)
                 onActionClick?.(action.id)

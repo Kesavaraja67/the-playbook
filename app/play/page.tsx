@@ -344,10 +344,11 @@ function PlayPageContent() {
   }, [])
 
   const isInitializing = isLoadingBoard || isLoadingResources || isLoadingActions
+  const isBusy = isProcessing || isInitializing
 
   const runAction = React.useCallback(
     (actionIdOrText: string) => {
-      if (!actionIdOrText.trim() || isProcessing || isInitializing) return
+      if (!actionIdOrText.trim() || isBusy) return
 
       const scenarioAtCall = scenarioId
       const totalDaysAtCall = totalDays
@@ -445,7 +446,7 @@ function PlayPageContent() {
 
       actionTimeoutsRef.current.push(timeoutId)
     },
-    [actions, isInitializing, isProcessing, nudgePlayer, scenarioId, totalDays, updateResource]
+    [actions, isBusy, nudgePlayer, scenarioId, totalDays, updateResource]
   )
 
   if (!scenario) {
@@ -524,7 +525,7 @@ function PlayPageContent() {
             <ActionMatrix
               actions={actions}
               onActionClick={runAction}
-              disabled={isProcessing || isInitializing}
+              disabled={isBusy}
             />
           )}
 
@@ -553,7 +554,7 @@ function PlayPageContent() {
             onKeyDown={(e) => {
               if (e.key === "Enter") runAction(input)
             }}
-            disabled={isProcessing || isInitializing}
+            disabled={isBusy}
             placeholder="Type your action..."
             className={cn(
               "h-12 flex-1 rounded-full border-2 border-[#D2D2D7] bg-white px-4",
@@ -565,7 +566,7 @@ function PlayPageContent() {
           <button
             type="button"
             onClick={() => runAction(input)}
-            disabled={isProcessing || isInitializing}
+            disabled={isBusy}
             className={cn(
               "grid size-12 place-items-center rounded-lg",
               "bg-[#0071E3] text-white",
