@@ -221,13 +221,18 @@ const DETECTIVE_INITIAL_CLUE =
   "A witness saw someone running from the docks at 10 PM. What do you do next?"
 const DETECTIVE_SECONDS_PER_TICK = 60
 
-function getDetectiveSuspicionDelta(rand: () => number = Math.random) {
-  return rand() > 0.5 ? 12 : -8
-}
-
 function getDetectiveTimeCostHours(action: Action | null): number | null {
   const timeCost = action?.costs?.find((cost) => cost.resource === "Time")?.amount ?? null
-  return typeof timeCost === "number" ? timeCost : null
+  return typeof timeCost === "number" && Number.isFinite(timeCost) ? timeCost : null
+}
+
+function getDetectiveTimeCostSeconds(action: Action | null): number | null {
+  const timeCostHours = getDetectiveTimeCostHours(action)
+  return typeof timeCostHours === "number" ? timeCostHours * 60 * 60 : null
+}
+
+function getDetectiveSuspicionDelta(rand: () => number = Math.random) {
+  return rand() > 0.5 ? 12 : -8
 }
 
 function getDetectiveInitialEvidence(): EvidenceItem[] {
@@ -748,6 +753,17 @@ function StandardPlayPageContent({
   const detectiveSuspectsRef = React.useRef<Suspect[]>(detectiveSuspects)
   const detectiveOutOfTimeAlertShownRef = React.useRef(false)
 
+  const showDetectiveOutOfTimeAlert = React.useCallback(() => {
+    if (detectiveOutOfTimeAlertShownRef.current) return
+
+    detectiveOutOfTimeAlertShownRef.current = true
+    setAlert({
+      type: "warning",
+      title: "Case went cold",
+      message: "You ran out of time. Reset the case file to try again.",
+    })
+  }, [setAlert])
+
   React.useEffect(() => {
     return () => {
       for (const id of initTimeoutsRef.current) clearTimeout(id)
@@ -794,15 +810,8 @@ function StandardPlayPageContent({
       return
     }
 
-    if (detectiveOutOfTimeAlertShownRef.current) return
-
-    detectiveOutOfTimeAlertShownRef.current = true
-    setAlert({
-      type: "warning",
-      title: "Case went cold",
-      message: "You ran out of time. Reset the case file to try again.",
-    })
-  }, [scenarioId, detectiveTimeRemainingSeconds])
+    showDetectiveOutOfTimeAlert()
+  }, [scenarioId, detectiveTimeRemainingSeconds, showDetectiveOutOfTimeAlert])
 
   const reset = (nextScenarioId: string) => {
     resetVersionRef.current += 1
@@ -933,11 +942,7 @@ function StandardPlayPageContent({
     if (!trimmed || isBusy) return
 
     if (scenarioId === "detective-mystery" && detectiveTimeRemainingSeconds <= 0) {
-      setAlert({
-        type: "warning",
-        title: "Case went cold",
-        message: "You ran out of time. Reset the case file to try again.",
-      })
+      showDetectiveOutOfTimeAlert()
       return
     }
 
@@ -980,11 +985,11 @@ function StandardPlayPageContent({
             actions.find((action) => action.label.toLowerCase() === normalized.trim()) ??
             null
 
-          const timeCostHours = getDetectiveTimeCostHours(actionDef)
+          const timeCostSeconds = getDetectiveTimeCostSeconds(actionDef)
 
-          if (typeof timeCostHours === "number") {
+          if (typeof timeCostSeconds === "number" && timeCostSeconds > 0) {
             setDetectiveTimeRemainingSeconds((prev) =>
-              Math.max(0, prev - timeCostHours * 60 * 60)
+              Math.max(0, prev - timeCostSeconds)
             )
           }
 

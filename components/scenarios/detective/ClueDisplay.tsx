@@ -12,6 +12,7 @@ export type ClueDisplayProps = {
 
 export function ClueDisplay({ clue, className }: ClueDisplayProps) {
   const [rendered, setRendered] = React.useState("")
+  const animationIdRef = React.useRef(0)
 
   React.useEffect(() => {
     if (!clue) {
@@ -19,27 +20,39 @@ export function ClueDisplay({ clue, className }: ClueDisplayProps) {
       return
     }
 
+    const raf = typeof window === "undefined" ? null : window.requestAnimationFrame
+    const caf = typeof window === "undefined" ? null : window.cancelAnimationFrame
+
+    if (!raf || !caf || typeof performance === "undefined") {
+      setRendered(clue)
+      return
+    }
+
     setRendered("")
+
+    animationIdRef.current += 1
+    const animationIdAtStart = animationIdRef.current
 
     let frameId = 0
     const start = performance.now()
     const msPerChar = 40
 
     const tick = (now: number) => {
+      if (animationIdRef.current !== animationIdAtStart) return
       const elapsed = now - start
       const charsToShow = Math.min(clue.length, Math.floor(elapsed / msPerChar))
       const nextRendered = clue.slice(0, charsToShow)
       setRendered((prev) => (prev === nextRendered ? prev : nextRendered))
 
       if (charsToShow < clue.length) {
-        frameId = requestAnimationFrame(tick)
+        frameId = raf(tick)
       }
     }
 
-    frameId = requestAnimationFrame(tick)
+    frameId = raf(tick)
 
     return () => {
-      cancelAnimationFrame(frameId)
+      caf(frameId)
     }
   }, [clue])
 
