@@ -31,6 +31,10 @@ CANVAS COMPONENTS AVAILABLE:
 - NegotiationDashboard: Salary negotiation metrics (salary scenario)
 - SpaceStationControl: System status and resources (space scenario)
 - DetectiveBoard: Evidence, suspects, timeline (mystery scenario)
+- LearningObjectives: Collapsible list of beginner-friendly learning goals (python tutorial scenario)
+- LessonContent: Step-by-step lesson text with examples and navigation (python tutorial scenario)
+- CodePlayground: Editable code box with answer checking and hints (python tutorial scenario)
+- AITutor: Beginner-friendly chat tutor with quick questions (python tutorial scenario)
 
 EMERGENCY SIMULATION RULES:
 - Maintain a serious, professional tone (no playful language).
@@ -42,6 +46,8 @@ EMERGENCY SIMULATION RULES:
 GENERATION RULES:
 - Generate components that match the current scenario context
 - Use scenario-specific components when appropriate
+- Only use LearningObjectives, LessonContent, CodePlayground, and AITutor for scenarios with layout "tutorial" or category "educational"
+- Update existing components rather than always creating new ones
 - Maintain visual consistency with the design system
 - Provide meaningful data that advances decision-making
 

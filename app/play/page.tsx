@@ -20,6 +20,7 @@ import {
   SpaceStationCommands,
   SpaceStationTelemetry,
 } from "@/components/play/SpaceStationUI"
+import { PythonTutorialUI } from "@/components/play/PythonTutorialUI"
 import { HowToPlayPanel } from "@/components/scenarios/HowToPlayPanel"
 import { ActionMatrix } from "@/components/tambo/ActionMatrix"
 import { GameBoard } from "@/components/tambo/GameBoard"
@@ -448,6 +449,25 @@ function PlayPageContent() {
   const searchParams = useSearchParams()
   const scenarioId = searchParams.get("scenario") || "zombie-survival"
   const scenario = getScenarioById(scenarioId)
+
+  if (scenario && scenario.layout === "tutorial") {
+    return <PythonTutorialUI scenario={scenario} />
+  }
+
+  return (
+    <StandardPlayPageContent router={router} scenarioId={scenarioId} scenario={scenario} />
+  )
+}
+
+function StandardPlayPageContent({
+  router,
+  scenarioId,
+  scenario,
+}: {
+  router: ReturnType<typeof useRouter>
+  scenarioId: string
+  scenario: Scenario | undefined
+}) {
   const isBoardScenario = scenario?.layout === "board"
 
   const [day, setDay] = React.useState(1)
