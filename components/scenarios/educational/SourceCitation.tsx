@@ -13,7 +13,14 @@ export type SourceCitationProps = {
 }
 
 export function SourceCitation({ source, url, fetchedAt }: SourceCitationProps) {
-  const fetchedAtLabel = fetchedAt ? new Date(fetchedAt).toLocaleString() : null
+  let fetchedAtLabel: string | null = null
+
+  if (fetchedAt) {
+    const date = new Date(fetchedAt)
+    if (!Number.isNaN(date.getTime())) {
+      fetchedAtLabel = date.toLocaleString()
+    }
+  }
 
   return (
     <motion.section

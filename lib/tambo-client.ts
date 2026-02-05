@@ -14,7 +14,7 @@ export const components: TamboComponent[] = [
     propsSchema: z.object({
       source: z.string(),
       url: z.string().url().optional(),
-      fetchedAt: z.string().optional(),
+      fetchedAt: z.string().datetime().optional(),
     }),
   },
 ]

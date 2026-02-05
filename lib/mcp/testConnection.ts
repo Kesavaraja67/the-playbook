@@ -10,7 +10,9 @@ export type McpConnectionTestResult =
   | {
       ok: false
       url: string
+      status?: number
       error: string
+      kind: "http" | "network"
     }
 
 export async function testMCPConnection(
@@ -28,7 +30,9 @@ export async function testMCPConnection(
       return {
         ok: false,
         url,
+        status: response.status,
         error: `MCP endpoint returned HTTP ${response.status}`,
+        kind: "http",
       }
     }
 
@@ -47,6 +51,7 @@ export async function testMCPConnection(
       ok: false,
       url,
       error: message,
+      kind: "network",
     }
   }
 }

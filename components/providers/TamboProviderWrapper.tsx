@@ -6,12 +6,14 @@ import { MCPTransport } from "@tambo-ai/react/mcp"
 
 import { components, tools } from "@/lib/tambo-client"
 
+const defaultMcpUrl = "https://mcp.tambo.co/mcp"
+
 const mcpServers = [
   {
     name: "tambo",
     description: "Tambo documentation and support (remote MCP server)",
     transport: MCPTransport.HTTP,
-    url: "https://mcp.tambo.co/mcp",
+    url: process.env.NEXT_PUBLIC_TAMBO_MCP_URL ?? defaultMcpUrl,
   },
 ]
 
