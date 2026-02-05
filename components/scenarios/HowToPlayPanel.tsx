@@ -1,0 +1,125 @@
+"use client"
+
+import * as React from "react"
+import { ChevronDown, ChevronRight } from "lucide-react"
+
+import { componentCardClassName } from "@/components/play/ComponentCanvas"
+import { cn } from "@/lib/utils"
+
+const defaultStorageKey = "playbook.zombieSurvival.howToPlay.isOpen"
+
+type HowToPlayPanelProps = {
+  storageKey?: string
+  className?: string
+}
+
+export function HowToPlayPanel({
+  storageKey = defaultStorageKey,
+  className,
+}: HowToPlayPanelProps) {
+  const [isOpen, setIsOpen] = React.useState(true)
+
+  React.useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(storageKey)
+      if (stored === "0") setIsOpen(false)
+      if (stored === "1") setIsOpen(true)
+    } catch {
+      // Ignore storage errors (private mode, blocked, etc.)
+    }
+  }, [storageKey])
+
+  const toggle = React.useCallback(() => {
+    setIsOpen((prev) => {
+      const next = !prev
+      try {
+        window.localStorage.setItem(storageKey, next ? "1" : "0")
+      } catch {
+        // Ignore storage errors (private mode, blocked, etc.)
+      }
+      return next
+    })
+  }, [storageKey])
+
+  return (
+    <section
+      className={cn(
+        componentCardClassName,
+        "border-[#0071E3] bg-[#E8F4FD] p-4",
+        className
+      )}
+    >
+      <button
+        type="button"
+        className={cn(
+          "flex w-full items-center justify-between gap-3 rounded-[10px] px-2 py-2",
+          "text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3] focus-visible:ring-offset-2"
+        )}
+        aria-expanded={isOpen}
+        aria-controls="how-to-play-panel-content"
+        onClick={toggle}
+      >
+        <div className="flex items-center gap-3">
+          <span className="text-lg" aria-hidden>
+            ℹ️
+          </span>
+          <div>
+            <div className="text-sm font-bold text-[#1D1D1F]">How to Play</div>
+            <div className="text-xs text-[#6E6E73]">
+              {isOpen ? "Click to collapse" : "Click to expand"}
+            </div>
+          </div>
+        </div>
+
+        {isOpen ? (
+          <ChevronDown className="size-4 text-[#0071E3]" aria-hidden />
+        ) : (
+          <ChevronRight className="size-4 text-[#0071E3]" aria-hidden />
+        )}
+      </button>
+
+      {isOpen && (
+        <div id="how-to-play-panel-content" className="mt-2 px-2">
+          <ul className="space-y-1 text-sm text-[#1D1D1F]">
+            <li>
+              <span className="mr-2" aria-hidden>
+                🎯
+              </span>
+              <strong>Goal:</strong> Survive 7 days and reach evacuation.
+            </li>
+            <li>
+              <span className="mr-2" aria-hidden>
+                📍
+              </span>
+              <strong>Your position:</strong> Blue circle on the map.
+            </li>
+            <li>
+              <span className="mr-2" aria-hidden>
+                🧟
+              </span>
+              <strong>Zombies:</strong> Red circles (avoid them!).
+            </li>
+            <li>
+              <span className="mr-2" aria-hidden>
+                📦
+              </span>
+              <strong>Resources:</strong> Green circles (collect them).
+            </li>
+            <li>
+              <span className="mr-2" aria-hidden>
+                ⚡
+              </span>
+              <strong>Actions:</strong> Choose action buttons below.
+            </li>
+            <li>
+              <span className="mr-2" aria-hidden>
+                💡
+              </span>
+              <strong>Tip:</strong> Watch your health and ammo carefully!
+            </li>
+          </ul>
+        </div>
+      )}
+    </section>
+  )
+}

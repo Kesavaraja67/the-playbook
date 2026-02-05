@@ -20,6 +20,7 @@ import {
   SpaceStationCommands,
   SpaceStationTelemetry,
 } from "@/components/play/SpaceStationUI"
+import { HowToPlayPanel } from "@/components/scenarios/HowToPlayPanel"
 import { ActionMatrix } from "@/components/tambo/ActionMatrix"
 import { GameBoard } from "@/components/tambo/GameBoard"
 import { ResourceMeter } from "@/components/tambo/ResourceMeter"
@@ -571,11 +572,14 @@ function PlayPageContent() {
       <main className="pb-[96px]">
         <ComponentCanvas>
           {isBoardScenario ? (
-            isLoadingBoard || !board ? (
-              <LoadingCard title="Game Board" height="h-[520px]" />
-            ) : (
-              <GameBoard {...board} />
-            )
+            <>
+              {scenarioId === "zombie-survival" && <HowToPlayPanel />}
+              {isLoadingBoard || !board ? (
+                <LoadingCard title="Game Board" height="h-[520px]" />
+              ) : (
+                <GameBoard {...board} />
+              )}
+            </>
           ) : scenarioId === "salary-negotiation" ? (
             <SalaryNegotiationBriefing scenario={scenario} />
           ) : scenarioId === "space-station" ? (
