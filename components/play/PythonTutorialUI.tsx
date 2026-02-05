@@ -41,10 +41,15 @@ function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
+function stripPythonComments(code: string) {
+  return code.replace(/#.*/g, "")
+}
+
 function hasStringAssignment(code: string, variableName: string) {
+  const normalized = stripPythonComments(code)
   const name = escapeRegExp(variableName)
   const re = new RegExp(`(^|\\n)\\s*${name}\\s*=\\s*(['\"]).*\\2`, "m")
-  return re.test(code)
+  return re.test(normalized)
 }
 
 const tutorialSteps: TutorialStepConfig[] = [
@@ -133,24 +138,26 @@ const tutorialSteps: TutorialStepConfig[] = [
     starterCode: ['# Define greet(name) here', "def greet(name):", "    "].join("\n"),
     hint: "Inside the function, return a string. Example: `return \"Hello, \" + name + \"!\"`.",
     validate: (code) => {
-      if (!/def\s+greet\s*\(\s*name\s*\)\s*:/m.test(code)) {
+      const normalized = stripPythonComments(code)
+
+      if (!/def\s+greet\s*\(\s*name\s*\)\s*:/m.test(normalized)) {
         return {
           ok: false,
           message: "Make sure you define `greet(name)` using `def greet(name):`.",
         }
       }
 
-      if (!/return\s+/m.test(code)) {
+      if (!/^\s*return\s+/m.test(normalized)) {
         return {
           ok: false,
           message: "Add a `return ...` line so the function gives back a greeting.",
         }
       }
 
-      if (!/name/m.test(code)) {
+      if (!/^\s*return[^\n]*\bname\b/m.test(normalized)) {
         return {
           ok: false,
-          message: "Use the `name` parameter somewhere in your greeting.",
+          message: "Use the `name` parameter in the value you return.",
         }
       }
 
@@ -187,25 +194,53 @@ const tutorialSteps: TutorialStepConfig[] = [
     ].join("\n"),
     hint: "Store the result in a variable, then print it: `msg = greet(\"Alice\")` then `print(msg)`.",
     validate: (code) => {
-      if (!/def\s+greet\s*\(\s*name\s*\)\s*:/m.test(code)) {
+      const normalized = stripPythonComments(code)
+
+      if (!/def\s+greet\s*\(\s*name\s*\)\s*:/m.test(normalized)) {
         return { ok: false, message: "Keep the `greet(name)` function definition." }
       }
 
-      if (!/greet\s*\(\s*(['"])Alice\1\s*\)/m.test(code)) {
+      if (!/greet\s*\(\s*(['"])Alice\1\s*\)/m.test(normalized)) {
         return {
           ok: false,
           message: "Call the function with the string \"Alice\": `greet(\"Alice\")`.",
         }
       }
 
-      if (!/print\s*\(/m.test(code)) {
+      if (/print\s*\(\s*greet\s*\(\s*(['"])Alice\1\s*\)\s*\)/m.test(normalized)) {
+        return { ok: true, message: "Perfect — you called the function and printed the result." }
+      }
+
+      const assignmentMatch = normalized.match(
+        /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*greet\s*\(\s*(['"])Alice\2\s*\)\s*$/m
+      )
+      if (assignmentMatch) {
+        const variableName = assignmentMatch[1]
+        const printVariableRe = new RegExp(
+          `print\\s*\\(\\s*${escapeRegExp(variableName)}\\s*\\)`
+        )
+        if (!printVariableRe.test(normalized)) {
+          return {
+            ok: false,
+            message: `Almost — now print the variable (for example: \`print(${variableName})\`).`,
+          }
+        }
+
+        return { ok: true, message: "Perfect — you called the function and printed the result." }
+      }
+
+      if (!/print\s*\(/m.test(normalized)) {
         return {
           ok: false,
           message: "Add a `print(...)` so you can see the greeting.",
         }
       }
 
-      return { ok: true, message: "Perfect — you called the function and printed the result." }
+      return {
+        ok: false,
+        message:
+          "Almost — print the result of `greet(\"Alice\")` (either directly, or by storing it in a variable first).",
+      }
     },
   },
   {
@@ -229,23 +264,51 @@ const tutorialSteps: TutorialStepConfig[] = [
     starterCode: ["def add(a, b):", "    ", "", "# Print add(10, 5)"].join("\n"),
     hint: "Return the sum: `return a + b` and then call it: `print(add(10, 5))`.",
     validate: (code) => {
-      if (!/def\s+add\s*\(\s*a\s*,\s*b\s*\)\s*:/m.test(code)) {
+      const normalized = stripPythonComments(code)
+
+      if (!/def\s+add\s*\(\s*a\s*,\s*b\s*\)\s*:/m.test(normalized)) {
         return { ok: false, message: "Define `add(a, b)` using `def add(a, b):`." }
       }
 
-      if (!/return\s+a\s*\+\s*b/m.test(code)) {
+      if (!/^\s*return\s+a\s*\+\s*b\s*$/m.test(normalized)) {
         return { ok: false, message: "Inside `add`, return `a + b`." }
       }
 
-      if (!/add\s*\(\s*10\s*,\s*5\s*\)/m.test(code)) {
+      if (!/add\s*\(\s*10\s*,\s*5\s*\)/m.test(normalized)) {
         return { ok: false, message: "Call your function as `add(10, 5)`." }
       }
 
-      if (!/print\s*\(/m.test(code)) {
+      if (/print\s*\(\s*add\s*\(\s*10\s*,\s*5\s*\)\s*\)/m.test(normalized)) {
+        return { ok: true, message: "You’ve got it — that’s a clean return value workflow." }
+      }
+
+      const assignmentMatch = normalized.match(
+        /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*add\s*\(\s*10\s*,\s*5\s*\)\s*$/m
+      )
+      if (assignmentMatch) {
+        const variableName = assignmentMatch[1]
+        const printVariableRe = new RegExp(
+          `print\\s*\\(\\s*${escapeRegExp(variableName)}\\s*\\)`
+        )
+        if (!printVariableRe.test(normalized)) {
+          return {
+            ok: false,
+            message: `Almost — now print the variable (for example: \`print(${variableName})\`).`,
+          }
+        }
+
+        return { ok: true, message: "You’ve got it — that’s a clean return value workflow." }
+      }
+
+      if (!/print\s*\(/m.test(normalized)) {
         return { ok: false, message: "Print the result so you can see it." }
       }
 
-      return { ok: true, message: "You’ve got it — that’s a clean return value workflow." }
+      return {
+        ok: false,
+        message:
+          "Almost — print the result of `add(10, 5)` (either directly, or by storing it in a variable first).",
+      }
     },
   },
 ]
