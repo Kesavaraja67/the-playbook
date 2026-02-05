@@ -1,12 +1,17 @@
 "use client"
 
+import { AnimatePresence, motion } from "framer-motion"
 import { Inter } from "next/font/google"
 import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 
-import { CategoryFilter, type ScenarioCategoryFilter } from "@/components/scenarios/CategoryFilter"
+import {
+  CategoryFilter,
+  type ScenarioCategoryFilter,
+} from "@/components/scenarios/CategoryFilter"
 import { ScenarioCard } from "@/components/scenarios/ScenarioCard"
 import { scenarios } from "@/lib/scenarios"
+import { consumePlaybookTransitionFlag } from "@/lib/transitionOverlay"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -15,12 +20,15 @@ const inter = Inter({
 
 export default function ScenariosPage() {
   const router = useRouter()
+  const [showTransitionOverlay, setShowTransitionOverlay] = useState(() =>
+    consumePlaybookTransitionFlag(),
+  )
 
   const [category, setCategory] = useState<ScenarioCategoryFilter>("all")
 
   const filteredScenarios = useMemo(() => {
     if (category === "all") return scenarios
-    return scenarios.filter((s) => s.category === category)
+    return scenarios.filter((scenario) => scenario.category === category)
   }, [category])
 
   const handleSelectScenario = (scenarioId: string) => {
@@ -42,6 +50,19 @@ export default function ScenariosPage() {
 
   return (
     <div className={`${inter.className} min-h-screen bg-[#F5F5F7] px-6 py-8`}>
+      <AnimatePresence>
+        {showTransitionOverlay && (
+          <motion.div
+            key="enter"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-50 bg-white"
+            onAnimationComplete={() => setShowTransitionOverlay(false)}
+          />
+        )}
+      </AnimatePresence>
+
       <div className="mx-auto max-w-6xl">
         <header className="flex items-center justify-between">
           <button
