@@ -16,6 +16,10 @@ export default function PlayPage({ searchParams }: PlayPageProps) {
         : "zombie-survival"
 
   return (
-    <PlayClient scenarioId={scenarioId} systemPrompt={buildSystemPrompt(scenarioId)} />
+    <PlayClient
+      scenarioId={scenarioId}
+      systemPrompt={buildSystemPrompt(scenarioId)}
+      apiKey={process.env.NEXT_PUBLIC_TAMBO_API_KEY}
+    />
   )
 }

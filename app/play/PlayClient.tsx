@@ -18,12 +18,12 @@ import { cn } from "@/lib/utils"
 type PlayClientProps = {
   scenarioId: string
   systemPrompt: string
+  apiKey: string | undefined
 }
 
-export function PlayClient({ scenarioId, systemPrompt }: PlayClientProps) {
+export function PlayClient({ scenarioId, systemPrompt, apiKey }: PlayClientProps) {
   const router = useRouter()
   const scenario = getScenarioById(scenarioId)
-  const apiKey = process.env.NEXT_PUBLIC_TAMBO_API_KEY
   const [resetKey, setResetKey] = React.useState(0)
 
   if (!scenario) {
