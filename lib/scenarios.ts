@@ -153,14 +153,7 @@ export const scenarios: Scenario[] = [
       "Call functions and use return values",
       "Complete all interactive exercises",
     ],
-    initialState: {
-      current_step: 1,
-      total_steps: 5,
-      concepts_mastered: 0,
-      total_concepts: 5,
-      attempts: 0,
-      hints_used: 0,
-    },
+    initialState: {},
     icon: "📚",
   },
 ]
