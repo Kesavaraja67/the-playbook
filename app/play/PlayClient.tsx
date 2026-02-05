@@ -124,14 +124,14 @@ function PlayThreadUI({
   onReset: () => void
 }) {
   const router = useRouter()
-  const { thread, streaming } = useTamboThread()
+  const { thread, isIdle } = useTamboThread()
   const { value, setValue, submit, isPending } = useTamboThreadInput()
 
   const handleSubmit = React.useCallback(() => {
     if (!value.trim()) return
-    if (isPending || streaming) return
+    if (isPending || !isIdle) return
     void submit()
-  }, [isPending, streaming, submit, value])
+  }, [isIdle, isPending, submit, value])
 
   const renderedComponents = React.useMemo(() => {
     const componentsForRender = thread.messages
@@ -168,10 +168,10 @@ function PlayThreadUI({
           <button
             type="button"
             onClick={onReset}
-            disabled={isPending || streaming}
+            disabled={isPending || !isIdle}
             className={cn(
               "inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F]",
-              isPending || streaming
+              isPending || !isIdle
                 ? "cursor-not-allowed opacity-60"
                 : "hover:text-[#0071E3]"
             )}
@@ -251,8 +251,8 @@ function PlayThreadUI({
               e.preventDefault()
               handleSubmit()
             }}
-            disabled={isPending || streaming}
-            placeholder={streaming ? "Generating…" : "Type your action..."}
+            disabled={isPending || !isIdle}
+            placeholder={isPending || !isIdle ? "Generating…" : "Type your action..."}
             className={cn(
               "h-12 flex-1 rounded-full border-2 border-[#D2D2D7] bg-white px-4",
               "text-sm text-[#1D1D1F] placeholder:text-[#6E6E73]",
@@ -263,7 +263,7 @@ function PlayThreadUI({
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={isPending || streaming}
+            disabled={isPending || !isIdle}
             className={cn(
               "grid size-12 place-items-center rounded-lg",
               "bg-[#0071E3] text-white",
