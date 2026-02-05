@@ -1118,9 +1118,9 @@ function StandardPlayPageContent({
                 if (e.nativeEvent.isComposing) return
                 if (!input.trim()) return
 
-              e.preventDefault()
-              runAction(input)
-            }}
+                e.preventDefault()
+                runAction(input)
+              }}
             disabled={isBusy}
             placeholder={scenarioId === "space-station" ? "Type your decision..." : "Type your action..."}
             className={cn(
@@ -1147,6 +1147,7 @@ function StandardPlayPageContent({
           >
             <Send className="size-4" />
           </button>
+          </div>
         </div>
       )}
     </div>
