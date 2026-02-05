@@ -12,37 +12,51 @@ if (!TAMBO_API_KEY && typeof window === "undefined") {
 /**
  * System prompt for The Playbook - Reality Forge V4.0
  */
-export const PLAYBOOK_SYSTEM_PROMPT = `You are the AI Game Master for "Reality Forge V4.0" - a generative UI simulation engine.
+export const PLAYBOOK_SYSTEM_PROMPT = `You are the AI Simulation Director for "Reality Forge V4.0" - a generative UI simulation engine.
 
 Your role is to:
-1. Generate visual canvas components dynamically based on user actions
-2. Manage scenario state and adapt to player decisions
-3. Create immersive, context-aware visualizations
-4. Stream components that enhance the narrative experience
-5. Morph components between different states as the story evolves
+1. Generate visual components dynamically based on operator decisions
+2. Manage scenario state and apply realistic consequences
+3. Produce clear, technical readouts and structured updates
+4. Stream components that improve situational awareness
+5. Update existing components rather than constantly creating new ones
 
 CANVAS COMPONENTS AVAILABLE:
-- GameBoard: Interactive maps showing player position, enemies, resources
-- ResourceMeter: Circular gauges for tracking health, ammo, supplies
-- ActionMatrix: Interactive action cards with success rates and costs
-- DiscoveryCard: Animated reveals for found items/achievements
+- GameBoard: Spatial overview of positions, threats, resources
+- ResourceMeter: Gauges for tracking critical metrics
+- ActionMatrix: Action options with costs
+- DiscoveryCard: Significant events and findings
 - TacticalAlert: Priority-based notifications and warnings
 - ProgressTracker: Timeline visualization for mission progress
-- NegotiationDashboard: Salary negotiation metrics (salary scenario)
+- ConversationThread: Chat-style message thread (salary negotiation)
+- QuickResponseButtons: Suggested reply pills (salary negotiation)
+- NegotiationDashboard: Simplified salary negotiation snapshot (salary negotiation)
 - SpaceStationControl: System status and resources (space scenario)
 - DetectiveBoard: Evidence, suspects, timeline (mystery scenario)
+- LearningObjectives: Collapsible list of beginner-friendly learning goals (python tutorial scenario)
+- LessonContent: Step-by-step lesson text with examples and navigation (python tutorial scenario)
+- CodePlayground: Editable code box with answer checking and hints (python tutorial scenario)
+- AITutor: Beginner-friendly chat tutor with quick questions (python tutorial scenario)
+
+EMERGENCY SIMULATION RULES:
+- Maintain a serious, professional tone (no playful language).
+- Do not introduce game mechanics (no levels, scores, achievements).
+- Treat the user as an operator/commander/coordinator, never as a "player".
+- Prefer concise, actionable updates: what changed, why it matters, and what to do next.
+- Use consistent status language: NOMINAL / DEGRADED / OFFLINE and NORMAL / WARNING / CRITICAL.
 
 GENERATION RULES:
 - Generate components that match the current scenario context
 - Use scenario-specific components when appropriate
+- Only use LearningObjectives, LessonContent, CodePlayground, and AITutor for scenarios with layout "tutorial" or category "educational"
 - Update existing components rather than always creating new ones
-- Maintain visual consistency with the Cyber Dreamscape theme
-- Provide meaningful data that advances the narrative
+- Maintain visual consistency with the design system
+- Provide meaningful data that advances decision-making
 
 SCENARIO NOTES:
 - detective-mystery: keep the tone serious but engaging. Emphasize time pressure (countdown), evidence collection, suspect interviews, and high-stakes accusations. When proposing actions, include success percentages and time costs in hours.
 
-Be creative, visually engaging, and maintain immersion with the chosen scenario.`
+Maintain immersion with realistic constraints, tradeoffs, and consequences.`
 
 /**
  * MCP Resource definitions
@@ -60,7 +74,7 @@ export const SCENARIO_RESOURCE = {
 export const PLAYBOOK_TOOLS = [
   {
     name: "update_arena_state",
-    description: "Update the persistent arena state based on player actions",
+    description: "Update the persistent arena state based on operator actions",
     parameters: {
       type: "object",
       properties: {
@@ -241,6 +255,76 @@ export const PLAYBOOK_TOOLS = [
       },
       required: ["milestones"]
     }
+  },
+  {
+    name: "generate_conversation_thread",
+    description: "Generate a professional conversation thread (for salary negotiation scenario)",
+    parameters: {
+      type: "object",
+      properties: {
+        messages: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              sender: {
+                type: "string",
+                enum: ["recruiter", "you"],
+              },
+              id: {
+                type: "string",
+                description: "Stable identifier for rendering (recommended if messages can be re-ordered)",
+              },
+              avatar: {
+                type: "string",
+                description: "Optional avatar glyph",
+              },
+              content: { type: "string" },
+              time: {
+                type: "string",
+                description: "Optional human-readable time label, e.g. '2:35 PM'",
+              },
+            },
+            required: ["sender", "content"],
+          },
+        },
+      },
+      required: ["messages"],
+    },
+  },
+  {
+    name: "generate_quick_response_buttons",
+    description: "Generate suggested quick reply buttons (for salary negotiation scenario)",
+    parameters: {
+      type: "object",
+      properties: {
+        actions: {
+          type: "array",
+          description: "Canonical list of quick response actions. If present, takes precedence over responses.",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              label: { type: "string" },
+            },
+            required: ["id", "label"],
+          },
+        },
+        responses: {
+          type: "array",
+          description: "Legacy alias for actions. Ignored when actions is present.",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              label: { type: "string" },
+            },
+            required: ["id", "label"],
+          },
+        },
+      },
+      anyOf: [{ required: ["actions"] }, { required: ["responses"] }],
+    },
   },
   {
     name: "generate_negotiation_dashboard",

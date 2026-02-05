@@ -25,6 +25,7 @@
       "title": "Salary Negotiation",
       "description": "You've received a job offer. Navigate the delicate art of negotiation to maximize your compensation package.",
       "difficulty": "medium",
+      "systemPrompt": "You are a recruiter negotiating a Senior Developer offer. Keep replies professional, calm, and conversational (like LinkedIn messages). Ask clarifying questions, acknowledge the candidate’s points, and propose win-win options. Avoid gamified language, points, or scores.",
       "objectives": [
         "Research market rates",
         "Build your case",
@@ -32,32 +33,35 @@
         "Secure a 20% increase"
       ],
       "initialState": {
-        "currentOffer": 85000,
-        "targetSalary": 100000,
+        "currentOffer": 120000,
+        "targetSalary": 150000,
+        "marketRate": 135000,
         "leverage": 50,
         "confidence": 60,
-        "relationship": "neutral",
+        "relationshipScore": 75,
         "round": 1
       }
     },
     {
       "id": "space-station",
       "title": "Space Station Crisis",
-      "description": "A critical malfunction threatens the ISS. Coordinate with mission control and your crew to prevent disaster.",
+      "description": "You are the emergency response coordinator for Mars Colony Alpha. Multiple systems are failing, and a crew of 6 depends on your decisions. Resupply arrives in 14 days.",
       "difficulty": "extreme",
       "objectives": [
-        "Diagnose the malfunction",
-        "Repair oxygen systems",
-        "Stabilize orbit",
-        "Evacuate if necessary"
+        "Restore oxygen generation",
+        "Stabilize power distribution",
+        "Maintain water recycler throughput",
+        "Keep crew health and morale stable",
+        "Coordinate with mission control"
       ],
+      "systemPrompt": "Run a serious emergency simulation. Provide clear, technical updates. Avoid game language (no levels, scores, achievements). Prioritize life support and crew safety. Present tradeoffs, constraints, and next actions.",
       "initialState": {
         "oxygen": 75,
         "power": 60,
-        "hull": 100,
         "crew": 6,
         "systems": "degraded",
-        "orbit": "decaying"
+        "location": "Mars Colony Alpha",
+        "resupplyDays": 14
       }
     },
     {
@@ -79,6 +83,21 @@
         "reputation": 70,
         "location": "Crime Scene"
       }
+    },
+    {
+      "id": "python-tutorial",
+      "title": "Learn Python: Variables & Functions",
+      "description": "Interactive tutorial teaching Python fundamentals. Perfect for complete beginners. Learn by doing with an AI tutor guiding you.",
+      "difficulty": "easy",
+      "category": "educational",
+      "objectives": [
+        "Understand what variables are",
+        "Create variables of different types",
+        "Write a simple function",
+        "Call functions and use return values",
+        "Complete all interactive exercises"
+      ],
+      "initialState": {}
     }
   ]
 }

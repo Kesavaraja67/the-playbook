@@ -4,6 +4,7 @@ export interface Scenario {
   id: string
   title: string
   description: string
+  systemPrompt?: string
   category: ScenarioCategory
   tags: string[]
   difficulty: "easy" | "medium" | "hard" | "extreme"
@@ -14,7 +15,7 @@ export interface Scenario {
   icon: string
 }
 
-export type ScenarioLayout = "board" | "briefing"
+export type ScenarioLayout = "board" | "briefing" | "tutorial"
 
 export type ScenarioCategory =
   | "game"
@@ -78,11 +79,12 @@ export const scenarios: Scenario[] = [
       "Secure a 20% increase",
     ],
     initialState: {
-      currentOffer: 85000,
-      targetSalary: 100000,
+      currentOffer: 120000,
+      targetSalary: 150000,
+      marketRate: 135000,
       leverage: 50,
       confidence: 60,
-      relationship: "neutral",
+      relationshipScore: 75,
       round: 1,
     },
     icon: "💼",
@@ -91,24 +93,27 @@ export const scenarios: Scenario[] = [
     id: "space-station",
     title: "Space Station Crisis",
     description:
-      "A critical malfunction threatens the ISS. Coordinate with mission control and your crew to prevent disaster.",
+      "You are the emergency response coordinator for Mars Colony Alpha. Multiple systems are failing, and a crew of 6 depends on your decisions. Resupply arrives in 14 days.",
+    systemPrompt:
+      "Run a serious emergency simulation. Provide clear, technical updates. Avoid game language (no levels, scores, achievements). Prioritize life support and crew safety. Present tradeoffs, constraints, and next actions.",
     category: "simulation",
     tags: ["Crisis", "Engineering", "Teamwork"],
     difficulty: "extreme",
     layout: "briefing",
     objectives: [
-      "Diagnose the malfunction",
-      "Repair oxygen systems",
-      "Stabilize orbit",
-      "Evacuate if necessary",
+      "Restore oxygen generation",
+      "Stabilize power distribution",
+      "Maintain water recycler throughput",
+      "Keep crew health and morale stable",
+      "Coordinate with mission control",
     ],
     initialState: {
       oxygen: 75,
       power: 60,
-      hull: 100,
       crew: 6,
       systems: "degraded",
-      orbit: "decaying",
+      location: "Mars Colony Alpha",
+      resupplyDays: 14,
     },
     icon: "🚀",
   },
@@ -136,6 +141,25 @@ export const scenarios: Scenario[] = [
       location: "Crime Scene",
     },
     icon: "🔍",
+  },
+  {
+    id: "python-tutorial",
+    title: "Learn Python: Variables & Functions",
+    description:
+      "Interactive tutorial teaching Python fundamentals. Perfect for complete beginners. Learn by doing with an AI tutor guiding you.",
+    category: "educational",
+    tags: ["Python", "Programming", "Tutorial", "Beginner", "Interactive"],
+    difficulty: "easy",
+    layout: "tutorial",
+    objectives: [
+      "Understand what variables are",
+      "Create variables of different types",
+      "Write a simple function",
+      "Call functions and use return values",
+      "Complete all interactive exercises",
+    ],
+    initialState: {},
+    icon: "📚",
   },
 ]
 

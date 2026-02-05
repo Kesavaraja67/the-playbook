@@ -5,11 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft, RotateCcw, Send } from "lucide-react"
 
 import { ComponentCanvas, componentCardClassName } from "@/components/play/ComponentCanvas"
-import {
-  SalaryNegotiationActions,
-  SalaryNegotiationBriefing,
-  SalaryNegotiationMetrics,
-} from "@/components/play/SalaryNegotiationUI"
 import { CaseFileHeader } from "@/components/scenarios/detective/CaseFileHeader"
 import { ClueDisplay } from "@/components/scenarios/detective/ClueDisplay"
 import { EvidenceBoard, type EvidenceItem } from "@/components/scenarios/detective/EvidenceBoard"
@@ -20,11 +15,17 @@ import {
   SpaceStationCommands,
   SpaceStationTelemetry,
 } from "@/components/play/SpaceStationUI"
+import { PythonTutorialUI } from "@/components/play/PythonTutorialUI"
+import { HowToPlayPanel } from "@/components/scenarios/HowToPlayPanel"
+import { ConversationThread } from "@/components/scenarios/negotiation/ConversationThread"
+import { NegotiationDashboard } from "@/components/scenarios/negotiation/NegotiationDashboard"
+import { QuickResponseButtons } from "@/components/scenarios/negotiation/QuickResponseButtons"
 import { ActionMatrix } from "@/components/tambo/ActionMatrix"
 import { GameBoard } from "@/components/tambo/GameBoard"
 import { ResourceMeter } from "@/components/tambo/ResourceMeter"
 import { TacticalAlert } from "@/components/tambo/TacticalAlert"
 import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
 import { getScenarioById, type Scenario } from "@/lib/scenarios"
 import { cn } from "@/lib/utils"
 
@@ -40,7 +41,6 @@ type TacticalAlertState = Omit<React.ComponentProps<typeof TacticalAlert>, "onDi
 type BoardState = React.ComponentProps<typeof GameBoard>
 type Resource = React.ComponentProps<typeof ResourceMeter>["resources"][number]
 type Action = React.ComponentProps<typeof ActionMatrix>["actions"][number]
-type ActionInput = string | { id: string; suspectId?: string }
 
 type InitialState = {
   day: number
@@ -52,9 +52,167 @@ type InitialState = {
   alert: TacticalAlertState | null
 }
 
+type SpaceStationDecision = {
+  deltas: Array<{ name: string; delta: number }>
+  alert: TacticalAlertState
+}
+
+function applySpaceStationDecision(normalized: string): SpaceStationDecision | null {
+  const isRepairO2 =
+    normalized === "repair_o2" ||
+    normalized.includes("repair o2") ||
+    (normalized.includes("repair") && (normalized.includes("oxygen") || normalized.includes("o2")))
+
+  if (isRepairO2) {
+    return {
+      deltas: [
+        { name: "Oxygen", delta: +12 },
+        { name: "Power", delta: -8 },
+      ],
+      alert: {
+        type: "success",
+        title: "Repair Attempt",
+        message: "Oxygen generation stabilizes. Continue monitoring telemetry.",
+      },
+    }
+  }
+
+  const isRestorePower =
+    normalized === "restore_power" ||
+    normalized.includes("restore power") ||
+    normalized.includes("restore_power")
+
+  if (isRestorePower) {
+    return {
+      deltas: [
+        { name: "Power", delta: +15 },
+        { name: "Solar Output", delta: +8 },
+        { name: "Oxygen", delta: -2 },
+      ],
+      alert: {
+        type: "info",
+        title: "Power Routing",
+        message: "Power distribution rebalanced. Watch for secondary failures.",
+      },
+    }
+  }
+
+  const isInspectWater =
+    normalized === "inspect_water" ||
+    normalized.includes("inspect water") ||
+    (normalized.includes("inspect") && normalized.includes("water"))
+
+  if (isInspectWater) {
+    return {
+      deltas: [
+        { name: "Water", delta: +10 },
+        { name: "Power", delta: -4 },
+      ],
+      alert: {
+        type: "success",
+        title: "Water Recycler",
+        message: "Recycler performance improves. Reduced risk of rationing.",
+      },
+    }
+  }
+
+  const isRealignSolar =
+    normalized === "realign_solar" ||
+    normalized.includes("realign solar") ||
+    (normalized.includes("realign") && normalized.includes("solar"))
+
+  if (isRealignSolar) {
+    return {
+      deltas: [
+        { name: "Solar Output", delta: +15 },
+        { name: "Power", delta: +6 },
+      ],
+      alert: {
+        type: "success",
+        title: "Solar Array",
+        message: "Solar capture efficiency increases. Power reserves climbing.",
+      },
+    }
+  }
+
+  const isBoostMorale =
+    normalized === "boost_morale" ||
+    normalized.includes("boost morale") ||
+    (normalized.includes("boost") && normalized.includes("morale"))
+
+  if (isBoostMorale) {
+    return {
+      deltas: [
+        { name: "Morale", delta: +10 },
+        { name: "Food", delta: -5 },
+      ],
+      alert: {
+        type: "info",
+        title: "Crew Update",
+        message: "Crew morale improves. Maintain clear, calm directives.",
+      },
+    }
+  }
+
+  const isCallForHelp =
+    normalized === "call_for_help" ||
+    normalized.includes("call for help") ||
+    (normalized.includes("call") && normalized.includes("help"))
+
+  if (isCallForHelp) {
+    return {
+      deltas: [
+        { name: "Power", delta: -2 },
+        { name: "Morale", delta: +4 },
+      ],
+      alert: {
+        type: "info",
+        title: "Mission Control",
+        message: "Mission control acknowledges. Awaiting updated status report.",
+      },
+    }
+  }
+
+  return null
+}
+
 function clamp(min: number, value: number, max: number) {
   if (!Number.isFinite(value)) return min
   return Math.max(min, Math.min(max, value))
+}
+
+function asNumber(value: unknown, fallback: number, fieldName?: string) {
+  const isValid = typeof value === "number" && Number.isFinite(value)
+
+  if (!isValid && fieldName && process.env.NODE_ENV !== "production") {
+    console.warn(`Invalid numeric value for ${fieldName}; using fallback.`, {
+      value,
+      fallback,
+    })
+  }
+
+  return isValid ? value : fallback
+}
+
+function getSalaryNegotiationConfig(initialState: Record<string, unknown>) {
+  return {
+    currentOffer: asNumber(
+      initialState["currentOffer"],
+      120_000,
+      "salary-negotiation.currentOffer"
+    ),
+    targetSalary: asNumber(
+      initialState["targetSalary"],
+      150_000,
+      "salary-negotiation.targetSalary"
+    ),
+    marketRate: asNumber(initialState["marketRate"], 135_000, "salary-negotiation.marketRate"),
+    relationshipScore: asNumber(
+      initialState["relationshipScore"],
+      75,
+      "salary-negotiation.relationshipScore"
+    ),
+  }
 }
 
 const DETECTIVE_CASE_TITLE = "The Dockside Murder"
@@ -301,9 +459,14 @@ function getInitialState(scenarioId: string): InitialState {
   if (scenarioId === "zombie-survival") return getZombieInitialState()
 
   if (scenarioId === "salary-negotiation") {
+    const currentOffer = 120_000
+    const targetSalary = 150_000
+    const marketRate = 135_000
+
     const initialAssistantMessage: ChatMessage = {
       role: "assistant",
-      content: "The hiring manager is waiting. What’s your next move?",
+      content:
+        "We’re excited to offer you the Senior Developer position at $120,000/year. What are your thoughts?",
     }
 
     return {
@@ -316,16 +479,27 @@ function getInitialState(scenarioId: string): InitialState {
         resources: [],
       } satisfies BoardState,
       resources: [
-        { name: "Confidence", value: 60, color: "#0071E3", icon: "🗣️" },
-        { name: "Leverage", value: 50, color: "#FF9F0A", icon: "⚖️" },
-        { name: "Offer", value: 70, color: "#34C759", icon: "💼" },
-        { name: "Market", value: 80, color: "#FF3B30", icon: "📊" },
+        { name: "Relationship", value: 75, color: "#34C759", icon: "🤝" },
+        { name: "Confidence", value: 70, color: "#0071E3", icon: "🗣️" },
+        { name: "Leverage", value: 65, color: "#FF9F0A", icon: "⚖️" },
+        {
+          name: "Offer",
+          value: Math.round((currentOffer / targetSalary) * 100),
+          color: "#0071E3",
+          icon: "💼",
+        },
+        {
+          name: "Market",
+          value: Math.round((marketRate / targetSalary) * 100),
+          color: "#FF3B30",
+          icon: "📊",
+        },
       ] as Resource[],
       actions: [
-        { id: "counter", label: "Counter", icon: "✍️", successRate: 65 },
-        { id: "benefits", label: "Benefits", icon: "🎁", successRate: 75 },
-        { id: "pause", label: "Pause", icon: "⏸️", successRate: 90 },
-        { id: "accept", label: "Accept", icon: "✅", successRate: 40 },
+        { id: "market-data", label: "Share market data", icon: "📊" },
+        { id: "counter", label: "Counter offer", icon: "✍️" },
+        { id: "benefits", label: "Ask about benefits", icon: "🎁" },
+        { id: "accept", label: "Accept offer", icon: "✅" },
       ] as Action[],
       messages: [initialAssistantMessage],
       alert: null,
@@ -335,12 +509,12 @@ function getInitialState(scenarioId: string): InitialState {
   if (scenarioId === "space-station") {
     const initialAssistantMessage: ChatMessage = {
       role: "assistant",
-      content: "Multiple systems are failing. What do you tackle first?",
+      content: "Emergency protocols active. State your first priority.",
     }
 
     return {
       day: 1,
-      totalDays: 7,
+      totalDays: 14,
       board: {
         gridSize: 10,
         playerPosition: { x: 4, y: 4 },
@@ -348,16 +522,66 @@ function getInitialState(scenarioId: string): InitialState {
         resources: [{ x: 2, y: 7, label: "Spare Parts" }],
       } satisfies BoardState,
       resources: [
-        { name: "Oxygen", value: 75, color: "#0071E3", icon: "💨" },
+        { name: "Oxygen", value: 75, color: "#0071E3", icon: "⚙️" },
         { name: "Power", value: 60, color: "#FF9F0A", icon: "⚡" },
-        { name: "Water", value: 40, color: "#34C759", icon: "💧" },
-        { name: "Hull", value: 90, color: "#FF3B30", icon: "🛡️" },
+        { name: "Solar Output", value: 60, color: "#34C759", icon: "📡" },
+        { name: "Water", value: 65, color: "#34C759", icon: "⚙️" },
+        { name: "Food", value: 55, color: "#FF9F0A", icon: "📦" },
+        { name: "Crew Health", value: 100, color: "#34C759", icon: "⚕️" },
+        { name: "Morale", value: 80, color: "#5E5CE6", icon: "📈" },
       ] as Resource[],
       actions: [
-        { id: "repair", label: "Repair", icon: "🧰", successRate: 70 },
-        { id: "reroute", label: "Reroute", icon: "🔀", successRate: 55 },
-        { id: "scan", label: "Scan", icon: "📡", successRate: 85 },
-        { id: "report", label: "Report", icon: "📞", successRate: 95 },
+        {
+          id: "repair_o2",
+          label: "Repair O2 Generator",
+          icon: "🔧",
+          costs: [
+            { resource: "Power", amount: 10 },
+            { resource: "Time", amount: 4 },
+          ],
+        },
+        {
+          id: "restore_power",
+          label: "Restore Power",
+          icon: "⚡",
+          costs: [
+            { resource: "Time", amount: 3 },
+          ],
+        },
+        {
+          id: "inspect_water",
+          label: "Inspect Water Recycler",
+          icon: "⚙️",
+          costs: [
+            { resource: "Power", amount: 5 },
+            { resource: "Time", amount: 2 },
+          ],
+        },
+        {
+          id: "realign_solar",
+          label: "Realign Solar Panels",
+          icon: "📊",
+          costs: [
+            { resource: "Time", amount: 2 },
+          ],
+        },
+        {
+          id: "boost_morale",
+          label: "Boost Crew Morale",
+          icon: "👥",
+          costs: [
+            { resource: "Time", amount: 2 },
+          ],
+        },
+        {
+          id: "call_for_help",
+          label: "Call for Help",
+          icon: "📡",
+          costs: [
+            { resource: "Power", amount: 3 },
+            { resource: "Time", amount: 1 },
+          ],
+        },
       ] as Action[],
       messages: [initialAssistantMessage],
       alert: null,
@@ -471,6 +695,25 @@ function PlayPageContent() {
   const searchParams = useSearchParams()
   const scenarioId = searchParams.get("scenario") || "zombie-survival"
   const scenario = getScenarioById(scenarioId)
+
+  if (scenario && scenario.layout === "tutorial") {
+    return <PythonTutorialUI scenario={scenario} />
+  }
+
+  return (
+    <StandardPlayPageContent router={router} scenarioId={scenarioId} scenario={scenario} />
+  )
+}
+
+function StandardPlayPageContent({
+  router,
+  scenarioId,
+  scenario,
+}: {
+  router: ReturnType<typeof useRouter>
+  scenarioId: string
+  scenario: Scenario | undefined
+}) {
   const isBoardScenario = scenario?.layout === "board"
 
   const [day, setDay] = React.useState(1)
@@ -485,6 +728,7 @@ function PlayPageContent() {
   const [isLoadingBoard, setIsLoadingBoard] = React.useState(true)
   const [isLoadingResources, setIsLoadingResources] = React.useState(true)
   const [isLoadingActions, setIsLoadingActions] = React.useState(true)
+  const [conversationStartMs, setConversationStartMs] = React.useState(() => Date.now())
 
   const [detectiveEvidence, setDetectiveEvidence] = React.useState<EvidenceItem[]>(() =>
     getDetectiveInitialEvidence()
@@ -558,13 +802,13 @@ function PlayPageContent() {
       title: "Case went cold",
       message: "You ran out of time. Reset the case file to try again.",
     })
-  }, [scenarioId, detectiveTimeRemainingSeconds, setAlert])
+  }, [scenarioId, detectiveTimeRemainingSeconds])
 
-  const reset = React.useCallback(() => {
+  const reset = (nextScenarioId: string) => {
     resetVersionRef.current += 1
     const resetVersion = resetVersionRef.current
 
-    const shouldLoadBoard = getScenarioById(scenarioId)?.layout === "board"
+    const shouldLoadBoard = getScenarioById(nextScenarioId)?.layout === "board"
 
     for (const id of initTimeoutsRef.current) clearTimeout(id)
     initTimeoutsRef.current = []
@@ -572,7 +816,8 @@ function PlayPageContent() {
     for (const id of actionTimeoutsRef.current) clearTimeout(id)
     actionTimeoutsRef.current = []
 
-    const init = getInitialState(scenarioId)
+    const init = getInitialState(nextScenarioId)
+    setConversationStartMs(Date.now())
 
     setDay(init.day)
     setTotalDays(init.totalDays)
@@ -584,7 +829,7 @@ function PlayPageContent() {
     setInput("")
     setIsProcessing(false)
 
-    if (scenarioId === "detective-mystery") {
+    if (nextScenarioId === "detective-mystery") {
       setDetectiveEvidence(getDetectiveInitialEvidence())
       setDetectiveSuspects(getDetectiveInitialSuspects())
       setDetectiveTimeRemainingSeconds(DETECTIVE_INITIAL_TIME_SECONDS)
@@ -628,14 +873,17 @@ function PlayPageContent() {
         setIsLoadingActions(false)
       }, 550)
     )
-  }, [scenarioId])
+  }
 
   React.useEffect(() => {
     if (!scenario) return
-    reset()
-  }, [scenarioId, scenario, reset])
+    reset(scenarioId)
+  }, [scenarioId, scenario])
 
-  const progressLabel = scenarioId === "zombie-survival" ? `Day ${day}/${totalDays}` : ""
+  const progressLabel =
+    scenarioId === "zombie-survival" || scenarioId === "space-station"
+      ? `Day ${day}/${totalDays}`
+      : ""
 
   const latestAssistantText = React.useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i -= 1) {
@@ -675,35 +923,43 @@ function PlayPageContent() {
     scenarioId === "detective-mystery" && detectiveTimeRemainingSeconds <= 0
   const canReset = !isBusy
 
-  const runAction = React.useCallback(
-    (actionInput: ActionInput) => {
-      const actionIdOrText = typeof actionInput === "string" ? actionInput : actionInput.id
-      const interviewSuspectIdAtCall =
-        typeof actionInput === "string" ? null : actionInput.suspectId ?? null
+  const runAction = (
+    actionIdOrText: string,
+    options?: {
+      clearInput?: boolean
+    }
+  ) => {
+    const trimmed = actionIdOrText.trim()
+    if (!trimmed || isBusy) return
 
-      if (!actionIdOrText.trim() || isBusy) return
+    if (scenarioId === "detective-mystery" && detectiveTimeRemainingSeconds <= 0) {
+      setAlert({
+        type: "warning",
+        title: "Case went cold",
+        message: "You ran out of time. Reset the case file to try again.",
+      })
+      return
+    }
 
-      if (scenarioId === "detective-mystery" && detectiveTimeRemainingSeconds <= 0) {
-        setAlert({
-          type: "warning",
-          title: "Case went cold",
-          message: "You ran out of time. Reset the case file to try again.",
-        })
-        return
-      }
+    const interviewSuspectIdAtCall =
+      scenarioId === "detective-mystery" && trimmed.startsWith("interview:")
+        ? trimmed.slice("interview:".length).trim() || null
+        : null
 
-      const scenarioAtCall = scenarioId
+    const actionIdAtCall = interviewSuspectIdAtCall ? "interview" : trimmed
+
+    const scenarioAtCall = scenarioId
       const totalDaysAtCall = totalDays
       const resetVersionAtCall = resetVersionRef.current
-      const normalized = actionIdOrText.toLowerCase()
+      const normalized = actionIdAtCall.toLowerCase()
       const userText =
-        actions.find((a) => a.id === actionIdOrText)?.label ?? actionIdOrText
+        actions.find((a) => a.id === actionIdAtCall)?.label ?? trimmed
 
       setMessages((prev) => {
         const next = [...prev, { role: "user" as const, content: userText }]
         return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
       })
-      setInput("")
+      if (options?.clearInput !== false) setInput("")
       setIsProcessing(true)
 
       const timeoutId = setTimeout(() => {
@@ -720,7 +976,7 @@ function PlayPageContent() {
           setDetectiveLatestClue(aiResponse)
 
           const actionDef =
-            actions.find((action) => action.id === actionIdOrText) ??
+            actions.find((action) => action.id === actionIdAtCall) ??
             actions.find((action) => action.label.toLowerCase() === normalized.trim()) ??
             null
 
@@ -859,6 +1115,31 @@ function PlayPageContent() {
           return
         }
 
+        if (scenarioAtCall === "space-station") {
+          setDay((d) => clamp(1, d + 1, totalDaysAtCall))
+
+          const outcome = applySpaceStationDecision(normalized)
+          if (outcome) {
+            for (const delta of outcome.deltas) {
+              updateResource(delta.name, delta.delta)
+            }
+            setAlert(outcome.alert)
+            setIsProcessing(false)
+            return
+          }
+
+          if (Math.random() > 0.6) {
+            setAlert({
+              type: "warning",
+              title: "New Alert",
+              message: "A new fault appears. Re-evaluate priorities.",
+            })
+          }
+
+          setIsProcessing(false)
+          return
+        }
+
         if (scenarioAtCall !== "zombie-survival") {
           if (Math.random() > 0.65) {
             setAlert({
@@ -930,17 +1211,16 @@ function PlayPageContent() {
       }, 650)
 
       actionTimeoutsRef.current.push(timeoutId)
-    },
-    [
-      actions,
-      detectiveTimeRemainingSeconds,
-      isBusy,
-      nudgePlayer,
-      scenarioId,
-      totalDays,
-      updateResource,
-    ]
-  )
+  }
+
+  const trySubmitNegotiationInput = (e?: React.SyntheticEvent) => {
+    const text = input.trim()
+    if (!text || isBusy) return
+
+    e?.preventDefault()
+    setInput("")
+    runAction(text, { clearInput: false })
+  }
 
   if (!scenario) {
     return (
@@ -959,6 +1239,18 @@ function PlayPageContent() {
   }
 
   const resolvedScenario = scenario
+  const headerTitle =
+    scenarioId === "space-station" ? "Space Station Emergency Simulation" : resolvedScenario.title
+
+  const resolvedSalaryConfig =
+    scenarioId === "salary-negotiation"
+      ? getSalaryNegotiationConfig(resolvedScenario.initialState)
+      : {
+          currentOffer: 120_000,
+          targetSalary: 150_000,
+          marketRate: 135_000,
+          relationshipScore: 75,
+        }
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F]">
@@ -974,7 +1266,7 @@ function PlayPageContent() {
           </button>
 
           <div className="text-center">
-            <div className="text-sm font-bold">{resolvedScenario.title}</div>
+            <div className="text-sm font-bold">{headerTitle}</div>
             {progressLabel && (
               <div className="text-xs text-[#6E6E73]">{progressLabel}</div>
             )}
@@ -982,7 +1274,7 @@ function PlayPageContent() {
 
           <button
             type="button"
-            onClick={reset}
+            onClick={() => reset(scenarioId)}
             disabled={!canReset}
             className={cn(
               "inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F]",
@@ -1004,151 +1296,289 @@ function PlayPageContent() {
         />
       )}
 
-      <main className="pb-[96px]">
+      <main className={cn(scenarioId === "salary-negotiation" ? "pb-10" : "pb-[96px]")}>
         <ComponentCanvas>
-          {isBoardScenario ? (
-            isLoadingBoard || !board ? (
-              <LoadingCard title="Game Board" height="h-[520px]" />
-            ) : (
-              <GameBoard {...board} />
-            )
-          ) : scenarioId === "salary-negotiation" ? (
-            <SalaryNegotiationBriefing scenario={scenario} />
-          ) : scenarioId === "space-station" ? (
-            <SpaceStationBriefing scenario={scenario} />
-          ) : scenarioId === "detective-mystery" ? (
-            <CaseFileHeader
-              caseTitle={DETECTIVE_CASE_TITLE}
-              caseSummary={scenario.description}
-              timeRemainingSeconds={detectiveTimeRemainingSeconds}
-              suspectCount={detectiveSuspects.length}
-              evidenceCollected={detectiveEvidence.filter((item) => item.collected).length}
-              evidenceTotal={detectiveEvidence.length}
-            />
-          ) : (
-            <ScenarioBriefingCard scenario={resolvedScenario} />
-          )}
-
-          {isLoadingResources ? (
-            <LoadingCard
-              title={
-                isBoardScenario
-                  ? "Resources"
-                  : scenarioId === "salary-negotiation"
-                    ? "Negotiation Signals"
-                    : scenarioId === "space-station"
-                      ? "Station Telemetry"
-                      : scenarioId === "detective-mystery"
-                        ? "Evidence Board"
-                        : "Resources"
-              }
-              height={scenarioId === "detective-mystery" ? "h-[420px]" : "h-[220px]"}
-            />
-          ) : isBoardScenario ? (
-            <ResourceMeter resources={resources} />
-          ) : scenarioId === "salary-negotiation" ? (
-            <SalaryNegotiationMetrics resources={resources} />
-          ) : scenarioId === "space-station" ? (
-            <SpaceStationTelemetry resources={resources} />
-          ) : scenarioId === "detective-mystery" ? (
+          {scenarioId === "salary-negotiation" ? (
             <>
-              <EvidenceBoard evidence={detectiveEvidence} />
-              <SuspectCards
-                className="mt-4"
-                suspects={detectiveSuspects}
-                disabled={isBusy || isDetectiveOutOfTime}
-                onInterviewSuspect={(suspectId) => {
-                  if (isBusy || isDetectiveOutOfTime) return
-                  runAction({ id: "interview", suspectId })
-                }}
-              />
+              <section className={componentCardClassName}>
+                <div className="flex items-start gap-4">
+                  <div className="text-4xl" aria-hidden>
+                    {resolvedScenario.icon}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold">Negotiation Guide</h3>
+                    <div className="mt-1 text-sm text-secondary">
+                      You’re negotiating for a Senior Developer role.
+                    </div>
+                    <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-primary">
+                      <li>Be professional and respectful.</li>
+                      <li>Present your value clearly.</li>
+                      <li>Listen to the recruiter’s concerns.</li>
+                      <li>Look for win-win tradeoffs.</li>
+                    </ul>
+                  </div>
+                </div>
+              </section>
+
+              <section className={componentCardClassName}>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-xl font-bold">Conversation</h3>
+                    <div className="mt-1 text-sm text-secondary">
+                      Keep it calm, clear, and collaborative.
+                    </div>
+                  </div>
+                </div>
+
+                <ConversationThread
+                  className="mt-4 max-h-[420px] pr-2"
+                  messages={messages.map((msg, index) => {
+                    const sender = msg.role === "assistant" ? "recruiter" : "you"
+                    const avatar = msg.role === "assistant" ? "👔" : "👤"
+                    const time = new Date(
+                      conversationStartMs + index * 2 * 60 * 1000
+                    ).toLocaleTimeString(undefined, {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })
+
+                    return {
+                      sender,
+                      avatar,
+                      time,
+                      content: msg.content,
+                    }
+                  })}
+                />
+              </section>
+
+              {isLoadingResources ? (
+                <LoadingCard title="Negotiation Dashboard" height="h-[220px]" />
+              ) : (
+                <section className={componentCardClassName}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-xl font-bold">Negotiation Dashboard</h3>
+                      <div className="mt-1 text-sm text-secondary">Key info, without the game feel.</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <NegotiationDashboard
+                      currentOffer={resolvedSalaryConfig.currentOffer}
+                      targetSalary={resolvedSalaryConfig.targetSalary}
+                      marketRate={resolvedSalaryConfig.marketRate}
+                      relationshipScore={resolvedSalaryConfig.relationshipScore}
+                      leveragePoints={[
+                        "5+ years of experience shipping production systems",
+                        "Specialized skills in AI/ML and performance optimization",
+                        "Competing offer in hand",
+                      ]}
+                    />
+                  </div>
+                </section>
+              )}
+
+              {isLoadingActions ? (
+                <LoadingCard title="Your Response" height="h-[220px]" />
+              ) : (
+                <section className={componentCardClassName}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-xl font-bold">Your Response</h3>
+                      <div className="mt-1 text-sm text-secondary">Write a clear, respectful message.</div>
+                    </div>
+                    {isBusy && <div className="text-xs font-semibold text-secondary">Busy…</div>}
+                  </div>
+
+                  <div className="mt-4 flex items-end gap-3">
+                    <Textarea
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        const isPlainEnter =
+                          e.key === "Enter" &&
+                          !e.shiftKey &&
+                          !e.altKey &&
+                          !e.ctrlKey &&
+                          !e.metaKey
+
+                        if (!isPlainEnter) return
+                        if (e.nativeEvent.isComposing) return
+                        trySubmitNegotiationInput(e)
+                      }}
+                      disabled={isBusy}
+                      placeholder="Write your response…"
+                      className="min-h-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={trySubmitNegotiationInput}
+                      disabled={isBusy || !input.trim()}
+                      className={cn(
+                        "grid size-12 place-items-center rounded-lg",
+                        "bg-accent-primary text-inverse",
+                        "shadow-[2px_2px_0px_#1D1D1F]",
+                        "hover:bg-accent-primary-dark",
+                        "disabled:cursor-not-allowed disabled:opacity-60"
+                      )}
+                      aria-label="Send"
+                    >
+                      <Send className="size-4" />
+                    </button>
+                  </div>
+
+                  <div className="mt-4">
+                    <div className="text-xs font-semibold text-secondary">Quick Responses</div>
+                    <QuickResponseButtons
+                      className="mt-2"
+                      actions={actions.map((action) => ({ id: action.id, label: action.label }))}
+                      onSelect={runAction}
+                      disabled={isBusy}
+                    />
+                  </div>
+                </section>
+              )}
             </>
           ) : (
-            <ResourceMeter resources={resources} />
-          )}
+            <>
+              {isBoardScenario ? (
+                <>
+                  {scenarioId === "zombie-survival" && <HowToPlayPanel />}
+                  {isLoadingBoard || !board ? (
+                    <LoadingCard title="Game Board" height="h-[520px]" />
+                  ) : (
+                    <GameBoard {...board} />
+                  )}
+                </>
+              ) : scenarioId === "space-station" ? (
+                <SpaceStationBriefing scenario={scenario} />
+              ) : scenarioId === "detective-mystery" ? (
+                <CaseFileHeader
+                  caseTitle={DETECTIVE_CASE_TITLE}
+                  caseSummary={scenario.description}
+                  timeRemainingSeconds={detectiveTimeRemainingSeconds}
+                  suspectCount={detectiveSuspects.length}
+                  evidenceCollected={detectiveEvidence.filter((item) => item.collected).length}
+                  evidenceTotal={detectiveEvidence.length}
+                />
+              ) : (
+                <ScenarioBriefingCard scenario={resolvedScenario} />
+              )}
 
-          {isLoadingActions ? (
-            <LoadingCard
-              title={
-                isBoardScenario
-                  ? "Actions"
-                  : scenarioId === "salary-negotiation"
-                    ? "Talking Points"
-                    : scenarioId === "space-station"
-                      ? "Command Deck"
-                      : scenarioId === "detective-mystery"
-                        ? "Investigation Actions"
-                        : "Actions"
-              }
-              height="h-[220px]"
-            />
-          ) : isBoardScenario ? (
-            <ActionMatrix
-              actions={actions}
-              onActionClick={runAction}
-              disabled={isBusy}
-            />
-          ) : scenarioId === "salary-negotiation" ? (
-            <SalaryNegotiationActions actions={actions} onActionClick={runAction} disabled={isBusy} />
-          ) : scenarioId === "space-station" ? (
-            <SpaceStationCommands actions={actions} onActionClick={runAction} disabled={isBusy} />
-          ) : scenarioId === "detective-mystery" ? (
-            <InvestigationActions
-              actions={actions}
-              onActionClick={runAction}
-              disabled={isBusy || isDetectiveOutOfTime}
-            />
-          ) : (
-            <ActionMatrix
-              actions={actions}
-              onActionClick={runAction}
-              disabled={isBusy}
-            />
-          )}
+              {isLoadingResources ? (
+                <LoadingCard
+                  title={
+                    isBoardScenario
+                      ? "Resources"
+                      : scenarioId === "space-station"
+                        ? "Station Telemetry"
+                        : scenarioId === "detective-mystery"
+                          ? "Case Metrics"
+                          : "Resources"
+                  }
+                  height={scenarioId === "detective-mystery" ? "h-[420px]" : "h-[220px]"}
+                />
+              ) : isBoardScenario ? (
+                <ResourceMeter resources={resources} />
+              ) : scenarioId === "space-station" ? (
+                <SpaceStationTelemetry
+                  resources={resources}
+                  day={day}
+                  totalDays={totalDays}
+                  onActionClick={runAction}
+                  disabled={isBusy}
+                />
+              ) : scenarioId === "detective-mystery" ? (
+                <>
+                  <EvidenceBoard evidence={detectiveEvidence} />
+                  <SuspectCards
+                    className="mt-4"
+                    suspects={detectiveSuspects}
+                    disabled={isBusy || isDetectiveOutOfTime}
+                    onInterviewSuspect={(suspectId) => {
+                      if (isBusy || isDetectiveOutOfTime) return
+                      runAction(`interview:${suspectId}`)
+                    }}
+                  />
+                </>
+              ) : (
+                <ResourceMeter resources={resources} />
+              )}
 
-          {scenarioId === "detective-mystery" && (
-            <ClueDisplay className="mt-4" clue={detectiveLatestClue} />
-          )}
+              {isLoadingActions ? (
+                <LoadingCard
+                  title={
+                    isBoardScenario
+                      ? "Actions"
+                      : scenarioId === "space-station"
+                        ? "Command Deck"
+                        : scenarioId === "detective-mystery"
+                          ? "Investigation Notebook"
+                          : "Actions"
+                  }
+                  height="h-[220px]"
+                />
+              ) : isBoardScenario ? (
+                <ActionMatrix actions={actions} onActionClick={runAction} disabled={isBusy} />
+              ) : scenarioId === "space-station" ? (
+                <SpaceStationCommands actions={actions} onActionClick={runAction} disabled={isBusy} />
+              ) : scenarioId === "detective-mystery" ? (
+                <InvestigationActions
+                  actions={actions}
+                  onActionClick={runAction}
+                  disabled={isBusy || isDetectiveOutOfTime}
+                />
+              ) : (
+                <ActionMatrix actions={actions} onActionClick={runAction} disabled={isBusy} />
+              )}
 
-          <section className={cn(componentCardClassName, "mt-4 p-4")}>
-            <div className="text-xs font-semibold text-[#6E6E73]">Chat</div>
-            <div className="mt-2 max-h-[240px] overflow-y-auto pr-2 text-sm">
-              {messages.map((msg, index) => (
-                <div key={index} className="mb-2">
-                  <span className="font-semibold">{msg.role === "user" ? "You" : "AI"}:</span>{" "}
-                  <span className="text-[#1D1D1F]">{msg.content}</span>
+              {scenarioId === "detective-mystery" && (
+                <ClueDisplay className="mt-4" clue={detectiveLatestClue} />
+              )}
+
+              <section className={cn(componentCardClassName, "mt-4 p-4")}>
+                <div className="text-xs font-semibold text-[#6E6E73]">Chat</div>
+                <div className="mt-2 max-h-[240px] overflow-y-auto pr-2 text-sm">
+                  {messages.map((msg, index) => (
+                    <div key={index} className="mb-2">
+                      <span className="font-semibold">{msg.role === "user" ? "You" : "AI"}:</span>{" "}
+                      <span className="text-[#1D1D1F]">{msg.content}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            {latestAssistantText && (
-              <div className="mt-3 text-xs text-[#6E6E73]">Latest: {latestAssistantText}</div>
-            )}
-          </section>
+                {latestAssistantText && (
+                  <div className="mt-3 text-xs text-[#6E6E73]">Latest: {latestAssistantText}</div>
+                )}
+              </section>
+            </>
+          )}
         </ComponentCanvas>
       </main>
 
-      <div className="fixed bottom-0 inset-x-0 z-40 h-[80px] bg-white border-t-2 border-[#D2D2D7]">
-        <div className="mx-auto flex h-full max-w-[1200px] items-center gap-3 px-6">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              const isPlainEnter =
-                e.key === "Enter" &&
-                !e.shiftKey &&
-                !e.altKey &&
-                !e.ctrlKey &&
-                !e.metaKey
+      {scenarioId === "salary-negotiation" ? null : (
+        <div className="fixed bottom-0 inset-x-0 z-40 h-[80px] bg-white border-t-2 border-[#D2D2D7]">
+          <div className="mx-auto flex h-full max-w-[1200px] items-center gap-3 px-6">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                const isPlainEnter =
+                  e.key === "Enter" &&
+                  !e.shiftKey &&
+                  !e.altKey &&
+                  !e.ctrlKey &&
+                  !e.metaKey
 
-              if (!isPlainEnter) return
-              if (e.nativeEvent.isComposing) return
-              if (!input.trim()) return
+                if (!isPlainEnter) return
+                if (e.nativeEvent.isComposing) return
+                if (!input.trim()) return
 
-              e.preventDefault()
-              runAction(input)
-            }}
-            disabled={isBusy || isDetectiveOutOfTime}
-            placeholder="Type your action..."
+                e.preventDefault()
+                runAction(input)
+              }}
+            disabled={isBusy}
+            placeholder={scenarioId === "space-station" ? "Type your decision..." : "Type your action..."}
             className={cn(
               "h-12 flex-1 rounded-full border-2 border-[#D2D2D7] bg-white px-4",
               "text-sm text-[#1D1D1F] placeholder:text-[#6E6E73]",
@@ -1159,9 +1589,9 @@ function PlayPageContent() {
           <button
             type="button"
             onClick={() => {
-              if (!isBusy && !isDetectiveOutOfTime) runAction(input)
+              if (!isBusy) runAction(input)
             }}
-            disabled={isBusy || isDetectiveOutOfTime}
+            disabled={isBusy}
             className={cn(
               "grid size-12 place-items-center rounded-lg",
               "bg-[#0071E3] text-white",
@@ -1173,8 +1603,9 @@ function PlayPageContent() {
           >
             <Send className="size-4" />
           </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
@@ -1197,29 +1628,54 @@ function generateMockResponse(input: string, scenarioId: string) {
   const normalized = input.toLowerCase()
 
   if (scenarioId === "salary-negotiation") {
-    if (normalized.includes("counter")) return "You counter with a clear, confident number."
-    if (normalized.includes("benefit")) return "You ask about benefits and flexibility instead of only salary."
-    if (normalized.includes("pause")) return "You take a beat to gather your leverage and stay composed."
-    if (normalized.includes("accept")) return "You accept, but you note the key terms you want in writing."
+    if (normalized.includes("market") || normalized.includes("data")) {
+      return "Thanks for sharing — could you send the sources or the range you’re referencing? That’ll help me align with our compensation team."
+    }
+    if (normalized.includes("counter")) {
+      return "I appreciate the context. Our initial offer is based on the level’s band, but we do have some flexibility. What range are you targeting, and what’s most important to you?"
+    }
+    if (normalized.includes("benefit")) {
+      return "Absolutely. We can look at the full package — base, bonus, equity, and benefits. Are you optimizing more for base salary, total compensation, or flexibility?"
+    }
+    if (normalized.includes("pause") || normalized.includes("time")) {
+      return "Of course — take the time you need. When would you like to reconnect, and is there anything I can send over in the meantime?"
+    }
+    if (normalized.includes("accept")) {
+      return "Great — I’ll send the written offer and next steps shortly. Let me know if you’d like us to walk through benefits or start dates before you sign."
+    }
 
     const responses = [
-      "You keep the conversation friendly and focused.",
-      "They listen closely and consider your reasoning.",
-      "You ask a direct question and wait for their response.",
+      "Thanks — that’s helpful context. Could you share what you’re optimizing for in this offer?",
+      "Understood. Let me check internally and come back with a couple of options.",
+      "That makes sense. If we can’t move base as far, would you be open to discussing a sign-on bonus or additional equity?",
     ]
     return responses[Math.floor(Math.random() * responses.length)]
   }
 
   if (scenarioId === "space-station") {
-    if (normalized.includes("repair")) return "You start repairs and monitor the system readouts."
-    if (normalized.includes("reroute")) return "You reroute power and stabilize the most critical subsystem."
-    if (normalized.includes("scan")) return "Diagnostics reveal more issues than expected."
-    if (normalized.includes("report")) return "Mission control acknowledges and requests updated telemetry."
+    if (normalized.includes("repair")) {
+      return "You authorize the repair procedure and request live telemetry from the affected subsystem."
+    }
+    if (normalized.includes("restore") || normalized.includes("power")) {
+      return "You reconfigure the power distribution network and isolate non-essential loads."
+    }
+    if (normalized.includes("inspect") || normalized.includes("water")) {
+      return "You order an inspection of the water recycler and initiate a controlled flush cycle."
+    }
+    if (normalized.includes("realign") || normalized.includes("solar")) {
+      return "You direct the solar array realignment and verify capture efficiency within tolerance."
+    }
+    if (normalized.includes("morale")) {
+      return "You issue a clear plan and assign tasks. The crew reports improved confidence."
+    }
+    if (normalized.includes("help") || normalized.includes("mission control")) {
+      return "Mission control responds with guidance and requests an updated status summary."
+    }
 
     const responses = [
-      "Alarms fade for a moment, then another warning comes online.",
-      "The station shudders slightly as systems re-balance.",
-      "You prioritize based on risk and available resources.",
+      "One alarm clears, but a secondary warning remains. Continue prioritizing life support.",
+      "Telemetry stabilizes briefly. Watch for cascading failures.",
+      "You confirm the next steps with the crew and continue monitoring critical readouts.",
     ]
     return responses[Math.floor(Math.random() * responses.length)]
   }
