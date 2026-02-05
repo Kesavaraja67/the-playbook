@@ -259,7 +259,11 @@ function asNumber(value: ArenaValue, fallback: number): number {
   if (typeof value === "number" && Number.isFinite(value)) return value
 
   if (typeof value === "string") {
-    const n = Number(value)
+    const trimmed = value.trim()
+    if (!trimmed) return fallback
+    if (!/^[-+]?(?:\d+|\d*\.\d+)$/.test(trimmed)) return fallback
+
+    const n = Number(trimmed)
     return Number.isFinite(n) ? n : fallback
   }
 

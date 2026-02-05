@@ -1,6 +1,4 @@
-/**
-* Scenario types and utilities for The Playbook
-*/
+/** Scenario types and utilities for The Playbook */
 
 export interface Scenario {
   id: string
@@ -133,16 +131,12 @@ export const scenarios: Scenario[] = [
   },
 ]
 
-/**
-* Get scenario by ID
-*/
+/** Get scenario by ID */
 export function getScenarioById(id: string): Scenario | undefined {
   return scenarios.find((s) => s.id === id)
 }
 
-/**
-* Get difficulty color
-*/
+/** Get difficulty color */
 export function getDifficultyColor(difficulty: Scenario["difficulty"]): string {
   const colors = {
     easy: "text-accent-success",
@@ -153,9 +147,7 @@ export function getDifficultyColor(difficulty: Scenario["difficulty"]): string {
   return colors[difficulty]
 }
 
-/**
-* Get difficulty badge variant
-*/
+/** Get difficulty badge variant */
 export function getDifficultyVariant(
   difficulty: Scenario["difficulty"]
 ): "default" | "secondary" | "destructive" | "outline" {
