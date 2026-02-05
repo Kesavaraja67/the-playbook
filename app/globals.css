@@ -3,11 +3,14 @@
 
 @import "tailwindcss";
 @import "tw-animate-css";
+/* Cyber Dreamscape tokens + utilities (CSS variables, glass, glow, holographic borders). */
+@import "../src/styles/design-system.css";
 
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* Cyber Dreamscape tokens are backed by CSS variables from src/styles/design-system.css. */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -117,22 +120,6 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-
-  /* Cyber Dreamscape Color Palette */
-  --electric-cyan: #00F0FF;
-  --neon-magenta: #FF006E;
-  --plasma-purple: #B537F2;
-  --quantum-gold: #FFD60A;
-  
-  /* Backgrounds */
-  --void-dark: #0A0E27;
-  --space-blue: #151B3D;
-  --nebula-purple: #1F1535;
-  
-  /* Accents */
-  --glow-white: #FFFFFF;
-  --frost-blue: #A5D8FF;
-  --warning-amber: #FFA94D;
 }
 
 @layer base {
@@ -192,122 +179,5 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-}
-
-/* Cyber Dreamscape Utilities */
-
-/* Glassmorphism */
-.glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.glass-strong {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* Neon Glow Effects */
-.glow-cyan {
-  box-shadow: 0 0 20px rgba(0, 240, 255, 0.5),
-              0 0 40px rgba(0, 240, 255, 0.3);
-}
-
-.glow-magenta {
-  box-shadow: 0 0 20px rgba(255, 0, 110, 0.5),
-              0 0 40px rgba(255, 0, 110, 0.3);
-}
-
-.glow-purple {
-  box-shadow: 0 0 20px rgba(181, 55, 242, 0.5),
-              0 0 40px rgba(181, 55, 242, 0.3);
-}
-
-.glow-gold {
-  box-shadow: 0 0 20px rgba(255, 214, 10, 0.5),
-              0 0 40px rgba(255, 214, 10, 0.3);
-}
-
-/* Holographic Border Animation */
-@keyframes holographic-border {
-  0% {
-    border-image: linear-gradient(45deg, var(--electric-cyan), var(--plasma-purple)) 1;
-  }
-  50% {
-    border-image: linear-gradient(45deg, var(--plasma-purple), var(--neon-magenta)) 1;
-  }
-  100% {
-    border-image: linear-gradient(45deg, var(--neon-magenta), var(--electric-cyan)) 1;
-  }
-}
-
-.holographic-border {
-  border: 2px solid transparent;
-  background: linear-gradient(var(--void-dark), var(--void-dark)) padding-box,
-              linear-gradient(45deg, var(--electric-cyan), var(--plasma-purple), var(--neon-magenta)) border-box;
-  animation: holographic-rotate 3s linear infinite;
-}
-
-@keyframes holographic-rotate {
-  0% {
-    filter: hue-rotate(0deg);
-  }
-  100% {
-    filter: hue-rotate(360deg);
-  }
-}
-
-/* Pulsing Glow */
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 40px rgba(0, 240, 255, 0.6),
-                0 0 60px rgba(0, 240, 255, 0.4);
-  }
-}
-
-.pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
-
-/* Floating Animation */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.float {
-  animation: float 3s ease-in-out infinite;
-}
-
-/* Shimmer Effect */
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-.shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.1) 50%,
-    transparent 100%
-  );
-  background-size: 1000px 100%;
-  animation: shimmer 3s infinite;
 }
 
