@@ -19,28 +19,22 @@ export function TacticalAdvice({ advice, type, isVisible }: TacticalAdviceProps)
   const config = {
     warning: {
       icon: AlertTriangle,
-      bgColor: "bg-red-900/30",
-      borderColor: "border-red-500/50",
-      iconColor: "text-red-400",
-      textColor: "text-red-100",
+      borderColor: "border-accent-danger",
+      iconColor: "text-accent-danger",
     },
     tip: {
       icon: Lightbulb,
-      bgColor: "bg-yellow-900/30",
-      borderColor: "border-yellow-500/50",
-      iconColor: "text-yellow-400",
-      textColor: "text-yellow-100",
+      borderColor: "border-accent-warning",
+      iconColor: "text-accent-warning",
     },
     info: {
       icon: Info,
-      bgColor: "bg-blue-900/30",
-      borderColor: "border-blue-500/50",
-      iconColor: "text-blue-400",
-      textColor: "text-blue-100",
+      borderColor: "border-accent-info",
+      iconColor: "text-accent-info",
     },
   }
 
-  const { icon: Icon, bgColor, borderColor, iconColor, textColor } = config[type]
+  const { icon: Icon, borderColor, iconColor } = config[type]
 
   return (
     <AnimatePresence>
@@ -50,11 +44,11 @@ export function TacticalAdvice({ advice, type, isVisible }: TacticalAdviceProps)
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -10, scale: 0.95 }}
           transition={{ duration: 0.3 }}
-          className={`${bgColor} ${borderColor} border rounded-lg p-4 mb-4`}
+          className={`bg-primary ${borderColor} border-2 rounded-lg p-4 mb-4 shadow-sm`}
         >
           <div className="flex items-start gap-3">
             <Icon className={`${iconColor} w-5 h-5 mt-0.5 flex-shrink-0`} />
-            <p className={`${textColor} text-sm leading-relaxed`}>
+            <p className="text-primary text-sm leading-relaxed">
               {advice}
             </p>
           </div>

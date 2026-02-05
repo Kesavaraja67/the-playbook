@@ -52,7 +52,7 @@ export function ComponentStack({ components, onRemove }: ComponentStackProps) {
                   animate={{ opacity: 0.5 }}
                   whileHover={{ opacity: 1 }}
                   onClick={() => onRemove(item.id)}
-                  className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 flex items-center justify-center text-red-300 text-xs transition-colors"
+                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-primary border-2 border-accent-danger flex items-center justify-center text-accent-danger text-xs shadow-sm hover:bg-secondary transition-colors"
                 >
                   ✕
                 </motion.button>
@@ -61,7 +61,7 @@ export function ComponentStack({ components, onRemove }: ComponentStackProps) {
 
             {/* Timestamp indicator */}
             <div className="mt-2 text-right">
-              <span className="text-[10px] text-slate-500">
+              <span className="text-[10px] text-tertiary">
                 {new Date(item.timestamp).toLocaleTimeString()}
               </span>
             </div>
@@ -77,7 +77,7 @@ export function ComponentStack({ components, onRemove }: ComponentStackProps) {
           className="flex flex-col items-center justify-center py-20 text-center"
         >
           <div className="text-6xl mb-4 opacity-20">📊</div>
-          <p className="text-slate-500 text-sm">
+          <p className="text-tertiary text-sm">
             Canvas components will appear here as the AI generates them
           </p>
         </motion.div>

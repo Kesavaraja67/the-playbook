@@ -23,8 +23,7 @@ export function ActionPanel({ actions, onActionClick }: ActionPanelProps) {
     <div className="space-y-2">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center justify-between w-full text-xs font-semibold text-slate-400 uppercase tracking-wide hover:text-slate-300 transition-colors"
-        style={{ fontFamily: "'Rajdhani', sans-serif" }}
+        className="flex items-center justify-between w-full text-xs font-semibold text-secondary uppercase tracking-wide hover:text-primary transition-colors"
       >
         <span>Suggested Actions</span>
         {isExpanded ? (
@@ -53,11 +52,11 @@ export function ActionPanel({ actions, onActionClick }: ActionPanelProps) {
                 >
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left h-auto py-1.5 px-2.5 text-xs border-slate-700 hover:border-cyan-500/50 hover:bg-cyan-950/30 transition-all"
+                    className="w-full justify-start text-left h-auto py-1.5 px-2.5 text-xs"
                     onClick={() => onActionClick(action)}
                   >
-                    <span className="text-cyan-400 mr-1.5 text-[10px]">▸</span>
-                    <span className="text-slate-200 leading-tight">{action}</span>
+                    <span className="text-accent-primary mr-1.5 text-[10px]">▸</span>
+                    <span className="text-primary leading-tight">{action}</span>
                   </Button>
                 </motion.div>
               ))}

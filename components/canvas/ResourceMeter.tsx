@@ -29,11 +29,10 @@ export function ResourceMeter({ resources }: ResourceMeterProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="glass-strong rounded-lg p-6"
+      className="ds-card p-6"
     >
       <h3
-        className="text-sm font-semibold text-slate-300 uppercase tracking-wide mb-4"
-        style={{ fontFamily: "'Rajdhani', sans-serif" }}
+        className="text-sm font-semibold text-secondary uppercase tracking-wide mb-4"
       >
         Resource Status
       </h3>
@@ -59,8 +58,8 @@ function CircularGauge({ resource, index }: { resource: Resource; index: number 
   // Determine status color based on value
   const getStatusColor = () => {
     if (value >= 70) return color
-    if (value >= 40) return "var(--warning-amber)"
-    return "var(--neon-magenta)"
+    if (value >= 40) return "var(--accent-warning)"
+    return "var(--accent-danger)"
   }
 
   const statusColor = getStatusColor()
@@ -82,7 +81,7 @@ function CircularGauge({ resource, index }: { resource: Resource; index: number 
             cy="50"
             r="40"
             fill="none"
-            stroke="rgba(255,255,255,0.1)"
+            stroke="var(--border-light)"
             strokeWidth="8"
           />
 
@@ -99,9 +98,6 @@ function CircularGauge({ resource, index }: { resource: Resource; index: number 
             initial={{ strokeDashoffset: circumference }}
             animate={{ strokeDashoffset }}
             transition={{ duration: 1, ease: "easeOut", delay: index * 0.1 }}
-            style={{
-              filter: `drop-shadow(0 0 8px ${statusColor})`
-            }}
           />
         </svg>
 
@@ -111,8 +107,7 @@ function CircularGauge({ resource, index }: { resource: Resource; index: number 
             <span className="text-2xl mb-1">{icon}</span>
           )}
           <motion.span
-            className="text-xl font-bold text-white"
-            style={{ fontFamily: "'Orbitron', sans-serif" }}
+            className="text-xl font-bold text-primary"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: index * 0.1 + 0.5 }}
@@ -124,8 +119,7 @@ function CircularGauge({ resource, index }: { resource: Resource; index: number 
 
       {/* Label */}
       <p
-        className="text-xs text-slate-300 font-medium text-center"
-        style={{ fontFamily: "'Rajdhani', sans-serif" }}
+        className="text-xs text-secondary font-medium text-center"
       >
         {name}
       </p>
@@ -145,7 +139,7 @@ function CircularGauge({ resource, index }: { resource: Resource; index: number 
             ease: "easeInOut"
           }}
         />
-        <span className="text-[10px] text-slate-400">
+        <span className="text-[10px] text-tertiary">
           {value >= 70 ? "Optimal" : value >= 40 ? "Warning" : "Critical"}
         </span>
       </div>

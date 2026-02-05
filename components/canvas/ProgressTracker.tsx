@@ -31,11 +31,10 @@ export function ProgressTracker({ milestones, title = "Mission Progress" }: Prog
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="glass-strong rounded-lg p-6"
+      className="ds-card p-6"
     >
       <h3
-        className="text-sm font-semibold text-slate-300 uppercase tracking-wide mb-6"
-        style={{ fontFamily: "'Rajdhani', sans-serif" }}
+        className="text-sm font-semibold text-secondary uppercase tracking-wide mb-6"
       >
         {title}
       </h3>
@@ -68,27 +67,24 @@ function MilestoneItem({
   const statusConfig = {
     completed: {
       icon: <Check className="w-4 h-4" />,
-      iconBg: "bg-green-500",
-      iconColor: "text-white",
-      lineColor: "bg-green-500",
-      textColor: "text-slate-300",
-      glow: "rgba(34, 197, 94, 0.5)"
+      iconBg: "bg-accent-success",
+      iconColor: "text-inverse",
+      lineColor: "bg-accent-success",
+      textColor: "text-secondary",
     },
     active: {
       icon: <Circle className="w-4 h-4" />,
-      iconBg: "bg-cyan-500",
-      iconColor: "text-white",
-      lineColor: "bg-cyan-500/30",
-      textColor: "text-white",
-      glow: "rgba(0, 240, 255, 0.5)"
+      iconBg: "bg-accent-primary",
+      iconColor: "text-inverse",
+      lineColor: "bg-accent-primary",
+      textColor: "text-primary",
     },
     locked: {
       icon: <Lock className="w-3 h-3" />,
-      iconBg: "bg-slate-700",
-      iconColor: "text-slate-500",
-      lineColor: "bg-slate-700",
-      textColor: "text-slate-500",
-      glow: "rgba(100, 116, 139, 0.2)"
+      iconBg: "bg-tertiary border-2 border-medium",
+      iconColor: "text-tertiary",
+      lineColor: "bg-tertiary",
+      textColor: "text-tertiary",
     }
   }
 
@@ -104,25 +100,7 @@ function MilestoneItem({
             animate={{ scale: 1 }}
             transition={{ delay: index * 0.1, type: "spring" }}
             className={`w-8 h-8 rounded-full ${config.iconBg} ${config.iconColor} flex items-center justify-center relative z-10`}
-            style={{
-              boxShadow: status === "active" ? `0 0 20px ${config.glow}` : "none"
-            }}
           >
-            {status === "active" && (
-              <motion.div
-                className="absolute inset-0 rounded-full"
-                style={{ background: config.iconBg }}
-                animate={{
-                  scale: [1, 1.5, 1],
-                  opacity: [0.5, 0, 0.5]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeOut"
-                }}
-              />
-            )}
             {config.icon}
           </motion.div>
 
@@ -145,7 +123,6 @@ function MilestoneItem({
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 + 0.1 }}
             className={`text-sm font-semibold ${config.textColor} mb-2`}
-            style={{ fontFamily: "'Rajdhani', sans-serif" }}
           >
             {title}
           </motion.h4>
@@ -158,18 +135,15 @@ function MilestoneItem({
               transition={{ delay: index * 0.1 + 0.2 }}
               className="space-y-1"
             >
-              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+              <div className="h-2 bg-secondary border-2 border-light rounded-full overflow-hidden">
                 <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500"
+                  className="h-full rounded-full bg-accent-primary"
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 1, delay: index * 0.1 + 0.3 }}
-                  style={{
-                    boxShadow: "0 0 10px rgba(0, 240, 255, 0.5)"
-                  }}
                 />
               </div>
-              <span className="text-xs text-slate-400">{progress}% Complete</span>
+              <span className="text-xs text-secondary">{progress}% Complete</span>
             </motion.div>
           )}
         </div>
