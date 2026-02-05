@@ -937,6 +937,7 @@ function PlayPageContent() {
       isBusy,
       nudgePlayer,
       scenarioId,
+      showDetectiveOutOfTimeAlert,
       totalDays,
       updateResource,
     ]
