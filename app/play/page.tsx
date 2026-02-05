@@ -504,6 +504,17 @@ function PlayPageContent() {
   const detectiveSuspectsRef = React.useRef<Suspect[]>(detectiveSuspects)
   const detectiveOutOfTimeAlertShownRef = React.useRef(false)
 
+  const showDetectiveOutOfTimeAlert = React.useCallback(() => {
+    if (detectiveOutOfTimeAlertShownRef.current) return
+
+    detectiveOutOfTimeAlertShownRef.current = true
+    setAlert({
+      type: "warning",
+      title: "Case went cold",
+      message: "You ran out of time. Reset the case file to try again.",
+    })
+  }, [setAlert])
+
   React.useEffect(() => {
     return () => {
       for (const id of initTimeoutsRef.current) clearTimeout(id)
@@ -550,15 +561,8 @@ function PlayPageContent() {
       return
     }
 
-    if (detectiveOutOfTimeAlertShownRef.current) return
-
-    detectiveOutOfTimeAlertShownRef.current = true
-    setAlert({
-      type: "warning",
-      title: "Case went cold",
-      message: "You ran out of time. Reset the case file to try again.",
-    })
-  }, [scenarioId, detectiveTimeRemainingSeconds, setAlert])
+    showDetectiveOutOfTimeAlert()
+  }, [scenarioId, detectiveTimeRemainingSeconds, showDetectiveOutOfTimeAlert])
 
   const reset = React.useCallback(() => {
     resetVersionRef.current += 1
@@ -684,11 +688,7 @@ function PlayPageContent() {
       if (!actionIdOrText.trim() || isBusy) return
 
       if (scenarioId === "detective-mystery" && detectiveTimeRemainingSeconds <= 0) {
-        setAlert({
-          type: "warning",
-          title: "Case went cold",
-          message: "You ran out of time. Reset the case file to try again.",
-        })
+        showDetectiveOutOfTimeAlert()
         return
       }
 
