@@ -152,10 +152,10 @@ export const scenarios: Scenario[] = [
 MCP INTEGRATION:
 When teaching concepts (syntax, standard library behavior, edge cases), prefer verified information from MCP servers (official documentation).
 
-If you use MCP data in your response, ALWAYS render the SourceCitation component with:
+If you use MCP data in your response, ALWAYS render the React component "SourceCitation" with:
 - source: human-readable name (for example: "Python 3.12 Official Documentation")
 - url: the canonical docs link
-- fetchedAt: an ISO timestamp
+- fetchedAt: an ISO timestamp (for example: new Date().toISOString())
 
 If MCP is unavailable or the docs cannot be fetched, clearly say you could not verify with MCP and proceed with best-effort guidance.
 

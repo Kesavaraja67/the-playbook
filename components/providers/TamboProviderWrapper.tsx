@@ -7,6 +7,8 @@ import { MCPTransport } from "@tambo-ai/react/mcp"
 import { components, tools } from "@/lib/tambo-client"
 import { DEFAULT_TAMBO_MCP_SERVER_URL } from "@/lib/mcp/constants"
 
+let hasLoggedMissingApiKey = false
+
 const mcpServers = [
   {
     name: "tambo-docs",
@@ -18,13 +20,19 @@ const mcpServers = [
 
 export function TamboProviderWrapper({ children }: { children: React.ReactNode }) {
   const apiKey = process.env.NEXT_PUBLIC_TAMBO_API_KEY
+  const isDevelopment = process.env.NODE_ENV === "development"
 
   React.useEffect(() => {
     if (apiKey) return
+    if (hasLoggedMissingApiKey) return
+
+    hasLoggedMissingApiKey = true
     console.warn("NEXT_PUBLIC_TAMBO_API_KEY is not set; running without TamboProvider")
   }, [apiKey])
 
   if (!apiKey) {
+    if (!isDevelopment) return <>{children}</>
+
     return (
       <>
         <div
