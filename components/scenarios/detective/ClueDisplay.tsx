@@ -19,6 +19,14 @@ export function ClueDisplay({ clue, className }: ClueDisplayProps) {
       return
     }
 
+    const raf = typeof window === "undefined" ? null : window.requestAnimationFrame
+    const caf = typeof window === "undefined" ? null : window.cancelAnimationFrame
+
+    if (!raf || !caf || typeof performance === "undefined") {
+      setRendered(clue)
+      return
+    }
+
     setRendered("")
 
     let frameId = 0
@@ -32,14 +40,14 @@ export function ClueDisplay({ clue, className }: ClueDisplayProps) {
       setRendered((prev) => (prev === nextRendered ? prev : nextRendered))
 
       if (charsToShow < clue.length) {
-        frameId = requestAnimationFrame(tick)
+        frameId = raf(tick)
       }
     }
 
-    frameId = requestAnimationFrame(tick)
+    frameId = raf(tick)
 
     return () => {
-      cancelAnimationFrame(frameId)
+      caf(frameId)
     }
   }, [clue])
 
