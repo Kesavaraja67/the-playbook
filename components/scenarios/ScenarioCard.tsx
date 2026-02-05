@@ -52,9 +52,9 @@ export function ScenarioCard({
 
         <div className="mt-auto">
           <div className="mb-4 flex flex-wrap gap-2">
-            {tags.slice(0, 3).map((tag, i) => (
+            {tags.slice(0, 3).map((tag) => (
               <span
-                key={`${tag}-${i}`}
+                key={`${title}-${tag}`}
                 className="rounded-[6px] border border-[#D2D2D7] bg-[#F5F5F7] px-3 py-1 text-[12px] text-[#6E6E73]"
               >
                 {tag}

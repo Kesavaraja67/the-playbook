@@ -32,12 +32,12 @@ export default function ScenariosPage() {
   }
 
   const handleBack = () => {
-    if (window.history.length > 1) {
-      router.back()
+    if (typeof window !== "undefined" && window.history.length <= 1) {
+      router.push("/")
       return
     }
 
-    router.push("/")
+    router.back()
   }
 
   return (
