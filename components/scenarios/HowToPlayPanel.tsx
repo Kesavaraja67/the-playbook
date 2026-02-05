@@ -51,6 +51,7 @@ export function HowToPlayPanel() {
         )}
         aria-expanded={isOpen}
         aria-controls={contentId}
+        aria-labelledby={labelId}
         onClick={toggle}
       >
         <div className="flex items-center gap-3">
