@@ -2,18 +2,11 @@
 
 import { motion } from "framer-motion"
 import { useRef } from "react"
+import type { ActionMatrixProps as ActionMatrixSchemaProps } from "@/lib/canvas-schemas"
 
-interface Action {
-  id: string
-  label: string
-  icon: string
-  costs?: Array<{ resource: string; amount: number }>
-  successRate?: number
-  description?: string
-}
+type Action = ActionMatrixSchemaProps["actions"][number]
 
-interface ActionMatrixProps {
-  actions: Action[]
+type ActionMatrixProps = ActionMatrixSchemaProps & {
   onActionClick?: (actionId: string) => void
 }
 
