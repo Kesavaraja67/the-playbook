@@ -20,11 +20,12 @@ const mcpServers = [
 export function TamboProviderWrapper({ children }: { children: React.ReactNode }) {
   const apiKey = process.env.NEXT_PUBLIC_TAMBO_API_KEY
 
-  if (!apiKey) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn("NEXT_PUBLIC_TAMBO_API_KEY is not set; running without TamboProvider")
-    }
+  React.useEffect(() => {
+    if (apiKey) return
+    console.warn("NEXT_PUBLIC_TAMBO_API_KEY is not set; running without TamboProvider")
+  }, [apiKey])
 
+  if (!apiKey) {
     return <>{children}</>
   }
 

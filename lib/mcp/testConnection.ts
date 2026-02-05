@@ -16,14 +16,19 @@ export type McpConnectionTestResult =
     }
 
 export async function testMCPConnection(
-  url: string = DEFAULT_TAMBO_MCP_SERVER_URL
+  url: string = DEFAULT_TAMBO_MCP_SERVER_URL,
+  { timeoutMs = 10_000 }: { timeoutMs?: number } = {}
 ): Promise<McpConnectionTestResult> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
   try {
     const response = await fetch(url, {
       method: "GET",
       headers: {
         accept: "application/json",
       },
+      signal: controller.signal,
     })
 
     if (!response.ok) {
@@ -45,7 +50,7 @@ export async function testMCPConnection(
       serverInfo,
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
+    const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error)
 
     return {
       ok: false,
@@ -53,5 +58,7 @@ export async function testMCPConnection(
       error: message,
       kind: "network",
     }
+  } finally {
+    clearTimeout(timeoutId)
   }
 }
