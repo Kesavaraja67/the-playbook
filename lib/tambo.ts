@@ -2,6 +2,12 @@
  * Tambo SDK Configuration
  */
 
+import type { TamboTool } from "@tambo-ai/react"
+
+import { negotiationTools } from "./tools/negotiation"
+import { spaceTools } from "./tools/space"
+import { zombieTools } from "./tools/zombie"
+
 // Ensure API key is available
 export const TAMBO_API_KEY = process.env.NEXT_PUBLIC_TAMBO_API_KEY
 
@@ -446,5 +452,14 @@ export const PLAYBOOK_TOOLS = [
       required: ["evidence", "suspects", "timeline"]
     }
   }
+]
+
+/**
+* Custom scenario tools that create varied, simulation-driven outcomes.
+*/
+export const PLAYBOOK_CUSTOM_TOOLS: TamboTool[] = [
+  ...zombieTools,
+  ...negotiationTools,
+  ...spaceTools,
 ]
 
