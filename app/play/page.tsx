@@ -40,6 +40,7 @@ type TacticalAlertState = Omit<React.ComponentProps<typeof TacticalAlert>, "onDi
 type BoardState = React.ComponentProps<typeof GameBoard>
 type Resource = React.ComponentProps<typeof ResourceMeter>["resources"][number]
 type Action = React.ComponentProps<typeof ActionMatrix>["actions"][number]
+type ActionInput = string | { id: string; suspectId?: string }
 
 type InitialState = {
   day: number
@@ -682,8 +683,6 @@ function PlayPageContent() {
   const isDetectiveOutOfTime =
     scenarioId === "detective-mystery" && detectiveTimeRemainingSeconds <= 0
   const canReset = !isBusy
-
-  type ActionInput = string | { id: string; suspectId?: string }
 
   const runAction = React.useCallback(
     (actionInput: ActionInput) => {
