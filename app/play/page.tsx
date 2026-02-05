@@ -15,6 +15,8 @@ import {
   SpaceStationCommands,
   SpaceStationTelemetry,
 } from "@/components/play/SpaceStationUI"
+import { PythonTutorialUI } from "@/components/play/PythonTutorialUI"
+import { HowToPlayPanel } from "@/components/scenarios/HowToPlayPanel"
 import { ConversationThread } from "@/components/scenarios/negotiation/ConversationThread"
 import { NegotiationDashboard } from "@/components/scenarios/negotiation/NegotiationDashboard"
 import { QuickResponseButtons } from "@/components/scenarios/negotiation/QuickResponseButtons"
@@ -48,6 +50,130 @@ type InitialState = {
   actions: Action[]
   messages: ChatMessage[]
   alert: TacticalAlertState | null
+}
+
+type SpaceStationDecision = {
+  deltas: Array<{ name: string; delta: number }>
+  alert: TacticalAlertState
+}
+
+function applySpaceStationDecision(normalized: string): SpaceStationDecision | null {
+  const isRepairO2 =
+    normalized === "repair_o2" ||
+    normalized.includes("repair o2") ||
+    (normalized.includes("repair") && (normalized.includes("oxygen") || normalized.includes("o2")))
+
+  if (isRepairO2) {
+    return {
+      deltas: [
+        { name: "Oxygen", delta: +12 },
+        { name: "Power", delta: -8 },
+      ],
+      alert: {
+        type: "success",
+        title: "Repair Attempt",
+        message: "Oxygen generation stabilizes. Continue monitoring telemetry.",
+      },
+    }
+  }
+
+  const isRestorePower =
+    normalized === "restore_power" ||
+    normalized.includes("restore power") ||
+    normalized.includes("restore_power")
+
+  if (isRestorePower) {
+    return {
+      deltas: [
+        { name: "Power", delta: +15 },
+        { name: "Solar Output", delta: +8 },
+        { name: "Oxygen", delta: -2 },
+      ],
+      alert: {
+        type: "info",
+        title: "Power Routing",
+        message: "Power distribution rebalanced. Watch for secondary failures.",
+      },
+    }
+  }
+
+  const isInspectWater =
+    normalized === "inspect_water" ||
+    normalized.includes("inspect water") ||
+    (normalized.includes("inspect") && normalized.includes("water"))
+
+  if (isInspectWater) {
+    return {
+      deltas: [
+        { name: "Water", delta: +10 },
+        { name: "Power", delta: -4 },
+      ],
+      alert: {
+        type: "success",
+        title: "Water Recycler",
+        message: "Recycler performance improves. Reduced risk of rationing.",
+      },
+    }
+  }
+
+  const isRealignSolar =
+    normalized === "realign_solar" ||
+    normalized.includes("realign solar") ||
+    (normalized.includes("realign") && normalized.includes("solar"))
+
+  if (isRealignSolar) {
+    return {
+      deltas: [
+        { name: "Solar Output", delta: +15 },
+        { name: "Power", delta: +6 },
+      ],
+      alert: {
+        type: "success",
+        title: "Solar Array",
+        message: "Solar capture efficiency increases. Power reserves climbing.",
+      },
+    }
+  }
+
+  const isBoostMorale =
+    normalized === "boost_morale" ||
+    normalized.includes("boost morale") ||
+    (normalized.includes("boost") && normalized.includes("morale"))
+
+  if (isBoostMorale) {
+    return {
+      deltas: [
+        { name: "Morale", delta: +10 },
+        { name: "Food", delta: -5 },
+      ],
+      alert: {
+        type: "info",
+        title: "Crew Update",
+        message: "Crew morale improves. Maintain clear, calm directives.",
+      },
+    }
+  }
+
+  const isCallForHelp =
+    normalized === "call_for_help" ||
+    normalized.includes("call for help") ||
+    (normalized.includes("call") && normalized.includes("help"))
+
+  if (isCallForHelp) {
+    return {
+      deltas: [
+        { name: "Power", delta: -2 },
+        { name: "Morale", delta: +4 },
+      ],
+      alert: {
+        type: "info",
+        title: "Mission Control",
+        message: "Mission control acknowledges. Awaiting updated status report.",
+      },
+    }
+  }
+
+  return null
 }
 
 function clamp(min: number, value: number, max: number) {
@@ -213,12 +339,12 @@ function getInitialState(scenarioId: string): InitialState {
   if (scenarioId === "space-station") {
     const initialAssistantMessage: ChatMessage = {
       role: "assistant",
-      content: "Multiple systems are failing. What do you tackle first?",
+      content: "Emergency protocols active. State your first priority.",
     }
 
     return {
       day: 1,
-      totalDays: 7,
+      totalDays: 14,
       board: {
         gridSize: 10,
         playerPosition: { x: 4, y: 4 },
@@ -226,16 +352,66 @@ function getInitialState(scenarioId: string): InitialState {
         resources: [{ x: 2, y: 7, label: "Spare Parts" }],
       } satisfies BoardState,
       resources: [
-        { name: "Oxygen", value: 75, color: "#0071E3", icon: "💨" },
+        { name: "Oxygen", value: 75, color: "#0071E3", icon: "⚙️" },
         { name: "Power", value: 60, color: "#FF9F0A", icon: "⚡" },
-        { name: "Water", value: 40, color: "#34C759", icon: "💧" },
-        { name: "Hull", value: 90, color: "#FF3B30", icon: "🛡️" },
+        { name: "Solar Output", value: 60, color: "#34C759", icon: "📡" },
+        { name: "Water", value: 65, color: "#34C759", icon: "⚙️" },
+        { name: "Food", value: 55, color: "#FF9F0A", icon: "📦" },
+        { name: "Crew Health", value: 100, color: "#34C759", icon: "⚕️" },
+        { name: "Morale", value: 80, color: "#5E5CE6", icon: "📈" },
       ] as Resource[],
       actions: [
-        { id: "repair", label: "Repair", icon: "🧰", successRate: 70 },
-        { id: "reroute", label: "Reroute", icon: "🔀", successRate: 55 },
-        { id: "scan", label: "Scan", icon: "📡", successRate: 85 },
-        { id: "report", label: "Report", icon: "📞", successRate: 95 },
+        {
+          id: "repair_o2",
+          label: "Repair O2 Generator",
+          icon: "🔧",
+          costs: [
+            { resource: "Power", amount: 10 },
+            { resource: "Time", amount: 4 },
+          ],
+        },
+        {
+          id: "restore_power",
+          label: "Restore Power",
+          icon: "⚡",
+          costs: [
+            { resource: "Time", amount: 3 },
+          ],
+        },
+        {
+          id: "inspect_water",
+          label: "Inspect Water Recycler",
+          icon: "⚙️",
+          costs: [
+            { resource: "Power", amount: 5 },
+            { resource: "Time", amount: 2 },
+          ],
+        },
+        {
+          id: "realign_solar",
+          label: "Realign Solar Panels",
+          icon: "📊",
+          costs: [
+            { resource: "Time", amount: 2 },
+          ],
+        },
+        {
+          id: "boost_morale",
+          label: "Boost Crew Morale",
+          icon: "👥",
+          costs: [
+            { resource: "Time", amount: 2 },
+          ],
+        },
+        {
+          id: "call_for_help",
+          label: "Call for Help",
+          icon: "📡",
+          costs: [
+            { resource: "Power", amount: 3 },
+            { resource: "Time", amount: 1 },
+          ],
+        },
       ] as Action[],
       messages: [initialAssistantMessage],
       alert: null,
@@ -322,6 +498,25 @@ function PlayPageContent() {
   const searchParams = useSearchParams()
   const scenarioId = searchParams.get("scenario") || "zombie-survival"
   const scenario = getScenarioById(scenarioId)
+
+  if (scenario && scenario.layout === "tutorial") {
+    return <PythonTutorialUI scenario={scenario} />
+  }
+
+  return (
+    <StandardPlayPageContent router={router} scenarioId={scenarioId} scenario={scenario} />
+  )
+}
+
+function StandardPlayPageContent({
+  router,
+  scenarioId,
+  scenario,
+}: {
+  router: ReturnType<typeof useRouter>
+  scenarioId: string
+  scenario: Scenario | undefined
+}) {
   const isBoardScenario = scenario?.layout === "board"
 
   const [day, setDay] = React.useState(1)
@@ -416,7 +611,10 @@ function PlayPageContent() {
     reset(scenarioId)
   }, [scenarioId, scenario])
 
-  const progressLabel = scenarioId === "zombie-survival" ? `Day ${day}/${totalDays}` : ""
+  const progressLabel =
+    scenarioId === "zombie-survival" || scenarioId === "space-station"
+      ? `Day ${day}/${totalDays}`
+      : ""
 
   const latestAssistantText = React.useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i -= 1) {
@@ -486,6 +684,31 @@ function PlayPageContent() {
           const next = [...prev, { role: "assistant" as const, content: aiResponse }]
           return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
         })
+
+        if (scenarioAtCall === "space-station") {
+          setDay((d) => clamp(1, d + 1, totalDaysAtCall))
+
+          const outcome = applySpaceStationDecision(normalized)
+          if (outcome) {
+            for (const delta of outcome.deltas) {
+              updateResource(delta.name, delta.delta)
+            }
+            setAlert(outcome.alert)
+            setIsProcessing(false)
+            return
+          }
+
+          if (Math.random() > 0.6) {
+            setAlert({
+              type: "warning",
+              title: "New Alert",
+              message: "A new fault appears. Re-evaluate priorities.",
+            })
+          }
+
+          setIsProcessing(false)
+          return
+        }
 
         if (scenarioAtCall !== "zombie-survival") {
           if (Math.random() > 0.65) {
@@ -586,16 +809,18 @@ function PlayPageContent() {
   }
 
   const resolvedScenario = scenario
-  const salaryConfig =
+  const headerTitle =
+    scenarioId === "space-station" ? "Space Station Emergency Simulation" : resolvedScenario.title
+
+  const resolvedSalaryConfig =
     scenarioId === "salary-negotiation"
       ? getSalaryNegotiationConfig(resolvedScenario.initialState)
-      : null
-  const resolvedSalaryConfig = salaryConfig ?? {
-    currentOffer: 120_000,
-    targetSalary: 150_000,
-    marketRate: 135_000,
-    relationshipScore: 75,
-  }
+      : {
+          currentOffer: 120_000,
+          targetSalary: 150_000,
+          marketRate: 135_000,
+          relationshipScore: 75,
+        }
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F]">
@@ -611,7 +836,7 @@ function PlayPageContent() {
           </button>
 
           <div className="text-center">
-            <div className="text-sm font-bold">{resolvedScenario.title}</div>
+            <div className="text-sm font-bold">{headerTitle}</div>
             {progressLabel && (
               <div className="text-xs text-[#6E6E73]">{progressLabel}</div>
             )}
@@ -789,11 +1014,14 @@ function PlayPageContent() {
           ) : (
             <>
               {isBoardScenario ? (
-                isLoadingBoard || !board ? (
-                  <LoadingCard title="Game Board" height="h-[520px]" />
-                ) : (
-                  <GameBoard {...board} />
-                )
+                <>
+                  {scenarioId === "zombie-survival" && <HowToPlayPanel />}
+                  {isLoadingBoard || !board ? (
+                    <LoadingCard title="Game Board" height="h-[520px]" />
+                  ) : (
+                    <GameBoard {...board} />
+                  )}
+                </>
               ) : scenarioId === "space-station" ? (
                 <SpaceStationBriefing scenario={scenario} />
               ) : scenarioId === "detective-mystery" ? (
@@ -818,7 +1046,13 @@ function PlayPageContent() {
               ) : isBoardScenario ? (
                 <ResourceMeter resources={resources} />
               ) : scenarioId === "space-station" ? (
-                <SpaceStationTelemetry resources={resources} />
+                <SpaceStationTelemetry
+                  resources={resources}
+                  day={day}
+                  totalDays={totalDays}
+                  onActionClick={runAction}
+                  disabled={isBusy}
+                />
               ) : scenarioId === "detective-mystery" ? (
                 <DetectiveMysteryMetrics resources={resources} />
               ) : (
@@ -885,36 +1119,35 @@ function PlayPageContent() {
                 if (e.nativeEvent.isComposing) return
                 if (!input.trim()) return
 
-                e.preventDefault()
-                runAction(input)
-              }}
-              disabled={isBusy}
-              placeholder="Type your action..."
-              className={cn(
-                "h-12 flex-1 rounded-full border-2 border-[#D2D2D7] bg-white px-4",
-                "text-sm text-[#1D1D1F] placeholder:text-[#6E6E73]",
-                "focus:outline-none focus:border-[#0071E3]",
-                "disabled:cursor-not-allowed disabled:opacity-60"
-              )}
-            />
-            <button
-              type="button"
-              onClick={() => {
-                if (!isBusy) runAction(input)
-              }}
-              disabled={isBusy}
-              className={cn(
-                "grid size-12 place-items-center rounded-lg",
-                "bg-[#0071E3] text-white",
-                "shadow-[2px_2px_0px_#1D1D1F]",
-                "hover:bg-[#005BB5]",
-                "disabled:bg-[#0071E3]/60 disabled:cursor-not-allowed"
-              )}
-              aria-label="Send"
-            >
-              <Send className="size-4" />
-            </button>
-          </div>
+              e.preventDefault()
+              runAction(input)
+            }}
+            disabled={isBusy}
+            placeholder={scenarioId === "space-station" ? "Type your decision..." : "Type your action..."}
+            className={cn(
+              "h-12 flex-1 rounded-full border-2 border-[#D2D2D7] bg-white px-4",
+              "text-sm text-[#1D1D1F] placeholder:text-[#6E6E73]",
+              "focus:outline-none focus:border-[#0071E3]",
+              "disabled:cursor-not-allowed disabled:opacity-60"
+            )}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              if (!isBusy) runAction(input)
+            }}
+            disabled={isBusy}
+            className={cn(
+              "grid size-12 place-items-center rounded-lg",
+              "bg-[#0071E3] text-white",
+              "shadow-[2px_2px_0px_#1D1D1F]",
+              "hover:bg-[#005BB5]",
+              "disabled:bg-[#0071E3]/60 disabled:cursor-not-allowed"
+            )}
+            aria-label="Send"
+          >
+            <Send className="size-4" />
+          </button>
         </div>
       )}
     </div>
@@ -964,15 +1197,29 @@ function generateMockResponse(input: string, scenarioId: string) {
   }
 
   if (scenarioId === "space-station") {
-    if (normalized.includes("repair")) return "You start repairs and monitor the system readouts."
-    if (normalized.includes("reroute")) return "You reroute power and stabilize the most critical subsystem."
-    if (normalized.includes("scan")) return "Diagnostics reveal more issues than expected."
-    if (normalized.includes("report")) return "Mission control acknowledges and requests updated telemetry."
+    if (normalized.includes("repair")) {
+      return "You authorize the repair procedure and request live telemetry from the affected subsystem."
+    }
+    if (normalized.includes("restore") || normalized.includes("power")) {
+      return "You reconfigure the power distribution network and isolate non-essential loads."
+    }
+    if (normalized.includes("inspect") || normalized.includes("water")) {
+      return "You order an inspection of the water recycler and initiate a controlled flush cycle."
+    }
+    if (normalized.includes("realign") || normalized.includes("solar")) {
+      return "You direct the solar array realignment and verify capture efficiency within tolerance."
+    }
+    if (normalized.includes("morale")) {
+      return "You issue a clear plan and assign tasks. The crew reports improved confidence."
+    }
+    if (normalized.includes("help") || normalized.includes("mission control")) {
+      return "Mission control responds with guidance and requests an updated status summary."
+    }
 
     const responses = [
-      "Alarms fade for a moment, then another warning comes online.",
-      "The station shudders slightly as systems re-balance.",
-      "You prioritize based on risk and available resources.",
+      "One alarm clears, but a secondary warning remains. Continue prioritizing life support.",
+      "Telemetry stabilizes briefly. Watch for cascading failures.",
+      "You confirm the next steps with the crew and continue monitoring critical readouts.",
     ]
     return responses[Math.floor(Math.random() * responses.length)]
   }

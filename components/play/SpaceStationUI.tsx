@@ -2,137 +2,214 @@
 
 import * as React from "react"
 
-import { componentCardClassName } from "@/components/play/ComponentCanvas"
+import {
+  CriticalStatusDisplay,
+  type StatusLevel,
+  type StatusSection,
+} from "@/components/scenarios/space/CriticalStatusDisplay"
+import { EmergencyActionsPanel } from "@/components/scenarios/space/EmergencyActionsPanel"
+import {
+  SystemsTable,
+  type SystemPriority,
+  type SystemRow,
+  type SystemStatus,
+} from "@/components/scenarios/space/SystemsTable"
+import { SimulationBriefing } from "@/components/scenarios/space/SimulationBriefing"
+import { TimeRemaining } from "@/components/scenarios/space/TimeRemaining"
 import type { ActionMatrixProps } from "@/components/tambo/ActionMatrix"
 import type { ResourceMeterProps } from "@/components/tambo/ResourceMeter"
 import type { Scenario } from "@/lib/scenarios"
-import { cn } from "@/lib/utils"
 
 type Resource = ResourceMeterProps["resources"][number]
 type Action = ActionMatrixProps["actions"][number]
-
-function asString(value: unknown, fallback: string) {
-  return typeof value === "string" ? value : fallback
-}
 
 function asNumber(value: unknown, fallback: number) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback
 }
 
-function statusFor(value: number) {
-  if (value >= 75) return { label: "Nominal", color: "#34C759" }
-  if (value >= 45) return { label: "Caution", color: "#FF9F0A" }
-  return { label: "Critical", color: "#FF3B30" }
+function resourceValue(resources: Resource[], name: string, fallback: number) {
+  const match = resources.find((resource) => resource.name.toLowerCase() === name.toLowerCase())
+  return match ? asNumber(match.value, fallback) : fallback
 }
 
-function TelemetryRow({ resource }: { resource: Resource }) {
-  const clamped = Math.max(0, Math.min(100, resource.value))
-  const status = statusFor(clamped)
-
-  return (
-    <div className="rounded-lg border-2 border-[#D2D2D7] bg-[#F5F5F7] p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <div
-            className="mt-1 size-2 rounded-full"
-            style={{ backgroundColor: status.color }}
-            aria-hidden
-          />
-          <div>
-            <div className="text-sm font-bold text-[#1D1D1F]">
-              {resource.icon ? `${resource.icon} ` : ""}
-              {resource.name}
-            </div>
-            <div className="mt-1 text-xs text-[#6E6E73]">Status: {status.label}</div>
-          </div>
-        </div>
-        <div className="text-right">
-          <div className="text-sm font-bold text-[#1D1D1F]">{Math.round(clamped)}%</div>
-          <div className="mt-1 text-[11px] font-semibold text-[#6E6E73]">Telemetry</div>
-        </div>
-      </div>
-
-      <div className="mt-3 h-2 w-full rounded-full bg-[#D2D2D7]">
-        <div
-          className="h-2 rounded-full"
-          style={{ width: `${clamped}%`, backgroundColor: resource.color }}
-        />
-      </div>
-    </div>
-  )
+function clampToPct(value: number) {
+  return Math.max(0, Math.min(100, value))
 }
 
-const commandHints: Record<string, string> = {
-  repair: "Stabilize the highest-impact subsystem.",
-  reroute: "Shift power to prevent cascade failures.",
-  scan: "Run diagnostics and identify new faults.",
-  report: "Transmit telemetry to mission control.",
+function statusFor(value: number): StatusLevel {
+  const pct = clampToPct(value)
+  if (pct >= 75) return "normal"
+  if (pct >= 45) return "warning"
+  return "critical"
+}
+
+function systemStatusFor(value: number): SystemStatus {
+  const pct = clampToPct(value)
+  if (pct >= 80) return "nominal"
+  if (pct >= 50) return "degraded"
+  return "offline"
+}
+
+function priorityForStatus(status: SystemStatus): SystemPriority {
+  if (status === "offline") return "critical"
+  if (status === "degraded") return "medium"
+  return "low"
+}
+
+function supplyDays(value: number, multiplier: number) {
+  return Math.max(0, Math.round((clampToPct(value) / 100) * multiplier))
 }
 
 export function SpaceStationBriefing({ scenario }: { scenario: Scenario }) {
-  const objectives = scenario.objectives ?? []
-  const crew = asNumber(scenario.initialState.crew, 6)
-  const orbit = asString(scenario.initialState.orbit, "decaying")
-  const systems = asString(scenario.initialState.systems, "degraded")
-
-  return (
-    <section className={componentCardClassName}>
-      <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <div className="text-4xl" aria-hidden>
-              {scenario.icon}
-            </div>
-            <div>
-              <h3 className="text-xl font-bold">Mission Console</h3>
-              <div className="mt-1 text-sm text-[#6E6E73]">Prioritize fixes and keep the station stable.</div>
-            </div>
-          </div>
-          <p className="mt-4 text-sm text-[#1D1D1F]">{scenario.description}</p>
-
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
-            {objectives.slice(0, 4).map((objective) => (
-              <div
-                key={objective}
-                className="rounded-lg border-2 border-[#D2D2D7] bg-[#F5F5F7] p-3 text-sm"
-              >
-                <span aria-hidden className="mr-2 text-[#0071E3]">
-                  ▸
-                </span>
-                {objective}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="w-full shrink-0 space-y-3 md:w-[320px]">
-          <div className="rounded-lg border-2 border-[#D2D2D7] bg-[#F5F5F7] p-4">
-            <div className="text-xs font-semibold text-[#6E6E73]">Crew</div>
-            <div className="mt-2 text-2xl font-bold text-[#1D1D1F]">{crew} onboard</div>
-            <div className="mt-2 text-xs text-[#6E6E73]">Keep life support and comms online.</div>
-          </div>
-          <div className="rounded-lg border-2 border-[#D2D2D7] bg-[#F5F5F7] p-4">
-            <div className="text-xs font-semibold text-[#6E6E73]">Orbit</div>
-            <div className="mt-2 text-sm font-bold text-[#1D1D1F]">{orbit}</div>
-            <div className="mt-3 text-xs font-semibold text-[#6E6E73]">Systems</div>
-            <div className="mt-1 text-sm font-bold text-[#1D1D1F]">{systems}</div>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
+  return <SimulationBriefing scenario={scenario} />
 }
 
-export function SpaceStationTelemetry({ resources }: { resources: Resource[] }) {
+export function SpaceStationTelemetry({
+  resources,
+  day,
+  totalDays,
+  onActionClick,
+  disabled,
+}: {
+  resources: Resource[]
+  day: number
+  totalDays: number
+  onActionClick: (id: string) => void
+  disabled: boolean
+}) {
+  const oxygen = resourceValue(resources, "Oxygen", 75)
+  const power = resourceValue(resources, "Power", 60)
+  const water = resourceValue(resources, "Water", 65)
+  const food = resourceValue(resources, "Food", 55)
+  const solar = resourceValue(resources, "Solar Output", 60)
+  const health = resourceValue(resources, "Crew Health", 100)
+  const morale = resourceValue(resources, "Morale", 80)
+
+  const oxygenSystemStatus = systemStatusFor(oxygen)
+  const powerSystemStatus = systemStatusFor(power)
+  const waterSystemStatus = systemStatusFor(water)
+  const solarSystemStatus = systemStatusFor(solar)
+
+  const alerts: string[] = []
+  if (oxygenSystemStatus === "offline") alerts.push("Oxygen generator offline")
+  if (oxygenSystemStatus === "degraded") alerts.push("Oxygen generation degraded")
+
+  if (powerSystemStatus === "offline") alerts.push("Power distribution offline")
+  if (powerSystemStatus === "degraded") {
+    alerts.push(`Power reserves at ${Math.round(clampToPct(power))}%`)
+  }
+
+  if (waterSystemStatus === "offline") alerts.push("Water recycler offline")
+  if (solarSystemStatus === "offline") alerts.push("Solar array offline")
+  if (alerts.length === 0) alerts.push("No critical alerts")
+
+  const sections: [StatusSection, StatusSection, StatusSection] = [
+    {
+      title: "LIFE SUPPORT",
+      metrics: [
+        {
+          label: "Oxygen",
+          value: oxygen,
+          detail: `${supplyDays(oxygen, 18)} days supply`,
+          status: statusFor(oxygen),
+        },
+        {
+          label: "Water",
+          value: water,
+          detail: `${supplyDays(water, 16)} days supply`,
+          status: statusFor(water),
+        },
+        {
+          label: "Food",
+          value: food,
+          detail: `${supplyDays(food, 14)} days supply`,
+          status: statusFor(food),
+        },
+      ],
+    },
+    {
+      title: "POWER SYSTEMS",
+      metrics: [
+        {
+          label: "Reserves",
+          value: power,
+          detail: `${supplyDays(power, 17)} days supply`,
+          status: statusFor(power),
+        },
+        {
+          label: "Solar",
+          value: solar,
+          detail: "Array efficiency",
+          status: statusFor(solar),
+        },
+      ],
+    },
+    {
+      title: "CREW STATUS",
+      metrics: [
+        {
+          label: "Health",
+          value: health,
+          detail: "6/6 healthy",
+          status: statusFor(health),
+        },
+        {
+          label: "Morale",
+          value: morale,
+          detail: "Stress indicators trending upward",
+          status: statusFor(morale),
+        },
+      ],
+    },
+  ]
+
+  const systems: SystemRow[] = [
+    {
+      id: "o2-generator",
+      system: "O2 Generator",
+      status: oxygenSystemStatus,
+      priority: priorityForStatus(oxygenSystemStatus),
+      actionLabel: oxygenSystemStatus === "nominal" ? undefined : "Repair",
+      actionId: oxygenSystemStatus === "nominal" ? undefined : "repair_o2",
+    },
+    {
+      id: "power-bus",
+      system: "Power Bus",
+      status: powerSystemStatus,
+      priority: priorityForStatus(powerSystemStatus),
+      actionLabel: powerSystemStatus === "nominal" ? undefined : "Restore",
+      actionId: powerSystemStatus === "nominal" ? undefined : "restore_power",
+    },
+    {
+      id: "water-recycler",
+      system: "Water Recycler",
+      status: waterSystemStatus,
+      priority: priorityForStatus(waterSystemStatus),
+      actionLabel: waterSystemStatus === "nominal" ? undefined : "Inspect",
+      actionId: waterSystemStatus === "nominal" ? undefined : "inspect_water",
+    },
+    {
+      id: "solar-panels",
+      system: "Solar Panels",
+      status: solarSystemStatus,
+      priority: priorityForStatus(solarSystemStatus),
+      actionLabel: solarSystemStatus === "nominal" ? undefined : "Realign",
+      actionId: solarSystemStatus === "nominal" ? undefined : "realign_solar",
+    },
+    {
+      id: "communications",
+      system: "Communications",
+      status: "nominal",
+      priority: "low",
+    },
+  ]
+
   return (
-    <section className={componentCardClassName}>
-      <h3 className="text-[#1D1D1F] text-xl font-bold mb-4">🛰️ Station Telemetry</h3>
-      <div className="grid gap-3 md:grid-cols-2">
-        {resources.map((resource) => (
-          <TelemetryRow key={resource.name} resource={resource} />
-        ))}
-      </div>
-    </section>
+    <div className="space-y-4">
+      <CriticalStatusDisplay alerts={alerts} sections={sections} />
+      <SystemsTable systems={systems} disabled={disabled} onActionClick={onActionClick} />
+      <TimeRemaining day={day} totalDays={totalDays} />
+    </div>
   )
 }
 
@@ -145,55 +222,5 @@ export function SpaceStationCommands({
   onActionClick: (id: string) => void
   disabled: boolean
 }) {
-  return (
-    <section className={componentCardClassName}>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-[#1D1D1F] text-xl font-bold">🧰 Command Deck</h3>
-          <div className="mt-1 text-xs text-[#6E6E73]">Run commands carefully. Confirm outcomes.</div>
-        </div>
-        {disabled && <div className="text-xs font-semibold text-[#6E6E73]">Busy…</div>}
-      </div>
-
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
-        {actions.map((action) => {
-          const hint = commandHints[action.id] ?? "Execute a command and watch readouts."
-
-          return (
-            <button
-              key={action.id}
-              type="button"
-              disabled={disabled}
-              onClick={() => {
-                if (disabled) return
-                onActionClick(action.id)
-              }}
-              className={cn(
-                "rounded-lg border-2 border-[#D2D2D7] bg-[#F5F5F7] p-4 text-left",
-                "shadow-[2px_2px_0px_#1D1D1F] transition-all",
-                disabled
-                  ? "cursor-not-allowed opacity-60"
-                  : "hover:border-[#0071E3] hover:-translate-y-0.5"
-              )}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div className="text-[28px] leading-none" aria-hidden>
-                    {action.icon}
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-[#1D1D1F]">{action.label}</div>
-                    <div className="mt-1 text-xs text-[#6E6E73]">{hint}</div>
-                  </div>
-                </div>
-                <div className="rounded-md border-2 border-[#1D1D1F] bg-white px-2 py-1 text-[11px] font-bold">
-                  CMD
-                </div>
-              </div>
-            </button>
-          )
-        })}
-      </div>
-    </section>
-  )
+  return <EmergencyActionsPanel actions={actions} onActionClick={onActionClick} disabled={disabled} />
 }
