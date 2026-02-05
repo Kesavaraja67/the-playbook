@@ -68,6 +68,7 @@ export function ActionMatrix({ actions, onActionClick, disabled = false }: Actio
               disabled={disabled}
               aria-disabled={disabled || undefined}
               onClick={() => {
+                if (disabled) return
                 setActiveActionId(action.id)
                 onActionClick?.(action.id)
               }}

@@ -552,7 +552,7 @@ function PlayPageContent() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") runAction(input)
+              if (e.key === "Enter" && !isBusy) runAction(input)
             }}
             disabled={isBusy}
             placeholder="Type your action..."
