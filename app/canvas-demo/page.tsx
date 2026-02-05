@@ -18,9 +18,9 @@ export default function CanvasDemoPage() {
 
   // Sample data
   const sampleResources = [
-    { name: "Health", value: 85, color: "var(--electric-cyan)", icon: "❤️" },
-    { name: "Ammo", value: 45, color: "var(--quantum-gold)", icon: "🔫" },
-    { name: "Food", value: 25, color: "var(--warning-amber)", icon: "🍖" }
+    { name: "Health", value: 85, color: "var(--accent-success)", icon: "❤️" },
+    { name: "Ammo", value: 45, color: "var(--accent-warning)", icon: "🔫" },
+    { name: "Food", value: 25, color: "var(--accent-danger)", icon: "🍖" },
   ]
 
   const sampleActions = [
@@ -65,25 +65,24 @@ export default function CanvasDemoPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[var(--void-dark)] via-[var(--space-blue)] to-[var(--nebula-purple)] p-6">
+    <div className="min-h-screen bg-secondary p-6">
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/">
-              <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
+              <Button variant="ghost" size="sm" className="text-secondary">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>
             </Link>
             <div>
               <h1
-                className="text-3xl font-bold gradient-text"
-                style={{ fontFamily: "'Orbitron', sans-serif" }}
+                className="text-3xl font-bold text-primary"
               >
                 Reality Forge Canvas Demo
               </h1>
-              <p className="text-sm text-slate-400 mt-1">
+              <p className="text-sm text-secondary mt-1">
                 Showcasing generative UI components
               </p>
             </div>
@@ -99,7 +98,7 @@ export default function CanvasDemoPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h2 className="text-lg font-semibold text-white mb-3" style={{ fontFamily: "'Rajdhani', sans-serif" }}>
+          <h2 className="text-lg font-semibold text-primary mb-3">
             GameBoard Component
           </h2>
           <GameBoard
@@ -123,7 +122,7 @@ export default function CanvasDemoPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <h2 className="text-lg font-semibold text-white mb-3" style={{ fontFamily: "'Rajdhani', sans-serif" }}>
+          <h2 className="text-lg font-semibold text-primary mb-3">
             ResourceMeter Component
           </h2>
           <ResourceMeter resources={sampleResources} />
@@ -135,7 +134,7 @@ export default function CanvasDemoPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <h2 className="text-lg font-semibold text-white mb-3" style={{ fontFamily: "'Rajdhani', sans-serif" }}>
+          <h2 className="text-lg font-semibold text-primary mb-3">
             ActionMatrix Component
           </h2>
           <ActionMatrix
@@ -156,7 +155,7 @@ export default function CanvasDemoPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <h2 className="text-lg font-semibold text-white mb-3" style={{ fontFamily: "'Rajdhani', sans-serif" }}>
+          <h2 className="text-lg font-semibold text-primary mb-3">
             ProgressTracker Component
           </h2>
           <ProgressTracker milestones={sampleMilestones} />
@@ -169,7 +168,7 @@ export default function CanvasDemoPage() {
           transition={{ delay: 0.5 }}
           className="space-y-3"
         >
-          <h2 className="text-lg font-semibold text-white mb-3" style={{ fontFamily: "'Rajdhani', sans-serif" }}>
+          <h2 className="text-lg font-semibold text-primary mb-3">
             TacticalAlert Component
           </h2>
           <TacticalAlert
@@ -193,7 +192,7 @@ export default function CanvasDemoPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
           >
-            <h2 className="text-lg font-semibold text-white mb-3" style={{ fontFamily: "'Rajdhani', sans-serif" }}>
+            <h2 className="text-lg font-semibold text-primary mb-3">
               DiscoveryCard Component
             </h2>
             <DiscoveryCard
@@ -209,11 +208,11 @@ export default function CanvasDemoPage() {
 
       {/* Instructions */}
       <div className="max-w-7xl mx-auto mt-8">
-        <div className="glass-strong rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-white mb-3" style={{ fontFamily: "'Rajdhani', sans-serif" }}>
+        <div className="ds-card p-6">
+          <h3 className="text-lg font-semibold text-primary mb-3">
             Component Features
           </h3>
-          <ul className="text-sm text-slate-300 space-y-2">
+          <ul className="text-sm text-secondary space-y-2">
             <li>✨ <strong>GameBoard:</strong> Interactive SVG map with animated player, enemies, and resources</li>
             <li>✨ <strong>ResourceMeter:</strong> Circular gauges with color-coded status indicators</li>
             <li>✨ <strong>ActionMatrix:</strong> Interactive action cards with costs and success rates</li>

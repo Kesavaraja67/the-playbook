@@ -5,7 +5,6 @@ import { PortalButton } from "@/components/portal/PortalButton"
 import { ParticleSystem } from "@/components/portal/ParticleSystem"
 import { Starfield } from "@/components/portal/Starfield"
 import { AmbientShapes } from "@/components/portal/AmbientShapes"
-import { CursorTrail } from "@/components/portal/CursorTrail"
 import { PortalTransition } from "@/components/portal/PortalTransition"
 import { motion } from "framer-motion"
 import { useState, useEffect } from "react"
@@ -31,58 +30,45 @@ export default function PortalLanding() {
   }
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-gradient-radial from-[#1a1a2e] via-[#0f0f1e] to-[#000000]">
-      {/* Background Layers */}
+    <div className="relative w-full min-h-screen overflow-hidden bg-secondary">
       <Starfield />
       <AmbientShapes />
-      
-      {/* Interactive Effects */}
-      <CursorTrail />
-      
-      {/* Central Portal Area */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        {/* Title */}
+
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6">
         <motion.h1
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.3 }}
-          className="text-5xl md:text-7xl font-bold mb-24 gradient-text"
-          style={{ fontFamily: "'Orbitron', sans-serif" }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="text-5xl md:text-7xl font-bold text-primary text-center"
         >
           THE PLAYBOOK
         </motion.h1>
 
-        {/* Portal Button with Particles */}
-        <div className="relative">
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mt-6 text-lg md:text-xl text-secondary text-center"
+        >
+          One template. Infinite realities.
+        </motion.p>
+
+        <div className="mt-12 relative">
           <ParticleSystem isActive={!isActivating} />
           <PortalButton onClick={handleActivate} isActivating={isActivating} />
         </div>
 
-        {/* Subtitle */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.6 }}
-          transition={{ duration: 1, delay: 0.8 }}
-          className="text-lg md:text-xl text-slate-300 mt-20"
-          style={{ fontFamily: "'Rajdhani', sans-serif" }}
-        >
-          One Template. Infinite Realities.
-        </motion.p>
-
-        {/* Hint */}
         {showHint && !isActivating && (
           <motion.p
             initial={{ opacity: 0 }}
-            animate={{ opacity: 0.4 }}
-            className="absolute bottom-20 text-sm text-slate-400 animate-pulse"
-            style={{ fontFamily: "'Rajdhani', sans-serif" }}
+            animate={{ opacity: 1 }}
+            className="mt-10 text-sm text-tertiary"
           >
             Click to initialize →
           </motion.p>
         )}
       </div>
 
-      {/* Transition Overlay */}
       {isActivating && <PortalTransition />}
     </div>
   )

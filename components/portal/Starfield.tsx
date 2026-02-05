@@ -8,8 +8,6 @@ interface Star {
   x: number
   y: number
   size: number
-  opacity: number
-  twinkleDuration: number
 }
 
 export function Starfield() {
@@ -21,14 +19,12 @@ export function Starfield() {
   const springY = useSpring(mouseY, { stiffness: 50, damping: 20 })
 
   useEffect(() => {
-    // Generate 200 random stars
+    // Generate 200 random points
     const newStars: Star[] = Array.from({ length: 200 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
       size: Math.random() * 2 + 1,
-      opacity: Math.random() * 0.5 + 0.3,
-      twinkleDuration: 2 + Math.random() * 3,
     }))
     setStars(newStars)
   }, [])
@@ -54,20 +50,12 @@ export function Starfield() {
       {stars.map((star) => (
         <motion.div
           key={star.id}
-          className="absolute rounded-full bg-white"
+          className="absolute rounded-full bg-[var(--border-light)]"
           style={{
             left: `${star.x}%`,
             top: `${star.y}%`,
             width: star.size,
             height: star.size,
-          }}
-          animate={{
-            opacity: [star.opacity, star.opacity * 0.3, star.opacity],
-          }}
-          transition={{
-            duration: star.twinkleDuration,
-            repeat: Infinity,
-            ease: "easeInOut",
           }}
         />
       ))}

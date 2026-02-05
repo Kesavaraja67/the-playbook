@@ -28,10 +28,9 @@ export function ParticleSystem({ isActive }: ParticleSystemProps) {
             width: particle.size,
             height: particle.size,
             backgroundColor: particle.color,
-            boxShadow: `0 0 ${particle.size * 2}px ${particle.color}`,
             left: "50%",
             top: "50%",
-            opacity: particle.opacity,
+            opacity: 1,
           }}
           animate={{
             x: [

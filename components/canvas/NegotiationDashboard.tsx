@@ -38,18 +38,17 @@ export function NegotiationDashboard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="glass-strong rounded-lg p-6 space-y-6"
+      className="ds-card p-6 space-y-6"
     >
       <h3
-        className="text-sm font-semibold text-slate-300 uppercase tracking-wide"
-        style={{ fontFamily: "'Rajdhani', sans-serif" }}
+        className="text-sm font-semibold text-secondary uppercase tracking-wide"
       >
         Negotiation Dashboard
       </h3>
 
       {/* Salary Comparison */}
       <div className="space-y-4">
-        <h4 className="text-xs text-slate-400 uppercase tracking-wide">Salary Comparison</h4>
+        <h4 className="text-xs text-tertiary uppercase tracking-wide">Salary Comparison</h4>
         
         <div className="space-y-3">
           {/* Current Offer */}
@@ -57,7 +56,7 @@ export function NegotiationDashboard({
             label="Current Offer"
             amount={currentOffer}
             maxAmount={maxSalary}
-            color="var(--electric-cyan)"
+            color="var(--accent-primary)"
             icon={<DollarSign className="w-4 h-4" />}
             delay={0}
           />
@@ -67,7 +66,7 @@ export function NegotiationDashboard({
             label="Your Target"
             amount={targetSalary}
             maxAmount={maxSalary}
-            color="var(--quantum-gold)"
+            color="var(--accent-warning)"
             icon={<TrendingUp className="w-4 h-4" />}
             delay={0.1}
           />
@@ -77,7 +76,7 @@ export function NegotiationDashboard({
             label="Market Rate"
             amount={marketRate}
             maxAmount={maxSalary}
-            color="var(--plasma-purple)"
+            color="var(--accent-info)"
             icon={<Briefcase className="w-4 h-4" />}
             delay={0.2}
           />
@@ -86,7 +85,7 @@ export function NegotiationDashboard({
 
       {/* Leverage Points */}
       <div className="space-y-3">
-        <h4 className="text-xs text-slate-400 uppercase tracking-wide">Your Leverage</h4>
+        <h4 className="text-xs text-tertiary uppercase tracking-wide">Your Leverage</h4>
         <div className="grid grid-cols-1 gap-2">
           {leveragePoints.map((point, index) => (
             <motion.div
@@ -94,15 +93,15 @@ export function NegotiationDashboard({
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 + index * 0.1 }}
-              className="glass border border-slate-700 rounded-lg p-3 hover:border-cyan-500/50 transition-colors"
+              className="bg-primary border-2 border-medium shadow-sm rounded-lg p-3 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between mb-1">
-                <h5 className="text-sm font-semibold text-white">{point.title}</h5>
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-500/20 text-green-300 border border-green-500/30">
+                <h5 className="text-sm font-semibold text-primary">{point.title}</h5>
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary text-accent-success border-2 border-accent-success">
                   +{point.value}%
                 </span>
               </div>
-              <p className="text-xs text-slate-400">{point.description}</p>
+              <p className="text-xs text-secondary">{point.description}</p>
             </motion.div>
           ))}
         </div>
@@ -110,7 +109,7 @@ export function NegotiationDashboard({
 
       {/* Relationship Meter */}
       <div className="space-y-3">
-        <h4 className="text-xs text-slate-400 uppercase tracking-wide">Recruiter Relationship</h4>
+        <h4 className="text-xs text-tertiary uppercase tracking-wide">Recruiter Relationship</h4>
         <div className="flex items-center gap-4">
           <div className="relative w-20 h-20 flex-shrink-0">
             <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
@@ -119,7 +118,7 @@ export function NegotiationDashboard({
                 cy="50"
                 r="40"
                 fill="none"
-                stroke="rgba(255,255,255,0.1)"
+                stroke="var(--border-light)"
                 strokeWidth="8"
               />
               <motion.circle
@@ -127,29 +126,32 @@ export function NegotiationDashboard({
                 cy="50"
                 r="40"
                 fill="none"
-                stroke={relationshipScore >= 70 ? "var(--electric-cyan)" : relationshipScore >= 40 ? "var(--warning-amber)" : "var(--neon-magenta)"}
+                stroke={
+                  relationshipScore >= 70
+                    ? "var(--accent-success)"
+                    : relationshipScore >= 40
+                    ? "var(--accent-warning)"
+                    : "var(--accent-danger)"
+                }
                 strokeWidth="8"
                 strokeLinecap="round"
                 strokeDasharray={`${2 * Math.PI * 40}`}
                 initial={{ strokeDashoffset: 2 * Math.PI * 40 }}
                 animate={{ strokeDashoffset: 2 * Math.PI * 40 * (1 - relationshipScore / 100) }}
                 transition={{ duration: 1, ease: "easeOut" }}
-                style={{
-                  filter: `drop-shadow(0 0 8px ${relationshipScore >= 70 ? "var(--electric-cyan)" : relationshipScore >= 40 ? "var(--warning-amber)" : "var(--neon-magenta)"})`
-                }}
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xl font-bold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+              <span className="text-xl font-bold text-primary">
                 {relationshipScore}%
               </span>
             </div>
           </div>
           <div className="flex-1">
-            <p className="text-sm text-slate-300 mb-1">
+            <p className="text-sm text-secondary mb-1">
               {relationshipScore >= 70 ? "Excellent rapport" : relationshipScore >= 40 ? "Building trust" : "Needs improvement"}
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-tertiary">
               {relationshipScore >= 70 ? "They're receptive to your requests" : relationshipScore >= 40 ? "Continue demonstrating value" : "Focus on relationship building"}
             </p>
           </div>
@@ -181,16 +183,16 @@ function SalaryBar({
       <div className="flex items-center justify-between text-xs">
         <div className="flex items-center gap-2">
           <span style={{ color }}>{icon}</span>
-          <span className="text-slate-400">{label}</span>
+          <span className="text-secondary">{label}</span>
         </div>
-        <span className="font-bold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+        <span className="font-bold text-primary">
           ${amount.toLocaleString()}
         </span>
       </div>
-      <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+      <div className="h-2 bg-secondary border-2 border-light rounded-full overflow-hidden">
         <motion.div
           className="h-full rounded-full"
-          style={{ background: color, boxShadow: `0 0 10px ${color}` }}
+          style={{ background: color }}
           initial={{ width: 0 }}
           animate={{ width: `${percentage}%` }}
           transition={{ duration: 0.8, delay, ease: "easeOut" }}

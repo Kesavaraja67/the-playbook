@@ -37,17 +37,15 @@ export function ArenaState({ state, scenarioId }: ArenaStateProps) {
   }
 
   return (
-    <Card className="bg-slate-900/80 backdrop-blur-sm border-slate-700 p-6">
+    <Card className="p-6">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
       >
         <h2 
-          className="text-2xl font-bold text-cyan-400 mb-6 flex items-center gap-2"
-          style={{ fontFamily: "'Orbitron', sans-serif" }}
+          className="text-2xl font-bold text-primary mb-6"
         >
-          <span className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
           Arena State
         </h2>
         {renderState()}
@@ -69,9 +67,9 @@ function renderZombieState(state: Record<string, any>) {
         <StatCard label="Time Left" value={`${state.timeRemaining || 0}h`} icon="⏰" />
       </div>
       
-      <div className="mt-4 p-3 bg-slate-800/50 rounded-lg">
-        <p className="text-sm text-slate-400">Location</p>
-        <p className="text-lg font-semibold text-white">{state.location || "Unknown"}</p>
+      <div className="mt-4 p-3 bg-primary border-2 border-light rounded-lg">
+        <p className="text-sm text-secondary">Location</p>
+        <p className="text-lg font-semibold text-primary">{state.location || "Unknown"}</p>
       </div>
     </div>
   )
@@ -81,16 +79,16 @@ function renderZombieState(state: Record<string, any>) {
 function renderSalaryState(state: Record<string, any>) {
   return (
     <div className="space-y-4">
-      <div className="p-4 bg-gradient-to-r from-blue-900/50 to-cyan-900/50 rounded-lg">
-        <p className="text-sm text-slate-400">Current Offer</p>
-        <p className="text-3xl font-bold text-white">
+      <div className="p-4 bg-primary border-2 border-medium rounded-lg">
+        <p className="text-sm text-secondary">Current Offer</p>
+        <p className="text-3xl font-bold text-primary">
           ${(state.currentOffer || 0).toLocaleString()}
         </p>
       </div>
       
-      <div className="p-4 bg-gradient-to-r from-green-900/50 to-emerald-900/50 rounded-lg">
-        <p className="text-sm text-slate-400">Target Salary</p>
-        <p className="text-3xl font-bold text-green-400">
+      <div className="p-4 bg-primary border-2 border-medium rounded-lg">
+        <p className="text-sm text-secondary">Target Salary</p>
+        <p className="text-3xl font-bold text-accent-success">
           ${(state.targetSalary || 0).toLocaleString()}
         </p>
       </div>
@@ -123,9 +121,9 @@ function renderSpaceState(state: Record<string, any>) {
         <StatCard label="Systems" value={state.systems || "unknown"} icon="⚙️" />
       </div>
       
-      <div className="mt-4 p-3 bg-red-900/30 border border-red-500/50 rounded-lg">
-        <p className="text-sm text-red-400 font-semibold">⚠️ Orbit Status</p>
-        <p className="text-lg text-white">{state.orbit || "Unknown"}</p>
+      <div className="mt-4 p-3 bg-primary border-2 border-accent-danger rounded-lg">
+        <p className="text-sm text-accent-danger font-semibold">Orbit Status</p>
+        <p className="text-lg text-primary">{state.orbit || "Unknown"}</p>
       </div>
     </div>
   )
@@ -144,9 +142,9 @@ function renderDetectiveState(state: Record<string, any>) {
       
       <StatBar label="Reputation" value={state.reputation || 50} max={100} color="purple" />
       
-      <div className="mt-4 p-3 bg-slate-800/50 rounded-lg">
-        <p className="text-sm text-slate-400">Current Location</p>
-        <p className="text-lg font-semibold text-white">{state.location || "Unknown"}</p>
+      <div className="mt-4 p-3 bg-primary border-2 border-light rounded-lg">
+        <p className="text-sm text-secondary">Current Location</p>
+        <p className="text-lg font-semibold text-primary">{state.location || "Unknown"}</p>
       </div>
     </div>
   )
@@ -157,9 +155,9 @@ function renderGenericState(state: Record<string, any>) {
   return (
     <div className="space-y-2">
       {Object.entries(state).map(([key, value]) => (
-        <div key={key} className="flex justify-between items-center p-2 bg-slate-800/50 rounded">
-          <span className="text-sm text-slate-400 capitalize">{key}</span>
-          <span className="text-sm font-semibold text-white">{String(value)}</span>
+        <div key={key} className="flex justify-between items-center p-2 bg-primary border-2 border-light rounded">
+          <span className="text-sm text-secondary capitalize">{key}</span>
+          <span className="text-sm font-semibold text-primary">{String(value)}</span>
         </div>
       ))}
     </div>
@@ -180,23 +178,23 @@ function StatBar({
 }) {
   const percentage = (value / max) * 100
   const colorClasses = {
-    red: "bg-red-500",
-    yellow: "bg-yellow-500",
-    green: "bg-green-500",
-    blue: "bg-blue-500",
-    purple: "bg-purple-500",
-    cyan: "bg-cyan-500",
+    red: "bg-accent-danger",
+    yellow: "bg-accent-warning",
+    green: "bg-accent-success",
+    blue: "bg-accent-primary",
+    purple: "bg-accent-info",
+    cyan: "bg-accent-primary",
   }
 
   return (
     <div>
       <div className="flex justify-between items-center mb-2">
-        <span className="text-sm text-slate-400">{label}</span>
-        <span className="text-sm font-semibold text-white">
+        <span className="text-sm text-secondary">{label}</span>
+        <span className="text-sm font-semibold text-primary">
           {value} / {max}
         </span>
       </div>
-      <div className="w-full bg-slate-700 rounded-full h-2">
+      <div className="w-full bg-secondary border-2 border-light rounded-full h-2">
         <motion.div
           className={`h-2 rounded-full ${colorClasses[color]}`}
           initial={{ width: 0 }}
@@ -218,12 +216,12 @@ function StatCard({
   icon: string
 }) {
   return (
-    <div className="p-3 bg-slate-800/50 rounded-lg">
+    <div className="p-3 bg-primary border-2 border-light rounded-lg">
       <div className="flex items-center gap-2 mb-1">
         <span className="text-xl">{icon}</span>
-        <p className="text-xs text-slate-400 uppercase">{label}</p>
+        <p className="text-xs text-secondary uppercase">{label}</p>
       </div>
-      <p className="text-xl font-bold text-white">{value}</p>
+      <p className="text-xl font-bold text-primary">{value}</p>
     </div>
   )
 }

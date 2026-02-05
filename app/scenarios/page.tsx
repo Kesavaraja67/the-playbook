@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { scenarios, getDifficultyColor } from "@/lib/scenarios"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 
 export default function ScenariosPage() {
   const router = useRouter()
@@ -14,90 +15,46 @@ export default function ScenariosPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[var(--void-dark)] via-[var(--space-blue)] to-[var(--nebula-purple)] p-8 relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-[var(--electric-cyan)] opacity-10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-[var(--plasma-purple)] opacity-10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-      </div>
-
-      {/* Hero Section */}
+    <div className="min-h-screen bg-secondary p-8">
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="max-w-6xl mx-auto mb-16 text-center relative z-10"
+        transition={{ duration: 0.5 }}
+        className="max-w-6xl mx-auto mb-12"
       >
-        <motion.h1 
-          className="text-6xl md:text-8xl font-bold mb-6 gradient-text"
-          style={{ fontFamily: "'Orbitron', sans-serif" }}
-          animate={{
-            textShadow: [
-              "0 0 20px rgba(0, 240, 255, 0.5)",
-              "0 0 40px rgba(181, 55, 242, 0.5)",
-              "0 0 20px rgba(0, 240, 255, 0.5)"
-            ]
-          }}
-          transition={{ duration: 3, repeat: Infinity }}
-        >
-          Choose Your Reality
-        </motion.h1>
-        <p 
-          className="text-xl text-slate-300 max-w-2xl mx-auto"
-          style={{ fontFamily: "'Rajdhani', sans-serif" }}
-        >
-          Select a scenario to begin your simulation. Each reality presents unique challenges,
-          objectives, and outcomes powered by AI.
+        <h1 className="text-4xl md:text-6xl font-bold text-primary text-center">
+          Choose your scenario
+        </h1>
+        <p className="mt-4 text-secondary text-center max-w-2xl mx-auto">
+          Pick a scenario to start. Each one has clear objectives and different
+          constraints.
         </p>
       </motion.div>
 
-      {/* Scenario Grid */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         {scenarios.map((scenario, index) => (
           <motion.div
             key={scenario.id}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            whileHover={{ 
-              scale: 1.05,
-              rotateY: 5,
-              z: 50
-            }}
-            style={{ perspective: 1000 }}
+            transition={{ duration: 0.4, delay: index * 0.05 }}
+            whileHover={{ scale: 1.01 }}
           >
             <Card
-              className={`relative overflow-hidden cursor-pointer transition-all duration-300 border-2 holographic-border glass-strong group`}
+              className="cursor-pointer transition-shadow hover:shadow-md"
               onClick={() => handleSelectScenario(scenario.id)}
             >
-              {/* Gradient overlay */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${scenario.gradient} opacity-20 group-hover:opacity-30 transition-opacity`} />
-              
-              {/* Shimmer effect on hover */}
-              <div className="absolute inset-0 shimmer opacity-0 group-hover:opacity-100 transition-opacity" />
-
-              {/* Content */}
-              <div className="relative p-8 h-full">
-                {/* Icon and Title */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-4">
-                    <motion.span 
-                      className="text-5xl"
-                      whileHover={{ scale: 1.2, rotate: 10 }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                    >
-                      {scenario.icon}
-                    </motion.span>
+              <div className="px-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <span className="text-5xl leading-none">{scenario.icon}</span>
                     <div>
-                      <h2 
-                        className="text-3xl font-bold text-white mb-2"
-                        style={{ fontFamily: "'Orbitron', sans-serif" }}
-                      >
+                      <h2 className="text-2xl font-bold text-primary">
                         {scenario.title}
                       </h2>
-                      <Badge 
-                        variant={scenario.difficulty === "extreme" ? "destructive" : "secondary"}
-                        className={`${getDifficultyColor(scenario.difficulty)} uppercase text-xs glow-cyan`}
+                      <Badge
+                        variant="outline"
+                        className={`${getDifficultyColor(scenario.difficulty)} mt-2`}
                       >
                         {scenario.difficulty}
                       </Badge>
@@ -105,97 +62,60 @@ export default function ScenariosPage() {
                   </div>
                 </div>
 
-                {/* Description */}
-                <p 
-                  className="text-slate-300 mb-6 leading-relaxed"
-                  style={{ fontFamily: "'Rajdhani', sans-serif" }}
-                >
+                <p className="mt-5 text-secondary leading-relaxed">
                   {scenario.description}
                 </p>
 
-                {/* Objectives */}
-                <div className="space-y-2">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide" style={{ color: "var(--electric-cyan)" }}>
+                <div className="mt-6">
+                  <h3 className="text-xs font-bold uppercase tracking-wide text-tertiary">
                     Objectives
                   </h3>
-                  <ul className="space-y-1">
-                    {scenario.objectives.slice(0, 3).map((objective, i) => (
-                      <motion.li 
-                        key={i} 
-                        className="text-sm text-slate-400 flex items-center gap-2"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 + i * 0.05 }}
+                  <ul className="mt-2 space-y-1">
+                    {scenario.objectives.slice(0, 3).map((objective) => (
+                      <li
+                        key={objective}
+                        className="text-sm text-secondary flex items-start gap-2"
                       >
-                        <span style={{ color: "var(--electric-cyan)" }}>▸</span>
-                        {objective}
-                      </motion.li>
+                        <span className="text-accent-primary">▸</span>
+                        <span>{objective}</span>
+                      </li>
                     ))}
                     {scenario.objectives.length > 3 && (
-                      <li className="text-sm text-slate-500 italic">
-                        +{scenario.objectives.length - 3} more...
+                      <li className="text-sm text-tertiary">
+                        +{scenario.objectives.length - 3} more
                       </li>
                     )}
                   </ul>
                 </div>
 
-                {/* Hover Indicator */}
                 <div className="mt-6 text-right">
-                  <motion.span 
-                    className="text-sm font-semibold"
-                    style={{ color: "var(--electric-cyan)" }}
-                    animate={{
-                      x: [0, 5, 0]
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }}
-                  >
-                    Click to Begin →
-                  </motion.span>
+                  <span className="text-sm font-semibold text-accent-primary">
+                    Click to begin →
+                  </span>
                 </div>
               </div>
-
-              {/* Glow effect on hover */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none glow-cyan" />
             </Card>
           </motion.div>
         ))}
       </div>
 
-      {/* Canvas Demo Link */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8 }}
-        className="max-w-6xl mx-auto mt-12 text-center relative z-10"
-      >
-        <button
+      <div className="max-w-6xl mx-auto mt-12 flex flex-col items-center gap-3">
+        <Button
+          type="button"
+          variant="secondary"
           onClick={() => router.push("/canvas-demo")}
-          className="glass px-6 py-3 rounded-lg text-white hover:glow-cyan transition-all mb-4"
-          style={{ fontFamily: "'Rajdhani', sans-serif" }}
         >
-          🎨 View Canvas Components Demo
-        </button>
-      </motion.div>
+          View canvas components demo
+        </Button>
 
-      {/* Back Button */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8 }}
-        className="max-w-6xl mx-auto mt-4 text-center relative z-10"
-      >
         <button
+          type="button"
           onClick={() => router.push("/")}
-          className="text-slate-400 hover:text-[var(--electric-cyan)] transition-colors"
-          style={{ fontFamily: "'Rajdhani', sans-serif" }}
+          className="text-secondary hover:text-accent-primary underline-offset-4 hover:underline"
         >
-          ← Back to Portal
+          Back to portal
         </button>
-      </motion.div>
+      </div>
     </div>
   )
 }

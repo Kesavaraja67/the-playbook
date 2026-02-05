@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { getScenarioById } from "@/lib/scenarios"
 import { ComponentStack } from "@/components/playbook/ComponentStack"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { motion } from "framer-motion"
 import { Send, ArrowLeft, Maximize2, Minimize2 } from "lucide-react"
 import {
@@ -68,9 +69,9 @@ function PlayPageContent() {
             component: (
               <ResourceMeter
                 resources={[
-                  { name: "Health", value: 85, color: "var(--electric-cyan)", icon: "❤️" },
-                  { name: "Ammo", value: 45, color: "var(--quantum-gold)", icon: "🔫" },
-                  { name: "Food", value: 25, color: "var(--warning-amber)", icon: "🍖" }
+                  { name: "Health", value: 85, color: "var(--accent-success)", icon: "❤️" },
+                  { name: "Ammo", value: 45, color: "var(--accent-warning)", icon: "🔫" },
+                  { name: "Food", value: 25, color: "var(--accent-danger)", icon: "🍖" }
                 ]}
               />
             ),
@@ -115,9 +116,9 @@ function PlayPageContent() {
                   { id: "life", name: "Life Support", status: "operational", priority: "low", icon: "🛡️" }
                 ]}
                 resources={[
-                  { name: "Oxygen", level: 75, color: "var(--electric-cyan)", icon: <span>💨</span> },
-                  { name: "Power", level: 60, color: "var(--quantum-gold)", icon: <span>⚡</span> },
-                  { name: "Water", level: 40, color: "var(--frost-blue)", icon: <span>💧</span> }
+                  { name: "Oxygen", level: 75, color: "var(--accent-info)", icon: <span>💨</span> },
+                  { name: "Power", level: 60, color: "var(--accent-warning)", icon: <span>⚡</span> },
+                  { name: "Water", level: 40, color: "var(--accent-primary)", icon: <span>💧</span> }
                 ]}
                 daysLeft={7}
               />
@@ -226,9 +227,9 @@ function PlayPageContent() {
 
   if (!scenario) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-secondary flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl text-white mb-4">Scenario not found</h1>
+          <h1 className="text-2xl text-primary mb-4">Scenario not found</h1>
           <Button onClick={() => router.push("/scenarios")}>
             Back to Scenarios
           </Button>
@@ -238,18 +239,18 @@ function PlayPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[var(--void-dark)] via-[var(--space-blue)] to-[var(--nebula-purple)] flex">
+    <div className="min-h-screen bg-secondary flex">
       {/* Sidebar - Scenario Info & Chat */}
       <motion.div
         initial={{ x: -300 }}
         animate={{ x: 0, width: sidebarCollapsed ? "60px" : "380px" }}
         transition={{ duration: 0.3 }}
-        className="flex-shrink-0 border-r border-slate-700 glass-strong flex flex-col relative"
+        className="flex-shrink-0 border-r-2 border-medium bg-tertiary flex flex-col relative"
       >
         {/* Collapse Toggle */}
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="absolute top-4 -right-3 z-10 w-6 h-6 rounded-full bg-cyan-600 hover:bg-cyan-700 flex items-center justify-center text-white"
+          className="absolute top-4 -right-3 z-10 w-8 h-8 rounded-full bg-accent-primary hover:bg-accent-primary-dark flex items-center justify-center text-inverse border-2 border-dark"
         >
           {sidebarCollapsed ? <Maximize2 className="w-3 h-3" /> : <Minimize2 className="w-3 h-3" />}
         </button>
@@ -257,12 +258,12 @@ function PlayPageContent() {
         {!sidebarCollapsed && (
           <>
             {/* Header */}
-            <div className="p-4 border-b border-slate-700">
+            <div className="p-4 border-b-2 border-medium">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => router.push("/scenarios")}
-                className="text-slate-400 hover:text-white mb-3"
+                className="text-secondary mb-3"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
@@ -271,18 +272,17 @@ function PlayPageContent() {
                 <span className="text-4xl">{scenario.icon}</span>
                 <div>
                   <h1 
-                    className="text-lg font-bold text-white"
-                    style={{ fontFamily: "'Orbitron', sans-serif" }}
+                    className="text-lg font-bold text-primary"
                   >
                     {scenario.title}
                   </h1>
-                  <p className="text-xs text-slate-400">Live Simulation</p>
+                  <p className="text-xs text-secondary">Live Simulation</p>
                 </div>
               </div>
             </div>
 
             {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 hide-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.map((msg, i) => (
                 <div
                   key={i}
@@ -291,8 +291,8 @@ function PlayPageContent() {
                   <div
                     className={`max-w-[85%] rounded-lg p-3 ${
                       msg.role === "user"
-                        ? "bg-cyan-900/50 text-white"
-                        : "bg-slate-800/50 text-slate-200"
+                        ? "bg-accent-primary text-inverse border-2 border-dark"
+                        : "bg-primary text-primary border-2 border-light"
                     }`}
                   >
                     <p className="text-xs whitespace-pre-wrap">{msg.content}</p>
@@ -302,17 +302,17 @@ function PlayPageContent() {
             </div>
 
             {/* Input */}
-            <div className="p-4 border-t border-slate-700">
+            <div className="p-4 border-t-2 border-medium">
               <div className="flex gap-2">
-                <input
+                <Input
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                   placeholder="Type your action..."
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  className="flex-1"
                 />
-                <Button onClick={handleSendMessage} size="sm" className="bg-cyan-600 hover:bg-cyan-700">
+                <Button onClick={handleSendMessage} size="sm">
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
@@ -342,7 +342,13 @@ function PlayPageContent() {
 
 export default function PlayPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><p className="text-white">Loading...</p></div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-secondary flex items-center justify-center">
+          <p className="text-primary">Loading...</p>
+        </div>
+      }
+    >
       <PlayPageContent />
     </Suspense>
   )

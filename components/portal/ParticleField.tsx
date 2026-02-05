@@ -13,7 +13,7 @@ import { useState } from "react"
  */
 export function ParticleField({
   count = 50,
-  color = "rgba(0, 240, 255, 0.3)"
+  color = "var(--border-medium)"
 }: {
   count?: number
   color?: string
@@ -42,11 +42,9 @@ export function ParticleField({
             width: particle.size,
             height: particle.size,
             background: color,
-            boxShadow: `0 0 ${particle.size * 2}px ${color}`
           }}
           animate={{
             y: [0, -30, 0],
-            opacity: [0.2, 0.8, 0.2]
           }}
           transition={{
             duration: particle.duration,

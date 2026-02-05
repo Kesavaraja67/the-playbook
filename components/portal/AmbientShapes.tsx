@@ -26,7 +26,7 @@ export function AmbientShapes() {
       {shapes.map((shape, i) => (
         <motion.div
           key={i}
-          className="absolute border border-cyan-400/10"
+          className="absolute border-2 border-light"
           style={{
             left: `${shape.x}%`,
             top: `${shape.y}%`,
@@ -39,7 +39,6 @@ export function AmbientShapes() {
           animate={{
             x: [0, -100, 0],
             rotate: [0, 360],
-            opacity: [0.1, 0.05, 0.1],
           }}
           transition={{
             duration: shape.duration,
@@ -49,25 +48,6 @@ export function AmbientShapes() {
           }}
         />
       ))}
-      
-      {/* Occasional light streaks */}
-      <motion.div
-        className="absolute top-0 left-0 w-1 h-40 bg-gradient-to-b from-cyan-400/50 to-transparent"
-        style={{
-          transform: "rotate(45deg)",
-        }}
-        animate={{
-          x: [-100, 2000],
-          y: [-100, 2000],
-          opacity: [0, 1, 0],
-        }}
-        transition={{
-          duration: 0.5,
-          repeat: Infinity,
-          repeatDelay: 8,
-          ease: "linear",
-        }}
-      />
     </div>
   )
 }

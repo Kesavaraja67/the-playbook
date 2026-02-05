@@ -9,7 +9,6 @@ export interface Scenario {
   difficulty: "easy" | "medium" | "hard" | "extreme"
   objectives: string[]
   initialState: Record<string, any>
-  gradient: string
   icon: string
 }
 
@@ -33,7 +32,6 @@ export const scenarios: Scenario[] = [
       location: "Abandoned Warehouse",
       timeRemaining: 24,
     },
-    gradient: "from-red-500 via-orange-500 to-yellow-500",
     icon: "🧟",
   },
   {
@@ -55,7 +53,6 @@ export const scenarios: Scenario[] = [
       relationship: "neutral",
       round: 1,
     },
-    gradient: "from-blue-500 via-cyan-500 to-teal-500",
     icon: "💼",
   },
   {
@@ -77,7 +74,6 @@ export const scenarios: Scenario[] = [
       systems: "degraded",
       orbit: "decaying",
     },
-    gradient: "from-purple-500 via-indigo-500 to-blue-600",
     icon: "🚀",
   },
   {
@@ -99,7 +95,6 @@ export const scenarios: Scenario[] = [
       reputation: 70,
       location: "Crime Scene",
     },
-    gradient: "from-slate-600 via-gray-700 to-zinc-800",
     icon: "🔍",
   },
 ]
@@ -116,10 +111,10 @@ export function getScenarioById(id: string): Scenario | undefined {
  */
 export function getDifficultyColor(difficulty: Scenario["difficulty"]): string {
   const colors = {
-    easy: "text-green-500",
-    medium: "text-yellow-500",
-    hard: "text-orange-500",
-    extreme: "text-red-500",
+    easy: "text-accent-success",
+    medium: "text-accent-info",
+    hard: "text-accent-warning",
+    extreme: "text-accent-danger",
   }
   return colors[difficulty]
 }

@@ -36,7 +36,7 @@ export function CursorTrail() {
         {trail.map((point) => (
           <motion.div
             key={point.id}
-            className="absolute w-2 h-2 rounded-full bg-cyan-400/50"
+            className="absolute w-2 h-2 rounded-full bg-[var(--accent-primary)]"
             style={{ left: point.x, top: point.y }}
             initial={{ opacity: 0.5, scale: 1 }}
             animate={{ opacity: 0, scale: 0 }}

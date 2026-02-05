@@ -47,12 +47,11 @@ export function SpaceStationControl({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="glass-strong rounded-lg p-6 space-y-6"
+      className="ds-card p-6 space-y-6"
     >
       <div className="flex items-center justify-between">
         <h3
-          className="text-sm font-semibold text-slate-300 uppercase tracking-wide"
-          style={{ fontFamily: "'Rajdhani', sans-serif" }}
+          className="text-sm font-semibold text-secondary uppercase tracking-wide"
         >
           Station Control Panel
         </h3>
@@ -61,7 +60,7 @@ export function SpaceStationControl({
 
       {/* System Status Grid */}
       <div className="space-y-3">
-        <h4 className="text-xs text-slate-400 uppercase tracking-wide">System Status</h4>
+        <h4 className="text-xs text-tertiary uppercase tracking-wide">System Status</h4>
         <div className="grid grid-cols-2 gap-3">
           {systems.map((system, index) => (
             <SystemCard
@@ -76,7 +75,7 @@ export function SpaceStationControl({
 
       {/* Resource Tanks */}
       <div className="space-y-3">
-        <h4 className="text-xs text-slate-400 uppercase tracking-wide">Resource Levels</h4>
+        <h4 className="text-xs text-tertiary uppercase tracking-wide">Resource Levels</h4>
         <div className="grid grid-cols-3 gap-4">
           {resources.map((resource, index) => (
             <LiquidTank
@@ -102,27 +101,23 @@ function SystemCard({
 }) {
   const statusConfig = {
     operational: {
-      bg: "from-green-900/30 to-green-800/30",
-      border: "border-green-500/50",
-      text: "text-green-400",
+      border: "border-accent-success",
+      text: "text-accent-success",
       icon: "✓"
     },
     warning: {
-      bg: "from-yellow-900/30 to-yellow-800/30",
-      border: "border-yellow-500/50",
-      text: "text-yellow-400",
+      border: "border-accent-warning",
+      text: "text-accent-warning",
       icon: "⚠"
     },
     failing: {
-      bg: "from-orange-900/30 to-orange-800/30",
-      border: "border-orange-500/50",
-      text: "text-orange-400",
+      border: "border-accent-warning",
+      text: "text-accent-warning",
       icon: "!"
     },
     critical: {
-      bg: "from-red-900/30 to-red-800/30",
-      border: "border-red-500/50",
-      text: "text-red-400",
+      border: "border-accent-danger",
+      text: "text-accent-danger",
       icon: "✕"
     }
   }
@@ -134,13 +129,13 @@ function SystemCard({
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: index * 0.05 }}
-      className={`glass border-2 ${config.border} rounded-lg p-3 bg-gradient-to-br ${config.bg}`}
+      className={`bg-primary border-2 ${config.border} shadow-sm rounded-lg p-3`}
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="text-2xl">{system.icon}</span>
           <div>
-            <h5 className="text-sm font-semibold text-white">{system.name}</h5>
+            <h5 className="text-sm font-semibold text-primary">{system.name}</h5>
             <span className={`text-xs ${config.text} uppercase font-semibold`}>
               {system.status}
             </span>
@@ -162,7 +157,7 @@ function SystemCard({
         <Button
           size="sm"
           onClick={() => onRepair(system.id)}
-          className="w-full mt-2 bg-cyan-600 hover:bg-cyan-700 text-xs"
+          className="w-full mt-2 text-xs"
         >
           Repair {system.repairCost && `(${system.repairCost} power)`}
         </Button>
@@ -185,13 +180,12 @@ function LiquidTank({
       transition={{ delay: index * 0.1 }}
       className="flex flex-col items-center"
     >
-      <div className="relative w-full h-32 bg-slate-800 rounded-lg overflow-hidden border-2 border-slate-700">
+      <div className="relative w-full h-32 bg-primary rounded-lg overflow-hidden border-2 border-medium">
         {/* Liquid fill */}
         <motion.div
           className="absolute bottom-0 left-0 right-0 rounded-lg"
           style={{
-            background: `linear-gradient(to top, ${resource.color}, ${resource.color}80)`,
-            boxShadow: `0 0 20px ${resource.color}50`
+            background: resource.color,
           }}
           initial={{ height: 0 }}
           animate={{ height: `${resource.level}%` }}
@@ -200,7 +194,7 @@ function LiquidTank({
 
         {/* Level indicator */}
         <div className="absolute inset-0 flex items-center justify-center z-10">
-          <span className="text-2xl font-bold text-white drop-shadow-lg" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+          <span className="text-2xl font-bold text-primary">
             {resource.level}%
           </span>
         </div>
@@ -210,7 +204,7 @@ function LiquidTank({
           {[25, 50, 75].map((line) => (
             <div
               key={line}
-              className="absolute left-0 right-0 border-t border-slate-600/50"
+              className="absolute left-0 right-0 border-t-2 border-light"
               style={{ bottom: `${line}%` }}
             />
           ))}
@@ -220,7 +214,7 @@ function LiquidTank({
       {/* Label */}
       <div className="flex items-center gap-2 mt-2">
         <span style={{ color: resource.color }}>{resource.icon}</span>
-        <span className="text-xs text-slate-400 font-semibold">{resource.name}</span>
+        <span className="text-xs text-secondary font-semibold">{resource.name}</span>
       </div>
     </motion.div>
   )
@@ -232,14 +226,14 @@ function CountdownTimer({ days }: { days: number }) {
       initial={{ scale: 0 }}
       animate={{ scale: 1 }}
       transition={{ type: "spring", stiffness: 200 }}
-      className="flex items-center gap-2 glass px-3 py-1.5 rounded-lg border border-cyan-500/50"
+      className="flex items-center gap-2 bg-primary px-3 py-1.5 rounded-lg border-2 border-medium shadow-sm"
     >
-      <Clock className="w-4 h-4 text-cyan-400" />
+      <Clock className="w-4 h-4 text-accent-primary" />
       <div className="text-center">
-        <div className="text-2xl font-bold text-white" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+        <div className="text-2xl font-bold text-primary">
           {days}
         </div>
-        <div className="text-[10px] text-slate-400 uppercase">Days Left</div>
+        <div className="text-[10px] text-tertiary uppercase">Days Left</div>
       </div>
     </motion.div>
   )
