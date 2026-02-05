@@ -42,7 +42,44 @@ function escapeRegExp(value: string) {
 }
 
 function stripPythonComments(code: string) {
-  return code.replace(/#.*/g, "")
+  return code
+    .split("\n")
+    .map((line) => {
+      let inSingleQuote = false
+      let inDoubleQuote = false
+      let isEscaped = false
+
+      for (let index = 0; index < line.length; index += 1) {
+        const char = line[index]
+
+        if (isEscaped) {
+          isEscaped = false
+          continue
+        }
+
+        if (char === "\\") {
+          isEscaped = true
+          continue
+        }
+
+        if (!inDoubleQuote && char === "'") {
+          inSingleQuote = !inSingleQuote
+          continue
+        }
+
+        if (!inSingleQuote && char === '"') {
+          inDoubleQuote = !inDoubleQuote
+          continue
+        }
+
+        if (!inSingleQuote && !inDoubleQuote && char === "#") {
+          return line.slice(0, index)
+        }
+      }
+
+      return line
+    })
+    .join("\n")
 }
 
 function hasStringAssignment(code: string, variableName: string) {
@@ -271,7 +308,7 @@ const tutorialSteps: TutorialStepConfig[] = [
         return { ok: false, message: "Define `add(a, b)` using `def add(a, b):`." }
       }
 
-      if (!/^\s*return\s+a\s*\+\s*b\s*$/m.test(normalized)) {
+      if (!/^\s*return\s*\(?\s*a\s*\+\s*b\s*\)?\s*$/m.test(normalized)) {
         return { ok: false, message: "Inside `add`, return `a + b`." }
       }
 
