@@ -128,12 +128,13 @@ function PlayThreadUI({
   const { value, setValue, submit, isPending } = useTamboThreadInput()
   const canSubmit = isIdle && !isPending
   const canReset = !isPending
+  const isGenerating = isPending || !isIdle
 
   const handleSubmit = React.useCallback(() => {
     if (!value.trim()) return
-    if (!canSubmit) return
+    if (!isIdle || isPending) return
     void submit()
-  }, [canSubmit, submit, value])
+  }, [isIdle, isPending, submit, value])
 
   const renderedComponents = React.useMemo(() => {
     const componentsForRender = thread.messages
@@ -169,9 +170,13 @@ function PlayThreadUI({
 
           <button
             type="button"
-            onClick={() => {
+            onClick={async () => {
               if (!isIdle) {
-                void cancel()
+                try {
+                  await cancel()
+                } catch (error) {
+                  console.error("Failed to cancel thread before reset", error)
+                }
               }
               onReset()
             }}
@@ -259,7 +264,7 @@ function PlayThreadUI({
               handleSubmit()
             }}
             disabled={!canSubmit}
-            placeholder={canSubmit ? "Type your action..." : "Generating…"}
+            placeholder={isGenerating ? "Generating…" : "Type your action..."}
             className={cn(
               "h-12 flex-1 rounded-full border-2 border-[#D2D2D7] bg-white px-4",
               "text-sm text-[#1D1D1F] placeholder:text-[#6E6E73]",
