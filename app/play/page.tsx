@@ -565,7 +565,9 @@ function PlayPageContent() {
           />
           <button
             type="button"
-            onClick={() => runAction(input)}
+            onClick={() => {
+              if (!isBusy) runAction(input)
+            }}
             disabled={isBusy}
             className={cn(
               "grid size-12 place-items-center rounded-lg",

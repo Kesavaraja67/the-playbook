@@ -113,7 +113,7 @@ export const PLAYBOOK_TOOLS = [
             required: ["x", "y"]
           }
         },
-        gridSize: { type: "number" }
+        gridSize: { type: "number", minimum: 2, maximum: 20 }
       },
       required: ["playerPosition"]
     }
