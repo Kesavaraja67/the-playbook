@@ -39,36 +39,37 @@ export function GameBoard({
   // Theme-based colors
   const themeColors = {
     apocalyptic: {
-      player: "var(--electric-cyan)",
-      enemy: "#FF006E",
-      resource: "var(--quantum-gold)",
-      grid: "rgba(255, 255, 255, 0.05)",
-      background: "var(--void-dark)"
+      player: "var(--accent-primary)",
+      enemy: "var(--accent-danger)",
+      resource: "var(--accent-warning)",
+      grid: "var(--border-light)",
+      background: "var(--bg-primary)",
     },
     "sci-fi": {
-      player: "var(--electric-cyan)",
-      enemy: "#FF006E",
-      resource: "var(--frost-blue)",
-      grid: "rgba(0, 240, 255, 0.1)",
-      background: "var(--space-blue)"
+      player: "var(--accent-primary)",
+      enemy: "var(--accent-tambo)",
+      resource: "var(--accent-info)",
+      grid: "var(--border-light)",
+      background: "var(--bg-primary)",
     },
     noir: {
-      player: "var(--quantum-gold)",
-      enemy: "#FF006E",
-      resource: "var(--frost-blue)",
-      grid: "rgba(255, 255, 255, 0.03)",
-      background: "#0A0A0A"
+      player: "var(--accent-warning)",
+      enemy: "var(--accent-danger)",
+      resource: "var(--accent-info)",
+      grid: "var(--border-light)",
+      background: "var(--bg-primary)",
     }
   }
 
   const colors = themeColors[theme]
+  const safeGridSize = Math.max(2, Math.min(20, Math.floor(gridSize)))
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
-      className="relative w-full aspect-square rounded-lg overflow-hidden glass-strong"
+      className="ds-card relative w-full aspect-square overflow-hidden"
       style={{ background: colors.background }}
     >
       <svg
@@ -81,35 +82,19 @@ export function GameBoard({
         <defs>
           <pattern
             id={`grid-${theme}`}
-            width={500 / gridSize}
-            height={500 / gridSize}
+            width={500 / safeGridSize}
+            height={500 / safeGridSize}
             patternUnits="userSpaceOnUse"
           >
             <rect
-              width={500 / gridSize}
-              height={500 / gridSize}
+              width={500 / safeGridSize}
+              height={500 / safeGridSize}
               fill="none"
               stroke={colors.grid}
               strokeWidth="1"
             />
           </pattern>
 
-          {/* Glow filters */}
-          <filter id="glow-player">
-            <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          <filter id="glow-resource">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
         </defs>
 
         {/* Grid */}
@@ -128,7 +113,6 @@ export function GameBoard({
               cy={point.y}
               r="8"
               fill={colors.resource}
-              filter="url(#glow-resource)"
               animate={{
                 opacity: [0.6, 1, 0.6],
                 r: [8, 10, 8]
@@ -225,7 +209,6 @@ export function GameBoard({
             cy={playerPosition.y}
             r="8"
             fill={colors.player}
-            filter="url(#glow-player)"
             animate={{
               scale: [1, 1.2, 1]
             }}
@@ -247,13 +230,13 @@ export function GameBoard({
 
       {/* Legend */}
       <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center text-xs">
-        <div className="flex gap-3 glass px-3 py-1.5 rounded">
+        <div className="flex gap-3 bg-primary border-2 border-medium shadow-sm px-3 py-1.5 rounded">
           <div className="flex items-center gap-1.5">
             <div
               className="w-2 h-2 rounded-full"
-              style={{ background: colors.player, boxShadow: `0 0 8px ${colors.player}` }}
+              style={{ background: colors.player }}
             />
-            <span className="text-white/80">You</span>
+            <span className="text-secondary">You</span>
           </div>
           {zombieLocations.length > 0 && (
             <div className="flex items-center gap-1.5">
@@ -261,16 +244,16 @@ export function GameBoard({
                 className="w-2 h-2 rounded-full"
                 style={{ background: colors.enemy }}
               />
-              <span className="text-white/80">Threats</span>
+              <span className="text-secondary">Threats</span>
             </div>
           )}
           {resourcePoints.length > 0 && (
             <div className="flex items-center gap-1.5">
               <div
                 className="w-2 h-2 rounded-full"
-                style={{ background: colors.resource, boxShadow: `0 0 8px ${colors.resource}` }}
+                style={{ background: colors.resource }}
               />
-              <span className="text-white/80">Resources</span>
+              <span className="text-secondary">Resources</span>
             </div>
           )}
         </div>

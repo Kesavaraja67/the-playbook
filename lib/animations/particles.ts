@@ -2,6 +2,8 @@
  * Particle physics calculations for orbital motion
  */
 
+// Note: Currently unused. Kept for potential future portal/visual effects.
+
 export interface Particle {
   id: number
   angle: number
@@ -9,15 +11,18 @@ export interface Particle {
   speed: number
   size: number
   color: string
-  opacity: number
 }
 
 /**
  * Generate particles with randomized properties
  */
 export function generateParticles(count: number): Particle[] {
-  const colors = ["#00d9ff", "#a855f7", "#ec4899", "#ffffff"]
-  
+  const colors = [
+    "var(--accent-primary, #0071e3)",
+    "var(--accent-info, #5e5ce6)",
+    "var(--accent-tambo, #ff006e)",
+  ]
+
   return Array.from({ length: count }, (_, i) => ({
     id: i,
     angle: (Math.PI * 2 * i) / count,
@@ -25,7 +30,6 @@ export function generateParticles(count: number): Particle[] {
     speed: 3 + Math.random() * 5,
     size: 2 + Math.random() * 3,
     color: colors[Math.floor(Math.random() * colors.length)],
-    opacity: 0.6 + Math.random() * 0.4,
   }))
 }
 

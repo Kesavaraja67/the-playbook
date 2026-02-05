@@ -31,28 +31,20 @@ export function DiscoveryCard({
 }: DiscoveryCardProps) {
   const rarityColors = {
     common: {
-      bg: "from-slate-700 to-slate-800",
-      border: "border-slate-600",
-      glow: "rgba(148, 163, 184, 0.3)",
-      text: "text-slate-300"
+      border: "border-medium",
+      text: "text-secondary"
     },
     rare: {
-      bg: "from-blue-700 to-blue-900",
-      border: "border-blue-500",
-      glow: "rgba(59, 130, 246, 0.5)",
-      text: "text-blue-300"
+      border: "border-accent-info",
+      text: "text-accent-info"
     },
     epic: {
-      bg: "from-purple-700 to-purple-900",
-      border: "border-purple-500",
-      glow: "rgba(168, 85, 247, 0.5)",
-      text: "text-purple-300"
+      border: "border-accent-tambo",
+      text: "text-accent-tambo"
     },
     legendary: {
-      bg: "from-yellow-600 to-orange-700",
-      border: "border-yellow-500",
-      glow: "rgba(251, 191, 36, 0.6)",
-      text: "text-yellow-300"
+      border: "border-accent-warning",
+      text: "text-accent-warning"
     }
   }
 
@@ -73,10 +65,7 @@ export function DiscoveryCard({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, scale: 0.8 }}
         transition={{ duration: 0.5, type: "spring" }}
-        className={`relative glass-strong rounded-lg p-6 border-2 ${colors.border} bg-gradient-to-br ${colors.bg}`}
-        style={{
-          boxShadow: `0 0 30px ${colors.glow}, 0 0 60px ${colors.glow}`
-        }}
+        className={`relative bg-primary shadow-sm rounded-lg p-6 border-2 ${colors.border}`}
       >
         {/* Sparkle effect */}
         {animation === "sparkle" && (
@@ -103,7 +92,7 @@ export function DiscoveryCard({
                   repeatDelay: 2
                 }}
               >
-                <Sparkles className="w-4 h-4 text-white" />
+                <Sparkles className="w-4 h-4 text-accent-primary" />
               </motion.div>
             ))}
           </div>
@@ -116,7 +105,6 @@ export function DiscoveryCard({
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
             className={`text-xs font-semibold uppercase tracking-wider ${colors.text}`}
-            style={{ fontFamily: "'Rajdhani', sans-serif" }}
           >
             {rarity} Discovery
           </motion.span>
@@ -125,7 +113,7 @@ export function DiscoveryCard({
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.4, type: "spring" }}
-              className="text-xs font-bold bg-white/20 px-2 py-1 rounded-full text-white"
+              className="text-xs font-bold bg-secondary px-2 py-1 rounded-full text-primary border-2 border-medium"
             >
               ×{quantity}
             </motion.span>
@@ -149,30 +137,10 @@ export function DiscoveryCard({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="text-2xl font-bold text-white text-center mb-2"
-          style={{ fontFamily: "'Orbitron', sans-serif" }}
+          className="text-2xl font-bold text-primary text-center mb-2"
         >
           {item}
         </motion.h3>
-
-        {/* Glow pulse */}
-        {animation === "glow" && (
-          <motion.div
-            className="absolute inset-0 rounded-lg pointer-events-none"
-            animate={{
-              boxShadow: [
-                `0 0 20px ${colors.glow}`,
-                `0 0 40px ${colors.glow}`,
-                `0 0 20px ${colors.glow}`
-              ]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-        )}
       </motion.div>
     </AnimatePresence>
   )

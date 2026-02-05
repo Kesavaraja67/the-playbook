@@ -26,20 +26,18 @@ interface ObjectiveTrackerProps {
  */
 export function ObjectiveTracker({ objectives, scenarioTitle }: ObjectiveTrackerProps) {
   return (
-    <Card className="bg-slate-900/80 backdrop-blur-sm border-slate-700 p-6">
+    <Card className="p-6">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
       >
         <h2 
-          className="text-2xl font-bold text-purple-400 mb-2 flex items-center gap-2"
-          style={{ fontFamily: "'Orbitron', sans-serif" }}
+          className="text-2xl font-bold text-primary mb-2"
         >
-          <span className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></span>
           Objectives
         </h2>
-        <p className="text-sm text-slate-400 mb-6">{scenarioTitle}</p>
+        <p className="text-sm text-secondary mb-6">{scenarioTitle}</p>
 
         <div className="space-y-4">
           {objectives.map((objective, index) => (
@@ -55,10 +53,10 @@ export function ObjectiveTracker({ objectives, scenarioTitle }: ObjectiveTracker
         </div>
 
         {/* Progress Summary */}
-        <div className="mt-6 pt-6 border-t border-slate-700">
+        <div className="mt-6 pt-6 border-t-2 border-medium">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-slate-400">Overall Progress</span>
-            <span className="text-sm font-semibold text-white">
+            <span className="text-sm text-secondary">Overall Progress</span>
+            <span className="text-sm font-semibold text-primary">
               {objectives.filter(o => o.status === "completed").length} / {objectives.length}
             </span>
           </div>
@@ -76,27 +74,27 @@ function ObjectiveItem({ objective }: { objective: Objective }) {
   const getIcon = () => {
     switch (objective.status) {
       case "completed":
-        return <CheckCircle2 className="w-5 h-5 text-green-500" />
+        return <CheckCircle2 className="w-5 h-5 text-accent-success" />
       case "active":
-        return <Circle className="w-5 h-5 text-cyan-500" />
+        return <Circle className="w-5 h-5 text-accent-primary" />
       case "locked":
-        return <Lock className="w-5 h-5 text-slate-600" />
+        return <Lock className="w-5 h-5 text-tertiary" />
     }
   }
 
   const getTextColor = () => {
     switch (objective.status) {
       case "completed":
-        return "text-slate-500 line-through"
+        return "text-tertiary line-through"
       case "active":
-        return "text-white"
+        return "text-primary"
       case "locked":
-        return "text-slate-600"
+        return "text-tertiary"
     }
   }
 
   return (
-    <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors">
+    <div className="flex items-start gap-3 p-3 rounded-lg bg-primary border-2 border-light hover:border-medium transition-colors">
       <div className="mt-0.5">{getIcon()}</div>
       <div className="flex-1">
         <p className={`text-sm ${getTextColor()}`}>
@@ -109,7 +107,7 @@ function ObjectiveItem({ objective }: { objective: Objective }) {
         )}
       </div>
       {objective.status === "active" && (
-        <Badge variant="outline" className="text-xs border-cyan-500/50 text-cyan-400">
+        <Badge variant="outline" className="text-xs border-accent-primary text-accent-primary">
           Active
         </Badge>
       )}

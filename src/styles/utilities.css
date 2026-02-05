@@ -1,0 +1,138 @@
+@layer utilities {
+  /* Solid background utilities */
+  .bg-primary {
+    background-color: var(--bg-primary);
+  }
+
+  .bg-secondary {
+    background-color: var(--bg-secondary);
+  }
+
+  .bg-tertiary {
+    background-color: var(--bg-tertiary);
+  }
+
+  .bg-dark {
+    background-color: var(--bg-dark);
+  }
+
+  /* Text utilities */
+  .text-primary {
+    color: var(--text-primary);
+  }
+
+  .text-secondary {
+    color: var(--text-secondary);
+  }
+
+  .text-tertiary {
+    color: var(--text-tertiary);
+  }
+
+  .text-inverse {
+    color: var(--text-inverse);
+  }
+
+  /* Border color utilities */
+  .border-light {
+    border-color: var(--border-light);
+  }
+
+  .border-medium {
+    border-color: var(--border-medium);
+  }
+
+  .border-dark {
+    border-color: var(--border-dark);
+  }
+
+  /* Shadows (subtle, solid) */
+  .shadow-sm {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .shadow-md {
+    box-shadow: var(--shadow-md);
+  }
+
+  .shadow-lg {
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Accent utilities (avoid opacity-based hover overlays) */
+  .bg-accent-primary {
+    background-color: var(--accent-primary);
+  }
+
+  .bg-accent-primary-dark {
+    background-color: var(--accent-primary-dark);
+  }
+
+  .text-accent-primary {
+    color: var(--accent-primary);
+  }
+
+  .border-accent-primary {
+    border-color: var(--accent-primary);
+  }
+
+  .bg-accent-success {
+    background-color: var(--accent-success);
+  }
+
+  .bg-accent-warning {
+    background-color: var(--accent-warning);
+  }
+
+  .bg-accent-danger {
+    background-color: var(--accent-danger);
+  }
+
+  .bg-accent-info {
+    background-color: var(--accent-info);
+  }
+
+  .bg-accent-tambo {
+    background-color: var(--accent-tambo);
+  }
+
+  .text-accent-success {
+    color: var(--accent-success);
+  }
+
+  .text-accent-warning {
+    color: var(--accent-warning);
+  }
+
+  .text-accent-danger {
+    color: var(--accent-danger);
+  }
+
+  .text-accent-info {
+    color: var(--accent-info);
+  }
+
+  .text-accent-tambo {
+    color: var(--accent-tambo);
+  }
+
+  .border-accent-success {
+    border-color: var(--accent-success);
+  }
+
+  .border-accent-warning {
+    border-color: var(--accent-warning);
+  }
+
+  .border-accent-danger {
+    border-color: var(--accent-danger);
+  }
+
+  .border-accent-info {
+    border-color: var(--accent-info);
+  }
+
+  .border-accent-tambo {
+    border-color: var(--accent-tambo);
+  }
+}
