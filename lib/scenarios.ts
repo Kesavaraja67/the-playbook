@@ -4,6 +4,7 @@ export interface Scenario {
   id: string
   title: string
   description: string
+  systemPrompt?: string
   category: ScenarioCategory
   tags: string[]
   difficulty: "easy" | "medium" | "hard" | "extreme"
@@ -91,24 +92,27 @@ export const scenarios: Scenario[] = [
     id: "space-station",
     title: "Space Station Crisis",
     description:
-      "A critical malfunction threatens the ISS. Coordinate with mission control and your crew to prevent disaster.",
+      "You are the emergency response coordinator for Mars Colony Alpha. Multiple systems are failing, and a crew of 6 depends on your decisions. Resupply arrives in 14 days.",
+    systemPrompt:
+      "Run a serious emergency simulation. Provide clear, technical updates. Avoid game language (no levels, scores, achievements). Prioritize life support and crew safety. Present tradeoffs, constraints, and next actions.",
     category: "simulation",
     tags: ["Crisis", "Engineering", "Teamwork"],
     difficulty: "extreme",
     layout: "briefing",
     objectives: [
-      "Diagnose the malfunction",
-      "Repair oxygen systems",
-      "Stabilize orbit",
-      "Evacuate if necessary",
+      "Restore oxygen generation",
+      "Stabilize power distribution",
+      "Maintain water recycler throughput",
+      "Keep crew health and morale stable",
+      "Coordinate with mission control",
     ],
     initialState: {
       oxygen: 75,
       power: 60,
-      hull: 100,
       crew: 6,
       systems: "degraded",
-      orbit: "decaying",
+      location: "Mars Colony Alpha",
+      resupplyDays: 14,
     },
     icon: "🚀",
   },
