@@ -14,7 +14,7 @@ export interface Scenario {
   icon: string
 }
 
-export type ScenarioLayout = "board" | "briefing"
+export type ScenarioLayout = "board" | "briefing" | "tutorial"
 
 export type ScenarioCategory =
   | "game"
@@ -136,6 +136,32 @@ export const scenarios: Scenario[] = [
       location: "Crime Scene",
     },
     icon: "🔍",
+  },
+  {
+    id: "python-tutorial",
+    title: "Learn Python: Variables & Functions",
+    description:
+      "Interactive tutorial teaching Python fundamentals. Perfect for complete beginners. Learn by doing with an AI tutor guiding you.",
+    category: "educational",
+    tags: ["Python", "Programming", "Tutorial", "Beginner", "Interactive"],
+    difficulty: "easy",
+    layout: "tutorial",
+    objectives: [
+      "Understand what variables are",
+      "Create variables of different types",
+      "Write a simple function",
+      "Call functions and use return values",
+      "Complete all interactive exercises",
+    ],
+    initialState: {
+      current_step: 1,
+      total_steps: 5,
+      concepts_mastered: 0,
+      total_concepts: 5,
+      attempts: 0,
+      hints_used: 0,
+    },
+    icon: "📚",
   },
 ]
 

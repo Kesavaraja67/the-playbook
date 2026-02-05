@@ -79,6 +79,28 @@
         "reputation": 70,
         "location": "Crime Scene"
       }
+    },
+    {
+      "id": "python-tutorial",
+      "title": "Learn Python: Variables & Functions",
+      "description": "Interactive tutorial teaching Python fundamentals. Perfect for complete beginners. Learn by doing with an AI tutor guiding you.",
+      "difficulty": "easy",
+      "category": "educational",
+      "objectives": [
+        "Understand what variables are",
+        "Create variables of different types",
+        "Write a simple function",
+        "Call functions and use return values",
+        "Complete all interactive exercises"
+      ],
+      "initialState": {
+        "current_step": 1,
+        "total_steps": 5,
+        "concepts_mastered": 0,
+        "total_concepts": 5,
+        "attempts": 0,
+        "hints_used": 0
+      }
     }
   ]
 }
