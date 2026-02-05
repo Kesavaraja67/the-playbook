@@ -366,15 +366,18 @@ export function PythonTutorialUI({ scenario }: { scenario: Scenario }) {
     [scenario.objectives]
   )
 
-  const totalSteps = tutorialSteps.length
+  const starterCodes = React.useMemo(
+    () => tutorialSteps.map((step) => step.starterCode),
+    []
+  )
+
+  const totalSteps = starterCodes.length
 
   const [stepIndex, setStepIndex] = React.useState(0)
   const [completedSteps, setCompletedSteps] = React.useState<boolean[]>(() =>
     new Array(totalSteps).fill(false)
   )
-  const [codes, setCodes] = React.useState<string[]>(() =>
-    tutorialSteps.map((step) => step.starterCode)
-  )
+  const [codes, setCodes] = React.useState<string[]>(() => starterCodes.slice())
   const [feedback, setFeedback] = React.useState<PlaygroundFeedback>({ state: "idle" })
   const [showHint, setShowHint] = React.useState(false)
   const [attempts, setAttempts] = React.useState(0)
@@ -396,12 +399,12 @@ export function PythonTutorialUI({ scenario }: { scenario: Scenario }) {
   const reset = React.useCallback(() => {
     setStepIndex(0)
     setCompletedSteps(new Array(totalSteps).fill(false))
-    setCodes(tutorialSteps.map((s) => s.starterCode))
+    setCodes(starterCodes.slice())
     setFeedback({ state: "idle" })
     setShowHint(false)
     setAttempts(0)
     setHintsUsed(0)
-  }, [totalSteps])
+  }, [starterCodes, totalSteps])
 
   const checkAnswer = React.useCallback(() => {
     setAttempts((prev) => prev + 1)
