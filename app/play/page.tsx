@@ -675,13 +675,13 @@ function PlayPageContent() {
                 !e.ctrlKey &&
                 !e.metaKey
 
-              if (!isPlainEnter) return
-              if (e.nativeEvent.isComposing) return
-              if (isBusy) return
-              if (!input.trim()) return
+              if (!isPlainEnter || e.nativeEvent.isComposing) return
+
+              const trimmed = input.trim()
+              if (!trimmed || isBusy) return
 
               e.preventDefault()
-              runAction(input)
+              runAction(trimmed)
             }}
             disabled={isBusy}
             placeholder="Type your action..."
