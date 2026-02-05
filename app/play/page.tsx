@@ -51,6 +51,27 @@ type InitialState = {
   alert: TacticalAlertState | null
 }
 
+const panelTitlesByScenarioId = {
+  "salary-negotiation": {
+    resources: "Negotiation Signals",
+    actions: "Talking Points",
+  },
+  "space-station": {
+    resources: "Station Telemetry",
+    actions: "Command Deck",
+  },
+  "detective-mystery": {
+    resources: "Case Metrics",
+    actions: "Investigation Notebook",
+  },
+} as const
+
+type BriefingScenarioId = keyof typeof panelTitlesByScenarioId
+
+function isBriefingScenarioId(value: string): value is BriefingScenarioId {
+  return Object.prototype.hasOwnProperty.call(panelTitlesByScenarioId, value)
+}
+
 function clamp(min: number, value: number, max: number) {
   if (!Number.isFinite(value)) return min
   return Math.max(min, Math.min(max, value))
@@ -274,6 +295,9 @@ function PlayPageContent() {
   const scenarioId = searchParams.get("scenario") || "zombie-survival"
   const scenario = getScenarioById(scenarioId)
   const isBoardScenario = scenario?.layout === "board"
+  const panelTitles = isBriefingScenarioId(scenarioId) ? panelTitlesByScenarioId[scenarioId] : null
+  const resourcesPanelTitle = isBoardScenario ? "Resources" : (panelTitles?.resources ?? "Resources")
+  const actionsPanelTitle = isBoardScenario ? "Actions" : (panelTitles?.actions ?? "Actions")
 
   const [day, setDay] = React.useState(1)
   const [totalDays, setTotalDays] = React.useState(7)
@@ -401,6 +425,7 @@ function PlayPageContent() {
   const effectiveIsLoadingBoard = isBoardScenario && isLoadingBoard
   const isInitializing = effectiveIsLoadingBoard || isLoadingResources || isLoadingActions
   const isBusy = isProcessing || isInitializing
+  // Disable reset while busy to avoid racing in-flight actions.
   const canReset = !isBusy
 
   const runAction = React.useCallback(
@@ -522,8 +547,6 @@ function PlayPageContent() {
     )
   }
 
-  const resolvedScenario = scenario
-
   return (
     <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F]">
       <header className="sticky top-0 z-40 h-[60px] bg-white border-b-2 border-[#D2D2D7]">
@@ -538,7 +561,7 @@ function PlayPageContent() {
           </button>
 
           <div className="text-center">
-            <div className="text-sm font-bold">{resolvedScenario.title}</div>
+            <div className="text-sm font-bold">{scenario.title}</div>
             {progressLabel && (
               <div className="text-xs text-[#6E6E73]">{progressLabel}</div>
             )}
@@ -548,6 +571,7 @@ function PlayPageContent() {
             type="button"
             onClick={reset}
             disabled={!canReset}
+            aria-disabled={!canReset || undefined}
             className={cn(
               "inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F]",
               !canReset ? "cursor-not-allowed opacity-60" : "hover:text-[#0071E3]"
@@ -583,22 +607,12 @@ function PlayPageContent() {
           ) : scenarioId === "detective-mystery" ? (
             <DetectiveMysteryBriefing scenario={scenario} />
           ) : (
-            <ScenarioBriefingCard scenario={resolvedScenario} />
+            <ScenarioBriefingCard scenario={scenario} />
           )}
 
           {isLoadingResources ? (
             <LoadingCard
-              title={
-                isBoardScenario
-                  ? "Resources"
-                  : scenarioId === "salary-negotiation"
-                    ? "Negotiation Signals"
-                    : scenarioId === "space-station"
-                      ? "Station Telemetry"
-                      : scenarioId === "detective-mystery"
-                        ? "Case Metrics"
-                        : "Resources"
-              }
+              title={resourcesPanelTitle}
               height="h-[220px]"
             />
           ) : isBoardScenario ? (
@@ -615,17 +629,7 @@ function PlayPageContent() {
 
           {isLoadingActions ? (
             <LoadingCard
-              title={
-                isBoardScenario
-                  ? "Actions"
-                  : scenarioId === "salary-negotiation"
-                    ? "Talking Points"
-                    : scenarioId === "space-station"
-                      ? "Command Deck"
-                      : scenarioId === "detective-mystery"
-                        ? "Investigation Notebook"
-                        : "Actions"
-              }
+              title={actionsPanelTitle}
               height="h-[220px]"
             />
           ) : isBoardScenario ? (
@@ -678,12 +682,13 @@ function PlayPageContent() {
                 !e.ctrlKey &&
                 !e.metaKey
 
-              if (!isPlainEnter) return
-              if (e.nativeEvent.isComposing) return
-              if (!input.trim()) return
+              if (!isPlainEnter || e.nativeEvent.isComposing) return
+
+              const trimmed = input.trim()
+              if (!trimmed || isBusy) return
 
               e.preventDefault()
-              runAction(input)
+              runAction(trimmed)
             }}
             disabled={isBusy}
             placeholder="Type your action..."
@@ -697,7 +702,9 @@ function PlayPageContent() {
           <button
             type="button"
             onClick={() => {
-              if (!isBusy) runAction(input)
+              const trimmed = input.trim()
+              if (!trimmed || isBusy) return
+              runAction(trimmed)
             }}
             disabled={isBusy}
             className={cn(
