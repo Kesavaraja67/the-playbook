@@ -12,6 +12,7 @@ export type ClueDisplayProps = {
 
 export function ClueDisplay({ clue, className }: ClueDisplayProps) {
   const [rendered, setRendered] = React.useState("")
+  const animationIdRef = React.useRef(0)
 
   React.useEffect(() => {
     if (!clue) {
@@ -29,11 +30,15 @@ export function ClueDisplay({ clue, className }: ClueDisplayProps) {
 
     setRendered("")
 
+    animationIdRef.current += 1
+    const animationIdAtStart = animationIdRef.current
+
     let frameId = 0
     const start = performance.now()
     const msPerChar = 40
 
     const tick = (now: number) => {
+      if (animationIdRef.current !== animationIdAtStart) return
       const elapsed = now - start
       const charsToShow = Math.min(clue.length, Math.floor(elapsed / msPerChar))
       const nextRendered = clue.slice(0, charsToShow)
