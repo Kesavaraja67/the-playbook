@@ -6,18 +6,28 @@ export interface Scenario {
   id: string
   title: string
   description: string
+  category: ScenarioCategory
+  tags: string[]
   difficulty: "easy" | "medium" | "hard" | "extreme"
   objectives: string[]
-  initialState: Record<string, any>
+  initialState: Record<string, unknown>
   gradient: string
   icon: string
 }
+
+export type ScenarioCategory =
+  | "game"
+  | "professional"
+  | "simulation"
+  | "educational"
 
 export const scenarios: Scenario[] = [
   {
     id: "zombie-survival",
     title: "Zombie Survival",
     description: "Navigate a post-apocalyptic city overrun by the undead. Manage resources, find survivors, and make it to the evacuation point.",
+    category: "game",
+    tags: ["Survival", "Strategy", "Resources"],
     difficulty: "hard",
     objectives: [
       "Find medical supplies",
@@ -40,6 +50,8 @@ export const scenarios: Scenario[] = [
     id: "salary-negotiation",
     title: "Salary Negotiation",
     description: "You've received a job offer. Navigate the delicate art of negotiation to maximize your compensation package.",
+    category: "professional",
+    tags: ["Negotiation", "Career", "Communication"],
     difficulty: "medium",
     objectives: [
       "Research market rates",
@@ -62,6 +74,8 @@ export const scenarios: Scenario[] = [
     id: "space-station",
     title: "Space Station Crisis",
     description: "A critical malfunction threatens the ISS. Coordinate with mission control and your crew to prevent disaster.",
+    category: "simulation",
+    tags: ["Crisis", "Engineering", "Teamwork"],
     difficulty: "extreme",
     objectives: [
       "Diagnose the malfunction",
@@ -84,6 +98,8 @@ export const scenarios: Scenario[] = [
     id: "detective-mystery",
     title: "Detective Mystery",
     description: "A high-profile murder case lands on your desk. Interview suspects, gather evidence, and solve the crime before the trail goes cold.",
+    category: "game",
+    tags: ["Mystery", "Investigation", "Logic"],
     difficulty: "medium",
     objectives: [
       "Interview all suspects",
