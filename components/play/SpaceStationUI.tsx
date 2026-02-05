@@ -6,18 +6,11 @@ import { componentCardClassName } from "@/components/play/ComponentCanvas"
 import type { ActionMatrixProps } from "@/components/tambo/ActionMatrix"
 import type { ResourceMeterProps } from "@/components/tambo/ResourceMeter"
 import type { Scenario } from "@/lib/scenarios"
+import { asNumber, asString } from "@/lib/safe-cast"
 import { cn } from "@/lib/utils"
 
 type Resource = ResourceMeterProps["resources"][number]
 type Action = ActionMatrixProps["actions"][number]
-
-function asString(value: unknown, fallback: string) {
-  return typeof value === "string" ? value : fallback
-}
-
-function asNumber(value: unknown, fallback: number) {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback
-}
 
 function statusFor(value: number) {
   if (value >= 75) return { label: "Nominal", color: "#34C759" }

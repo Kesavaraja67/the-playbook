@@ -6,14 +6,11 @@ import { componentCardClassName } from "@/components/play/ComponentCanvas"
 import type { ActionMatrixProps } from "@/components/tambo/ActionMatrix"
 import type { ResourceMeterProps } from "@/components/tambo/ResourceMeter"
 import type { Scenario } from "@/lib/scenarios"
+import { asNumber } from "@/lib/safe-cast"
 import { cn } from "@/lib/utils"
 
 type Resource = ResourceMeterProps["resources"][number]
 type Action = ActionMatrixProps["actions"][number]
-
-function asNumber(value: unknown, fallback: number) {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback
-}
 
 const suspectList = [
   { name: "Avery Carter", note: "Last seen near the docks" },

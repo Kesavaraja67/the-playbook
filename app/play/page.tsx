@@ -51,7 +51,7 @@ type InitialState = {
   alert: TacticalAlertState | null
 }
 
-const panelTitlesByScenarioId: Record<string, { resources: string; actions: string }> = {
+const panelTitlesByScenarioId = {
   "salary-negotiation": {
     resources: "Negotiation Signals",
     actions: "Talking Points",
@@ -64,6 +64,12 @@ const panelTitlesByScenarioId: Record<string, { resources: string; actions: stri
     resources: "Case Metrics",
     actions: "Investigation Notebook",
   },
+} as const
+
+type BriefingScenarioId = keyof typeof panelTitlesByScenarioId
+
+function isBriefingScenarioId(value: string): value is BriefingScenarioId {
+  return Object.prototype.hasOwnProperty.call(panelTitlesByScenarioId, value)
 }
 
 function clamp(min: number, value: number, max: number) {
@@ -289,7 +295,7 @@ function PlayPageContent() {
   const scenarioId = searchParams.get("scenario") || "zombie-survival"
   const scenario = getScenarioById(scenarioId)
   const isBoardScenario = scenario?.layout === "board"
-  const panelTitles = panelTitlesByScenarioId[scenarioId]
+  const panelTitles = isBriefingScenarioId(scenarioId) ? panelTitlesByScenarioId[scenarioId] : null
   const resourcesPanelTitle = isBoardScenario ? "Resources" : (panelTitles?.resources ?? "Resources")
   const actionsPanelTitle = isBoardScenario ? "Actions" : (panelTitles?.actions ?? "Actions")
 
