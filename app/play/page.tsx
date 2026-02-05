@@ -1,236 +1,384 @@
 "use client"
 
-import { useState, useEffect, useCallback, Suspense } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
-import { getScenarioById } from "@/lib/scenarios"
-import { ComponentStack } from "@/components/playbook/ComponentStack"
+import * as React from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { ArrowLeft, RotateCcw, Send } from "lucide-react"
+
+import { ComponentCanvas, componentCardClassName } from "@/components/play/ComponentCanvas"
+import { ActionMatrix } from "@/components/tambo/ActionMatrix"
+import { GameBoard } from "@/components/tambo/GameBoard"
+import { ResourceMeter } from "@/components/tambo/ResourceMeter"
+import { TacticalAlert } from "@/components/tambo/TacticalAlert"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { motion } from "framer-motion"
-import { Send, ArrowLeft, Maximize2, Minimize2 } from "lucide-react"
-import {
-  GameBoard,
-  ResourceMeter,
-  TacticalAlert,
-  ProgressTracker,
-  NegotiationDashboard,
-  SpaceStationControl,
-  DetectiveBoard
-} from "@/components/canvas"
+import { getScenarioById } from "@/lib/scenarios"
+import { cn } from "@/lib/utils"
+
+type ChatMessage = {
+  role: "user" | "assistant"
+  content: string
+}
+
+type TacticalAlertState = Omit<React.ComponentProps<typeof TacticalAlert>, "onDismiss">
+
+type BoardState = React.ComponentProps<typeof GameBoard>
+type Resource = React.ComponentProps<typeof ResourceMeter>["resources"][number]
+type Action = React.ComponentProps<typeof ActionMatrix>["actions"][number]
+
+function clamp(min: number, value: number, max: number) {
+  return Math.max(min, Math.min(max, value))
+}
+
+function getZombieInitialState() {
+  const board: BoardState = {
+    gridSize: 10,
+    playerPosition: { x: 5, y: 5 },
+    enemies: [
+      { x: 3, y: 4, type: "Zombie" },
+      { x: 6, y: 6, type: "Zombie" },
+    ],
+    resources: [{ x: 8, y: 3, type: "Loot" }],
+  }
+
+  const resources: Resource[] = [
+    { name: "Health", value: 85, color: "#FF3B30", icon: "❤️" },
+    { name: "Ammo", value: 12, color: "#FF9F0A", icon: "🔫" },
+    { name: "Food", value: 3, color: "#34C759", icon: "🍖" },
+    { name: "Water", value: 2, color: "#0071E3", icon: "💧" },
+  ]
+
+  const actions: Action[] = [
+    {
+      id: "scavenge",
+      label: "Scavenge",
+      icon: "🔍",
+      costs: [{ resource: "Energy", amount: 10 }],
+      successRate: 75,
+      description: "Search nearby for supplies",
+    },
+    {
+      id: "fortify",
+      label: "Fortify",
+      icon: "🛡️",
+      costs: [{ resource: "Materials", amount: 20 }],
+      successRate: 90,
+      description: "Reinforce your position",
+    },
+    {
+      id: "move",
+      label: "Move",
+      icon: "🏃",
+      costs: [{ resource: "Energy", amount: 15 }],
+      successRate: 60,
+      description: "Relocate to a safer spot",
+    },
+    {
+      id: "rest",
+      label: "Rest",
+      icon: "😴",
+      successRate: 100,
+      description: "Recover and plan",
+    },
+  ]
+
+  const initialAssistantMessage: ChatMessage = {
+    role: "assistant",
+    content: "You hear zombies nearby. What do you do?",
+  }
+
+  return {
+    day: 1,
+    totalDays: 7,
+    board,
+    resources,
+    actions,
+    messages: [initialAssistantMessage],
+    alert: null as TacticalAlertState | null,
+  }
+}
+
+function getInitialState(scenarioId: string) {
+  if (scenarioId === "zombie-survival") return getZombieInitialState()
+
+  if (scenarioId === "salary-negotiation") {
+    const initialAssistantMessage: ChatMessage = {
+      role: "assistant",
+      content: "The hiring manager is waiting. What’s your next move?",
+    }
+
+    return {
+      day: 1,
+      totalDays: 1,
+      board: {
+        gridSize: 8,
+        playerPosition: { x: 3, y: 4 },
+        enemies: [],
+        resources: [],
+      } satisfies BoardState,
+      resources: [
+        { name: "Confidence", value: 60, color: "#0071E3", icon: "🗣️" },
+        { name: "Leverage", value: 50, color: "#FF9F0A", icon: "⚖️" },
+        { name: "Offer", value: 70, color: "#34C759", icon: "💼" },
+        { name: "Market", value: 80, color: "#FF3B30", icon: "📊" },
+      ] as Resource[],
+      actions: [
+        { id: "counter", label: "Counter", icon: "✍️", successRate: 65 },
+        { id: "benefits", label: "Benefits", icon: "🎁", successRate: 75 },
+        { id: "pause", label: "Pause", icon: "⏸️", successRate: 90 },
+        { id: "accept", label: "Accept", icon: "✅", successRate: 40 },
+      ] as Action[],
+      messages: [initialAssistantMessage],
+      alert: null as TacticalAlertState | null,
+    }
+  }
+
+  if (scenarioId === "space-station") {
+    const initialAssistantMessage: ChatMessage = {
+      role: "assistant",
+      content: "Multiple systems are failing. What do you tackle first?",
+    }
+
+    return {
+      day: 1,
+      totalDays: 7,
+      board: {
+        gridSize: 10,
+        playerPosition: { x: 4, y: 4 },
+        enemies: [{ x: 6, y: 6, label: "Failure" }],
+        resources: [{ x: 2, y: 7, label: "Spare Parts" }],
+      } satisfies BoardState,
+      resources: [
+        { name: "Oxygen", value: 75, color: "#0071E3", icon: "💨" },
+        { name: "Power", value: 60, color: "#FF9F0A", icon: "⚡" },
+        { name: "Water", value: 40, color: "#34C759", icon: "💧" },
+        { name: "Hull", value: 90, color: "#FF3B30", icon: "🛡️" },
+      ] as Resource[],
+      actions: [
+        { id: "repair", label: "Repair", icon: "🧰", successRate: 70 },
+        { id: "reroute", label: "Reroute", icon: "🔀", successRate: 55 },
+        { id: "scan", label: "Scan", icon: "📡", successRate: 85 },
+        { id: "report", label: "Report", icon: "📞", successRate: 95 },
+      ] as Action[],
+      messages: [initialAssistantMessage],
+      alert: null as TacticalAlertState | null,
+    }
+  }
+
+  const initialAssistantMessage: ChatMessage = {
+    role: "assistant",
+    content: "A new lead appears. What do you do next?",
+  }
+
+  return {
+    day: 1,
+    totalDays: 1,
+    board: {
+      gridSize: 10,
+      playerPosition: { x: 5, y: 5 },
+      enemies: [{ x: 7, y: 4, label: "Suspect" }],
+      resources: [{ x: 3, y: 7, label: "Evidence" }],
+    } satisfies BoardState,
+    resources: [
+      { name: "Evidence", value: 25, color: "#34C759", icon: "🧾" },
+      { name: "Leads", value: 40, color: "#0071E3", icon: "🧠" },
+      { name: "Time", value: 60, color: "#FF9F0A", icon: "⏳" },
+      { name: "Pressure", value: 70, color: "#FF3B30", icon: "🚨" },
+    ] as Resource[],
+    actions: [
+      { id: "interview", label: "Interview", icon: "🗣️", successRate: 65 },
+      { id: "analyze", label: "Analyze", icon: "🔬", successRate: 80 },
+      { id: "stakeout", label: "Stakeout", icon: "👀", successRate: 55 },
+      { id: "accuse", label: "Accuse", icon: "⚖️", successRate: 35 },
+    ] as Action[],
+    messages: [initialAssistantMessage],
+    alert: null as TacticalAlertState | null,
+  }
+}
+
+function LoadingCard({ title, height }: { title: string; height: string }) {
+  return (
+    <section className={cn(componentCardClassName, "animate-pulse")}>
+      <div className="h-6 w-48 rounded bg-[#D2D2D7]" aria-label={title} />
+      <div className={cn("mt-6 rounded-lg bg-[#F5F5F7]", height)} />
+    </section>
+  )
+}
 
 function PlayPageContent() {
-  const searchParams = useSearchParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const scenarioId = searchParams.get("scenario") || "zombie-survival"
   const scenario = getScenarioById(scenarioId)
 
-  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>(
-    scenario ? [
-      {
-        role: "assistant",
-        content: `Welcome to **${scenario.title}**!\n\n${scenario.description}\n\nYour objectives are clear. What will you do first?`,
-      },
-    ] : []
-  )
-  const [input, setInput] = useState("")
-  const [canvasComponents, setCanvasComponents] = useState<Array<{
-    id: string
-    type: string
-    component: React.ReactNode
-    timestamp: number
-  }>>([])
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [day, setDay] = React.useState(1)
+  const [totalDays, setTotalDays] = React.useState(7)
+  const [board, setBoard] = React.useState<BoardState | null>(null)
+  const [resources, setResources] = React.useState<Resource[]>([])
+  const [actions, setActions] = React.useState<Action[]>([])
+  const [messages, setMessages] = React.useState<ChatMessage[]>([])
+  const [alert, setAlert] = React.useState<TacticalAlertState | null>(null)
+  const [input, setInput] = React.useState("")
+  const [isLoadingBoard, setIsLoadingBoard] = React.useState(true)
+  const [isLoadingResources, setIsLoadingResources] = React.useState(true)
+  const [isLoadingActions, setIsLoadingActions] = React.useState(true)
 
-  const addInitialComponents = useCallback((scenarioId: string) => {
-    const timestamp = Date.now()
-    
-    switch (scenarioId) {
-      case "zombie-survival":
-        setCanvasComponents([
-          {
-            id: `comp-${timestamp}`,
-            type: "GameBoard",
-            component: (
-              <GameBoard
-                playerPosition={{ x: 250, y: 250 }}
-                zombieLocations={[
-                  { x: 180, y: 200 },
-                  { x: 320, y: 280 }
-                ]}
-                resourcePoints={[{ x: 400, y: 150 }]}
-                theme="apocalyptic"
-              />
-            ),
-            timestamp
-          },
-          {
-            id: `comp-${timestamp + 1}`,
-            type: "ResourceMeter",
-            component: (
-              <ResourceMeter
-                resources={[
-                  { name: "Health", value: 85, color: "var(--accent-success)", icon: "❤️" },
-                  { name: "Ammo", value: 45, color: "var(--accent-warning)", icon: "🔫" },
-                  { name: "Food", value: 25, color: "var(--accent-danger)", icon: "🍖" }
-                ]}
-              />
-            ),
-            timestamp: timestamp + 1
-          }
-        ])
-        break
+  const reset = React.useCallback(() => {
+    const init = getInitialState(scenarioId)
 
-      case "salary-negotiation":
-        setCanvasComponents([
-          {
-            id: `comp-${timestamp}`,
-            type: "NegotiationDashboard",
-            component: (
-              <NegotiationDashboard
-                currentOffer={85000}
-                targetSalary={100000}
-                marketRate={95000}
-                leveragePoints={[
-                  { title: "Specialized Skills", description: "Rare expertise in AI/ML", value: 15 },
-                  { title: "Market Demand", description: "High demand for your role", value: 10 }
-                ]}
-                relationshipScore={65}
-              />
-            ),
-            timestamp
-          }
-        ])
-        break
-
-      case "space-station":
-        setCanvasComponents([
-          {
-            id: `comp-${timestamp}`,
-            type: "SpaceStationControl",
-            component: (
-              <SpaceStationControl
-                systems={[
-                  { id: "oxygen", name: "O₂ Recycler", status: "warning", priority: "high", icon: "💨", repairCost: 20 },
-                  { id: "power", name: "Power Grid", status: "operational", priority: "low", icon: "⚡" },
-                  { id: "comms", name: "Communications", status: "failing", priority: "critical", icon: "📡", repairCost: 30 },
-                  { id: "life", name: "Life Support", status: "operational", priority: "low", icon: "🛡️" }
-                ]}
-                resources={[
-                  { name: "Oxygen", level: 75, color: "var(--accent-info)", icon: <span>💨</span> },
-                  { name: "Power", level: 60, color: "var(--accent-warning)", icon: <span>⚡</span> },
-                  { name: "Water", level: 40, color: "var(--accent-primary)", icon: <span>💧</span> }
-                ]}
-                daysLeft={7}
-              />
-            ),
-            timestamp
-          }
-        ])
-        break
-
-      case "detective-mystery":
-        setCanvasComponents([
-          {
-            id: `comp-${timestamp}`,
-            type: "DetectiveBoard",
-            component: (
-              <DetectiveBoard
-                suspects={[
-                  { id: "1", name: "John Smith", alibi: "Was at home watching TV", suspicionLevel: 75, connections: ["Victim", "Crime Scene"] },
-                  { id: "2", name: "Jane Doe", alibi: "Working late at office", suspicionLevel: 45, connections: ["Victim"] }
-                ]}
-                evidence={[
-                  { id: "1", type: "physical", description: "Fingerprints on weapon", location: "Crime Scene", timestamp: "10:30 PM" },
-                  { id: "2", type: "testimony", description: "Witness saw suspect fleeing", location: "Street", timestamp: "10:45 PM" }
-                ]}
-                timeline={[
-                  { time: "10:00 PM", event: "Victim last seen alive", verified: true },
-                  { time: "10:30 PM", event: "Estimated time of death", verified: true },
-                  { time: "10:45 PM", event: "Suspect spotted nearby", verified: false }
-                ]}
-              />
-            ),
-            timestamp
-          }
-        ])
-        break
-    }
-  }, [setCanvasComponents])
-
-  useEffect(() => {
-    if (scenario) {
-      // Add initial canvas components based on scenario
-      setTimeout(() => {
-        addInitialComponents(scenarioId)
-      }, 1000)
-    }
-  }, [scenario, scenarioId, addInitialComponents])
-
-  const handleSendMessage = () => {
-    if (!input.trim()) return
-
-    const userMessage = { role: "user", content: input }
-    setMessages((prev) => [...prev, userMessage])
+    setDay(init.day)
+    setTotalDays(init.totalDays)
+    setBoard(null)
+    setResources([])
+    setActions([])
+    setMessages(init.messages)
+    setAlert(init.alert)
     setInput("")
 
-    // Simulate AI response and component generation
-    setTimeout(() => {
-      const aiResponse = generateMockResponse(input, scenarioId)
-      setMessages((prev) => [...prev, { role: "assistant", content: aiResponse }])
-      
-      // Randomly generate new canvas components
-      if (Math.random() > 0.6) {
-        generateCanvasComponent(scenarioId, input)
+    setIsLoadingBoard(true)
+    setIsLoadingResources(true)
+    setIsLoadingActions(true)
+
+    window.setTimeout(() => {
+      setBoard(init.board)
+      setIsLoadingBoard(false)
+    }, 350)
+
+    window.setTimeout(() => {
+      setResources(init.resources)
+      setIsLoadingResources(false)
+    }, 450)
+
+    window.setTimeout(() => {
+      setActions(init.actions)
+      setIsLoadingActions(false)
+    }, 550)
+  }, [scenarioId])
+
+  React.useEffect(() => {
+    if (!scenario) return
+    reset()
+  }, [scenarioId, scenario, reset])
+
+  const progressLabel = scenarioId === "zombie-survival" ? `Day ${day}/${totalDays}` : ""
+
+  const latestAssistantText = React.useMemo(() => {
+    const last = [...messages].reverse().find((m) => m.role === "assistant")
+    return last?.content ?? ""
+  }, [messages])
+
+  const updateResource = React.useCallback((name: string, delta: number) => {
+    setResources((prev) =>
+      prev.map((r) =>
+        r.name === name
+          ? { ...r, value: clamp(0, r.value + delta, 100) }
+          : r
+      )
+    )
+  }, [])
+
+  const nudgePlayer = React.useCallback((dx: number, dy: number) => {
+    setBoard((prev) => {
+      if (!prev) return prev
+      const gridSize = prev.gridSize ?? 10
+      return {
+        ...prev,
+        playerPosition: {
+          x: clamp(0, prev.playerPosition.x + dx, gridSize - 1),
+          y: clamp(0, prev.playerPosition.y + dy, gridSize - 1),
+        },
       }
-    }, 1000)
-  }
+    })
+  }, [])
 
-  const generateCanvasComponent = (scenarioId: string, userInput: string) => {
-    const timestamp = Date.now()
-    
-    // Example: Generate components based on user actions
-    if (userInput.toLowerCase().includes("alert") || userInput.toLowerCase().includes("warning")) {
-      setCanvasComponents(prev => [{
-        id: `comp-${timestamp}`,
-        type: "TacticalAlert",
-        component: (
-          <TacticalAlert
-            type="warning"
-            title="New Development"
-            message="The situation has changed. Adjust your strategy accordingly."
-            priority="medium"
-          />
-        ),
-        timestamp
-      }, ...prev])
-    } else if (userInput.toLowerCase().includes("progress") || userInput.toLowerCase().includes("objective")) {
-      setCanvasComponents(prev => [{
-        id: `comp-${timestamp}`,
-        type: "ProgressTracker",
-        component: (
-          <ProgressTracker
-            milestones={[
-              { id: "1", title: "Initial Setup", status: "completed" },
-              { id: "2", title: "Current Objective", status: "active", progress: 60 },
-              { id: "3", title: "Final Goal", status: "locked" }
-            ]}
-          />
-        ),
-        timestamp
-      }, ...prev])
-    }
-  }
+  const runAction = React.useCallback(
+    (actionIdOrText: string) => {
+      if (!actionIdOrText.trim()) return
 
-  const handleRemoveComponent = (id: string) => {
-    setCanvasComponents(prev => prev.filter(comp => comp.id !== id))
-  }
+      const normalized = actionIdOrText.toLowerCase()
+      const userText =
+        actions.find((a) => a.id === actionIdOrText)?.label ?? actionIdOrText
+
+      setMessages((prev) => [...prev, { role: "user", content: userText }])
+      setInput("")
+
+      window.setTimeout(() => {
+        const aiResponse = generateMockResponse(userText)
+        setMessages((prev) => [...prev, { role: "assistant", content: aiResponse }])
+
+        if (scenarioId !== "zombie-survival") {
+          if (Math.random() > 0.65) {
+            setAlert({
+              type: "info",
+              title: "Update",
+              message: "New information comes in. Adjust your plan.",
+            })
+          }
+          return
+        }
+
+        if (normalized.includes("move")) {
+          nudgePlayer(Math.random() > 0.5 ? 1 : -1, Math.random() > 0.5 ? 1 : -1)
+          updateResource("Water", -1)
+          setAlert({
+            type: "info",
+            title: "Relocated",
+            message: "You changed position. Stay quiet and keep moving.",
+          })
+          return
+        }
+
+        if (normalized.includes("scavenge")) {
+          updateResource("Food", +2)
+          updateResource("Ammo", +5)
+          setAlert({
+            type: "success",
+            title: "Supplies Found",
+            message: "You found usable supplies in the area.",
+          })
+          return
+        }
+
+        if (normalized.includes("rest")) {
+          updateResource("Health", +10)
+          setDay((d) => clamp(1, d + 1, totalDays))
+          setAlert({
+            type: "hint",
+            title: "Regroup",
+            message: "Resting helps, but time is still passing.",
+          })
+          return
+        }
+
+        if (normalized.includes("fortify")) {
+          updateResource("Food", -1)
+          setAlert({
+            type: "warning",
+            title: "Noise",
+            message: "Fortifying draws attention. Stay alert.",
+          })
+          return
+        }
+
+        if (Math.random() > 0.7) {
+          setAlert({
+            type: "warning",
+            title: "Nearby Movement",
+            message: "You hear shuffling footsteps close by.",
+          })
+        }
+      }, 650)
+    },
+    [actions, nudgePlayer, scenarioId, totalDays, updateResource]
+  )
 
   if (!scenario) {
     return (
-      <div className="min-h-screen bg-secondary flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl text-primary mb-4">Scenario not found</h1>
-          <Button onClick={() => router.push("/scenarios")}>
+      <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] grid place-items-center p-6">
+        <div className={cn(componentCardClassName, "max-w-[520px]")}>
+          <div className="text-lg font-bold">Scenario not found</div>
+          <div className="mt-2 text-sm text-[#6E6E73]">
+            The requested scenario doesn’t exist.
+          </div>
+          <Button className="mt-5" onClick={() => router.push("/scenarios")}>
             Back to Scenarios
           </Button>
         </div>
@@ -239,112 +387,110 @@ function PlayPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary flex">
-      {/* Sidebar - Scenario Info & Chat */}
-      <motion.div
-        initial={{ x: -300 }}
-        animate={{ x: 0, width: sidebarCollapsed ? "60px" : "380px" }}
-        transition={{ duration: 0.3 }}
-        className="flex-shrink-0 border-r-2 border-medium bg-tertiary flex flex-col relative"
-      >
-        {/* Collapse Toggle */}
-        <button
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="absolute top-4 -right-3 z-10 w-8 h-8 rounded-full bg-accent-primary hover:bg-accent-primary-dark flex items-center justify-center text-inverse border-2 border-dark"
-        >
-          {sidebarCollapsed ? <Maximize2 className="w-3 h-3" /> : <Minimize2 className="w-3 h-3" />}
-        </button>
+    <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F]">
+      <header className="sticky top-0 z-40 h-[60px] bg-white border-b-2 border-[#D2D2D7]">
+        <div className="mx-auto flex h-full max-w-[1200px] items-center justify-between px-6">
+          <button
+            type="button"
+            onClick={() => router.push("/scenarios")}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F] hover:text-[#0071E3]"
+          >
+            <ArrowLeft className="size-4" />
+            Back
+          </button>
 
-        {!sidebarCollapsed && (
-          <>
-            {/* Header */}
-            <div className="p-4 border-b-2 border-medium">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push("/scenarios")}
-                className="text-secondary mb-3"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-4xl">{scenario.icon}</span>
-                <div>
-                  <h1 
-                    className="text-lg font-bold text-primary"
-                  >
-                    {scenario.title}
-                  </h1>
-                  <p className="text-xs text-secondary">Live Simulation</p>
-                </div>
-              </div>
-            </div>
+          <div className="text-center">
+            <div className="text-sm font-bold">{scenario.title}</div>
+            {progressLabel && (
+              <div className="text-xs text-[#6E6E73]">{progressLabel}</div>
+            )}
+          </div>
 
-            {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[85%] rounded-lg p-3 ${
-                      msg.role === "user"
-                        ? "bg-accent-primary text-inverse border-2 border-dark"
-                        : "bg-primary text-primary border-2 border-light"
-                    }`}
-                  >
-                    <p className="text-xs whitespace-pre-wrap">{msg.content}</p>
-                  </div>
+          <button
+            type="button"
+            onClick={reset}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F] hover:text-[#0071E3]"
+          >
+            <RotateCcw className="size-4" />
+            Reset
+          </button>
+        </div>
+      </header>
+
+      {alert && (
+        <TacticalAlert
+          {...alert}
+          onDismiss={() => {
+            setAlert(null)
+          }}
+        />
+      )}
+
+      <main className="pb-[96px]">
+        <ComponentCanvas>
+          {isLoadingBoard || !board ? (
+            <LoadingCard title="Game Board" height="h-[520px]" />
+          ) : (
+            <GameBoard {...board} />
+          )}
+
+          {isLoadingResources ? (
+            <LoadingCard title="Resources" height="h-[220px]" />
+          ) : (
+            <ResourceMeter resources={resources} />
+          )}
+
+          {isLoadingActions ? (
+            <LoadingCard title="Actions" height="h-[220px]" />
+          ) : (
+            <ActionMatrix actions={actions} onActionClick={runAction} />
+          )}
+
+          <section className={cn(componentCardClassName, "mt-4 p-4")}>
+            <div className="text-xs font-semibold text-[#6E6E73]">Chat</div>
+            <div className="mt-2 max-h-[240px] overflow-y-auto pr-2 text-sm">
+              {messages.map((msg, index) => (
+                <div key={index} className="mb-2">
+                  <span className="font-semibold">{msg.role === "user" ? "You" : "AI"}:</span>{" "}
+                  <span className="text-[#1D1D1F]">{msg.content}</span>
                 </div>
               ))}
             </div>
+            {latestAssistantText && (
+              <div className="mt-3 text-xs text-[#6E6E73]">Latest: {latestAssistantText}</div>
+            )}
+          </section>
+        </ComponentCanvas>
+      </main>
 
-            {/* Input */}
-            <div className="p-4 border-t-2 border-medium">
-              <div className="flex gap-2">
-                <Input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (
-                      e.key === "Enter" &&
-                      !e.shiftKey &&
-                      !e.altKey &&
-                      !e.metaKey &&
-                      !e.ctrlKey
-                    ) {
-                      e.preventDefault()
-                      handleSendMessage()
-                    }
-                  }}
-                  placeholder="Type your action..."
-                  className="flex-1"
-                />
-                <Button onClick={handleSendMessage} size="sm">
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
-
-        {sidebarCollapsed && (
-          <div className="flex flex-col items-center py-4 gap-4">
-            <span className="text-2xl">{scenario.icon}</span>
-          </div>
-        )}
-      </motion.div>
-
-      {/* Main Canvas Area */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-5xl mx-auto">
-          <ComponentStack
-            components={canvasComponents}
-            onRemove={handleRemoveComponent}
+      <div className="fixed bottom-0 inset-x-0 z-40 h-[80px] bg-white border-t-2 border-[#D2D2D7]">
+        <div className="mx-auto flex h-full max-w-[1200px] items-center gap-3 px-6">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") runAction(input)
+            }}
+            placeholder="Type your action..."
+            className={cn(
+              "h-12 flex-1 rounded-full border-2 border-[#D2D2D7] bg-white px-4",
+              "text-sm text-[#1D1D1F] placeholder:text-[#6E6E73]",
+              "focus:outline-none focus:border-[#0071E3]"
+            )}
           />
+          <button
+            type="button"
+            onClick={() => runAction(input)}
+            className={cn(
+              "grid size-12 place-items-center rounded-lg",
+              "bg-[#0071E3] text-white",
+              "shadow-[2px_2px_0px_#1D1D1F]",
+              "hover:bg-[#005BB5]"
+            )}
+            aria-label="Send"
+          >
+            <Send className="size-4" />
+          </button>
         </div>
       </div>
     </div>
@@ -353,43 +499,41 @@ function PlayPageContent() {
 
 export default function PlayPage() {
   return (
-    <Suspense
+    <React.Suspense
       fallback={
-        <div className="min-h-screen bg-secondary flex items-center justify-center">
-          <p className="text-primary">Loading...</p>
+        <div className="min-h-screen bg-[#F5F5F7] grid place-items-center">
+          <div className="text-sm text-[#1D1D1F]">Loading…</div>
         </div>
       }
     >
       <PlayPageContent />
-    </Suspense>
+    </React.Suspense>
   )
 }
 
-// Mock response generator
-function generateMockResponse(input: string, scenarioId: string): string {
-  const responses: Record<string, string[]> = {
-    "zombie-survival": [
-      "You cautiously move forward. The sound of shuffling feet echoes nearby.",
-      "You find supplies in an abandoned store. Resources updated.",
-      "A group of zombies spots you! Quick decision needed.",
-    ],
-    "salary-negotiation": [
-      "The hiring manager listens carefully. They seem impressed.",
-      "They counter with a slightly higher offer. Progress is being made.",
-      "You've built strong rapport. They're open to discussing benefits.",
-    ],
-    "space-station": [
-      "You access the diagnostic panel. Multiple warnings detected.",
-      "The oxygen recycler is failing faster than expected.",
-      "Mission control acknowledges your status.",
-    ],
-    "detective-mystery": [
-      "You examine the evidence carefully. A pattern emerges.",
-      "The suspect's alibi doesn't add up. Further investigation needed.",
-      "You discover crucial evidence that changes everything.",
-    ],
+function generateMockResponse(input: string) {
+  const normalized = input.toLowerCase()
+
+  if (normalized.includes("move")) {
+    return "You move carefully. The city feels too quiet."
   }
 
-  const scenarioResponses = responses[scenarioId] || responses["zombie-survival"]
-  return scenarioResponses[Math.floor(Math.random() * scenarioResponses.length)]
+  if (normalized.includes("scavenge")) {
+    return "You search nearby buildings and gather anything useful."
+  }
+
+  if (normalized.includes("rest")) {
+    return "You take a moment to breathe. Every sound matters."
+  }
+
+  if (normalized.includes("fortify")) {
+    return "You reinforce your position, trying not to make too much noise."
+  }
+
+  const responses = [
+    "You hesitate. Something is watching from the shadows.",
+    "A distant groan cuts through the silence.",
+    "You keep your senses sharp and plan your next move.",
+  ]
+  return responses[Math.floor(Math.random() * responses.length)]
 }

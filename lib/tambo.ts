@@ -83,30 +83,31 @@ export const PLAYBOOK_TOOLS = [
           },
           required: ["x", "y"]
         },
-        zombieLocations: {
+        enemies: {
           type: "array",
           items: {
             type: "object",
             properties: {
               x: { type: "number" },
-              y: { type: "number" }
+              y: { type: "number" },
+              type: { type: "string" },
+              label: { type: "string" }
             }
           }
         },
-        resourcePoints: {
+        resources: {
           type: "array",
           items: {
             type: "object",
             properties: {
               x: { type: "number" },
-              y: { type: "number" }
+              y: { type: "number" },
+              type: { type: "string" },
+              label: { type: "string" }
             }
           }
         },
-        theme: {
-          type: "string",
-          enum: ["apocalyptic", "sci-fi", "noir"]
-        }
+        gridSize: { type: "number" }
       },
       required: ["playerPosition"]
     }
@@ -197,7 +198,7 @@ export const PLAYBOOK_TOOLS = [
       properties: {
         type: {
           type: "string",
-          enum: ["warning", "info", "danger", "success"]
+          enum: ["warning", "hint", "info", "success"]
         },
         title: { type: "string" },
         message: { type: "string" },
