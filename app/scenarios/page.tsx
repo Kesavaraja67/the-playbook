@@ -1,13 +1,18 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { scenarios, getDifficultyColor } from "@/lib/scenarios"
+import { consumePlaybookTransitionFlag } from "@/lib/transitionOverlay"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 
 export default function ScenariosPage() {
   const router = useRouter()
+  const [showTransitionOverlay, setShowTransitionOverlay] = useState(() =>
+    consumePlaybookTransitionFlag(),
+  )
 
   const handleSelectScenario = (scenarioId: string) => {
     router.push(`/play?scenario=${scenarioId}`)
@@ -15,6 +20,19 @@ export default function ScenariosPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--void-dark)] via-[var(--space-blue)] to-[var(--nebula-purple)] p-8 relative overflow-hidden">
+      <AnimatePresence>
+        {showTransitionOverlay && (
+          <motion.div
+            key="enter"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-50 bg-white"
+            onAnimationComplete={() => setShowTransitionOverlay(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Animated background elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-20 left-20 w-96 h-96 bg-[var(--electric-cyan)] opacity-10 rounded-full blur-3xl animate-pulse" />
