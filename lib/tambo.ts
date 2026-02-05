@@ -71,42 +71,49 @@ export const PLAYBOOK_TOOLS = [
   },
   {
     name: "generate_game_board",
-    description: "Generate an interactive game board showing player position, enemies, and resources",
+    description: "Generate an interactive game board. Props: playerPosition, enemies, resources, gridSize.",
     parameters: {
       type: "object",
+      additionalProperties: false,
       properties: {
         playerPosition: {
           type: "object",
+          additionalProperties: false,
           properties: {
             x: { type: "number" },
             y: { type: "number" }
           },
           required: ["x", "y"]
         },
-        zombieLocations: {
+        enemies: {
           type: "array",
           items: {
             type: "object",
+            additionalProperties: false,
             properties: {
               x: { type: "number" },
-              y: { type: "number" }
-            }
+              y: { type: "number" },
+              type: { type: "string" },
+              label: { type: "string" }
+            },
+            required: ["x", "y"]
           }
         },
-        resourcePoints: {
+        resources: {
           type: "array",
           items: {
             type: "object",
+            additionalProperties: false,
             properties: {
               x: { type: "number" },
-              y: { type: "number" }
-            }
+              y: { type: "number" },
+              type: { type: "string" },
+              label: { type: "string" }
+            },
+            required: ["x", "y"]
           }
         },
-        theme: {
-          type: "string",
-          enum: ["apocalyptic", "sci-fi", "noir"]
-        }
+        gridSize: { type: "number", minimum: 2, maximum: 20 }
       },
       required: ["playerPosition"]
     }
@@ -191,20 +198,16 @@ export const PLAYBOOK_TOOLS = [
   },
   {
     name: "generate_tactical_alert",
-    description: "Generate priority-based notifications and warnings",
+    description: "Generate a tactical alert (type: warning|hint|info|success).",
     parameters: {
       type: "object",
       properties: {
         type: {
           type: "string",
-          enum: ["warning", "info", "danger", "success"]
+          enum: ["warning", "hint", "info", "success"]
         },
         title: { type: "string" },
-        message: { type: "string" },
-        priority: {
-          type: "string",
-          enum: ["low", "medium", "high", "critical"]
-        }
+        message: { type: "string" }
       },
       required: ["type", "title", "message"]
     }

@@ -1,236 +1,520 @@
 "use client"
 
-import { useState, useEffect, useCallback, Suspense } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
-import { getScenarioById } from "@/lib/scenarios"
-import { ComponentStack } from "@/components/playbook/ComponentStack"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { motion } from "framer-motion"
-import { Send, ArrowLeft, Maximize2, Minimize2 } from "lucide-react"
+import * as React from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { ArrowLeft, RotateCcw, Send } from "lucide-react"
+
+import { ComponentCanvas, componentCardClassName } from "@/components/play/ComponentCanvas"
 import {
-  GameBoard,
-  ResourceMeter,
-  TacticalAlert,
-  ProgressTracker,
-  NegotiationDashboard,
-  SpaceStationControl,
-  DetectiveBoard
-} from "@/components/canvas"
+  DetectiveMysteryActions,
+  DetectiveMysteryBriefing,
+  DetectiveMysteryMetrics,
+} from "@/components/play/DetectiveMysteryUI"
+import {
+  SalaryNegotiationActions,
+  SalaryNegotiationBriefing,
+  SalaryNegotiationMetrics,
+} from "@/components/play/SalaryNegotiationUI"
+import {
+  SpaceStationBriefing,
+  SpaceStationCommands,
+  SpaceStationTelemetry,
+} from "@/components/play/SpaceStationUI"
+import { ActionMatrix } from "@/components/tambo/ActionMatrix"
+import { GameBoard } from "@/components/tambo/GameBoard"
+import { ResourceMeter } from "@/components/tambo/ResourceMeter"
+import { TacticalAlert } from "@/components/tambo/TacticalAlert"
+import { Button } from "@/components/ui/button"
+import { getScenarioById, type Scenario } from "@/lib/scenarios"
+import { cn } from "@/lib/utils"
+
+type ChatMessage = {
+  role: "user" | "assistant"
+  content: string
+}
+
+const MAX_MESSAGES = 100
+
+type TacticalAlertState = Omit<React.ComponentProps<typeof TacticalAlert>, "onDismiss">
+
+type BoardState = React.ComponentProps<typeof GameBoard>
+type Resource = React.ComponentProps<typeof ResourceMeter>["resources"][number]
+type Action = React.ComponentProps<typeof ActionMatrix>["actions"][number]
+
+type InitialState = {
+  day: number
+  totalDays: number
+  board: BoardState
+  resources: Resource[]
+  actions: Action[]
+  messages: ChatMessage[]
+  alert: TacticalAlertState | null
+}
+
+function clamp(min: number, value: number, max: number) {
+  if (!Number.isFinite(value)) return min
+  return Math.max(min, Math.min(max, value))
+}
+
+function getZombieInitialState(): InitialState {
+  const board: BoardState = {
+    gridSize: 10,
+    playerPosition: { x: 5, y: 5 },
+    enemies: [
+      { x: 3, y: 4, type: "Zombie" },
+      { x: 6, y: 6, type: "Zombie" },
+    ],
+    resources: [{ x: 8, y: 3, type: "Loot" }],
+  }
+
+  const resources: Resource[] = [
+    { name: "Health", value: 85, color: "#FF3B30", icon: "❤️" },
+    { name: "Ammo", value: 12, color: "#FF9F0A", icon: "🔫" },
+    { name: "Food", value: 3, color: "#34C759", icon: "🍖" },
+    { name: "Water", value: 2, color: "#0071E3", icon: "💧" },
+    { name: "Energy", value: 70, color: "#AF52DE", icon: "⚡" },
+    { name: "Materials", value: 40, color: "#8E8E93", icon: "🧱" },
+  ]
+
+  const actions: Action[] = [
+    {
+      id: "scavenge",
+      label: "Scavenge",
+      icon: "🔍",
+      costs: [{ resource: "Energy", amount: 10 }],
+      successRate: 75,
+      description: "Search nearby for supplies",
+    },
+    {
+      id: "fortify",
+      label: "Fortify",
+      icon: "🛡️",
+      costs: [{ resource: "Materials", amount: 20 }],
+      successRate: 90,
+      description: "Reinforce your position",
+    },
+    {
+      id: "move",
+      label: "Move",
+      icon: "🏃",
+      costs: [{ resource: "Energy", amount: 15 }],
+      successRate: 60,
+      description: "Relocate to a safer spot",
+    },
+    {
+      id: "rest",
+      label: "Rest",
+      icon: "😴",
+      successRate: 100,
+      description: "Recover and plan",
+    },
+  ]
+
+  const initialAssistantMessage: ChatMessage = {
+    role: "assistant",
+    content: "You hear zombies nearby. What do you do?",
+  }
+
+  return {
+    day: 1,
+    totalDays: 7,
+    board,
+    resources,
+    actions,
+    messages: [initialAssistantMessage],
+    alert: null,
+  }
+}
+
+function getInitialState(scenarioId: string): InitialState {
+  if (scenarioId === "zombie-survival") return getZombieInitialState()
+
+  if (scenarioId === "salary-negotiation") {
+    const initialAssistantMessage: ChatMessage = {
+      role: "assistant",
+      content: "The hiring manager is waiting. What’s your next move?",
+    }
+
+    return {
+      day: 1,
+      totalDays: 1,
+      board: {
+        gridSize: 8,
+        playerPosition: { x: 3, y: 4 },
+        enemies: [],
+        resources: [],
+      } satisfies BoardState,
+      resources: [
+        { name: "Confidence", value: 60, color: "#0071E3", icon: "🗣️" },
+        { name: "Leverage", value: 50, color: "#FF9F0A", icon: "⚖️" },
+        { name: "Offer", value: 70, color: "#34C759", icon: "💼" },
+        { name: "Market", value: 80, color: "#FF3B30", icon: "📊" },
+      ] as Resource[],
+      actions: [
+        { id: "counter", label: "Counter", icon: "✍️", successRate: 65 },
+        { id: "benefits", label: "Benefits", icon: "🎁", successRate: 75 },
+        { id: "pause", label: "Pause", icon: "⏸️", successRate: 90 },
+        { id: "accept", label: "Accept", icon: "✅", successRate: 40 },
+      ] as Action[],
+      messages: [initialAssistantMessage],
+      alert: null,
+    }
+  }
+
+  if (scenarioId === "space-station") {
+    const initialAssistantMessage: ChatMessage = {
+      role: "assistant",
+      content: "Multiple systems are failing. What do you tackle first?",
+    }
+
+    return {
+      day: 1,
+      totalDays: 7,
+      board: {
+        gridSize: 10,
+        playerPosition: { x: 4, y: 4 },
+        enemies: [{ x: 6, y: 6, label: "Failure" }],
+        resources: [{ x: 2, y: 7, label: "Spare Parts" }],
+      } satisfies BoardState,
+      resources: [
+        { name: "Oxygen", value: 75, color: "#0071E3", icon: "💨" },
+        { name: "Power", value: 60, color: "#FF9F0A", icon: "⚡" },
+        { name: "Water", value: 40, color: "#34C759", icon: "💧" },
+        { name: "Hull", value: 90, color: "#FF3B30", icon: "🛡️" },
+      ] as Resource[],
+      actions: [
+        { id: "repair", label: "Repair", icon: "🧰", successRate: 70 },
+        { id: "reroute", label: "Reroute", icon: "🔀", successRate: 55 },
+        { id: "scan", label: "Scan", icon: "📡", successRate: 85 },
+        { id: "report", label: "Report", icon: "📞", successRate: 95 },
+      ] as Action[],
+      messages: [initialAssistantMessage],
+      alert: null,
+    }
+  }
+
+  const initialAssistantMessage: ChatMessage = {
+    role: "assistant",
+    content: "A new lead appears. What do you do next?",
+  }
+
+  return {
+    day: 1,
+    totalDays: 1,
+    board: {
+      gridSize: 10,
+      playerPosition: { x: 5, y: 5 },
+      enemies: [{ x: 7, y: 4, label: "Suspect" }],
+      resources: [{ x: 3, y: 7, label: "Evidence" }],
+    } satisfies BoardState,
+    resources: [
+      { name: "Evidence", value: 25, color: "#34C759", icon: "🧾" },
+      { name: "Leads", value: 40, color: "#0071E3", icon: "🧠" },
+      { name: "Time", value: 60, color: "#FF9F0A", icon: "⏳" },
+      { name: "Pressure", value: 70, color: "#FF3B30", icon: "🚨" },
+    ] as Resource[],
+    actions: [
+      { id: "interview", label: "Interview", icon: "🗣️", successRate: 65 },
+      { id: "analyze", label: "Analyze", icon: "🔬", successRate: 80 },
+      { id: "stakeout", label: "Stakeout", icon: "👀", successRate: 55 },
+      { id: "accuse", label: "Accuse", icon: "⚖️", successRate: 35 },
+    ] as Action[],
+    messages: [initialAssistantMessage],
+    alert: null,
+  }
+}
+
+function LoadingCard({ title, height }: { title: string; height: string }) {
+  return (
+    <section className={cn(componentCardClassName, "animate-pulse")}>
+      <div className="h-6 w-48 rounded bg-[#D2D2D7]" aria-label={title} />
+      <div className={cn("mt-6 rounded-lg bg-[#F5F5F7]", height)} />
+    </section>
+  )
+}
+
+function ScenarioBriefingCard({ scenario }: { scenario: Scenario }) {
+  const objectives = scenario.objectives ?? []
+  const hasObjectives = objectives.length > 0
+
+  return (
+    <section className={componentCardClassName}>
+      <div className="flex items-start gap-4">
+        <div className="text-4xl" aria-hidden>
+          {scenario.icon}
+        </div>
+        <div className="flex-1">
+          <h3 className="text-xl font-bold">Briefing</h3>
+          <div className="mt-1 text-sm font-semibold">{scenario.title}</div>
+          <div className="mt-3 text-sm text-[#6E6E73]">{scenario.description}</div>
+
+          {hasObjectives && (
+            <div className="mt-5">
+              <div className="text-xs font-semibold text-[#6E6E73]">Objectives</div>
+              <ul className="mt-2 list-disc pl-5 text-sm">
+                {objectives.map((objective) => (
+                  <li key={objective}>{objective}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="mt-5 text-xs text-[#6E6E73]">
+            Use the actions below or type your next move in the command bar to continue.
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
 
 function PlayPageContent() {
-  const searchParams = useSearchParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const scenarioId = searchParams.get("scenario") || "zombie-survival"
   const scenario = getScenarioById(scenarioId)
+  const isBoardScenario = scenario?.layout === "board"
 
-  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>(
-    scenario ? [
-      {
-        role: "assistant",
-        content: `Welcome to **${scenario.title}**!\n\n${scenario.description}\n\nYour objectives are clear. What will you do first?`,
-      },
-    ] : []
-  )
-  const [input, setInput] = useState("")
-  const [canvasComponents, setCanvasComponents] = useState<Array<{
-    id: string
-    type: string
-    component: React.ReactNode
-    timestamp: number
-  }>>([])
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [day, setDay] = React.useState(1)
+  const [totalDays, setTotalDays] = React.useState(7)
+  const [board, setBoard] = React.useState<BoardState | null>(null)
+  const [resources, setResources] = React.useState<Resource[]>([])
+  const [actions, setActions] = React.useState<Action[]>([])
+  const [messages, setMessages] = React.useState<ChatMessage[]>([])
+  const [alert, setAlert] = React.useState<TacticalAlertState | null>(null)
+  const [input, setInput] = React.useState("")
+  const [isProcessing, setIsProcessing] = React.useState(false)
+  const [isLoadingBoard, setIsLoadingBoard] = React.useState(true)
+  const [isLoadingResources, setIsLoadingResources] = React.useState(true)
+  const [isLoadingActions, setIsLoadingActions] = React.useState(true)
 
-  const addInitialComponents = useCallback((scenarioId: string) => {
-    const timestamp = Date.now()
-    
-    switch (scenarioId) {
-      case "zombie-survival":
-        setCanvasComponents([
-          {
-            id: `comp-${timestamp}`,
-            type: "GameBoard",
-            component: (
-              <GameBoard
-                playerPosition={{ x: 250, y: 250 }}
-                zombieLocations={[
-                  { x: 180, y: 200 },
-                  { x: 320, y: 280 }
-                ]}
-                resourcePoints={[{ x: 400, y: 150 }]}
-                theme="apocalyptic"
-              />
-            ),
-            timestamp
-          },
-          {
-            id: `comp-${timestamp + 1}`,
-            type: "ResourceMeter",
-            component: (
-              <ResourceMeter
-                resources={[
-                  { name: "Health", value: 85, color: "var(--accent-success)", icon: "❤️" },
-                  { name: "Ammo", value: 45, color: "var(--accent-warning)", icon: "🔫" },
-                  { name: "Food", value: 25, color: "var(--accent-danger)", icon: "🍖" }
-                ]}
-              />
-            ),
-            timestamp: timestamp + 1
-          }
-        ])
-        break
+  const initTimeoutsRef = React.useRef<Array<ReturnType<typeof setTimeout>>>([])
+  const actionTimeoutsRef = React.useRef<Array<ReturnType<typeof setTimeout>>>([])
+  const resetVersionRef = React.useRef(0)
 
-      case "salary-negotiation":
-        setCanvasComponents([
-          {
-            id: `comp-${timestamp}`,
-            type: "NegotiationDashboard",
-            component: (
-              <NegotiationDashboard
-                currentOffer={85000}
-                targetSalary={100000}
-                marketRate={95000}
-                leveragePoints={[
-                  { title: "Specialized Skills", description: "Rare expertise in AI/ML", value: 15 },
-                  { title: "Market Demand", description: "High demand for your role", value: 10 }
-                ]}
-                relationshipScore={65}
-              />
-            ),
-            timestamp
-          }
-        ])
-        break
+  React.useEffect(() => {
+    return () => {
+      for (const id of initTimeoutsRef.current) clearTimeout(id)
+      initTimeoutsRef.current = []
 
-      case "space-station":
-        setCanvasComponents([
-          {
-            id: `comp-${timestamp}`,
-            type: "SpaceStationControl",
-            component: (
-              <SpaceStationControl
-                systems={[
-                  { id: "oxygen", name: "O₂ Recycler", status: "warning", priority: "high", icon: "💨", repairCost: 20 },
-                  { id: "power", name: "Power Grid", status: "operational", priority: "low", icon: "⚡" },
-                  { id: "comms", name: "Communications", status: "failing", priority: "critical", icon: "📡", repairCost: 30 },
-                  { id: "life", name: "Life Support", status: "operational", priority: "low", icon: "🛡️" }
-                ]}
-                resources={[
-                  { name: "Oxygen", level: 75, color: "var(--accent-info)", icon: <span>💨</span> },
-                  { name: "Power", level: 60, color: "var(--accent-warning)", icon: <span>⚡</span> },
-                  { name: "Water", level: 40, color: "var(--accent-primary)", icon: <span>💧</span> }
-                ]}
-                daysLeft={7}
-              />
-            ),
-            timestamp
-          }
-        ])
-        break
-
-      case "detective-mystery":
-        setCanvasComponents([
-          {
-            id: `comp-${timestamp}`,
-            type: "DetectiveBoard",
-            component: (
-              <DetectiveBoard
-                suspects={[
-                  { id: "1", name: "John Smith", alibi: "Was at home watching TV", suspicionLevel: 75, connections: ["Victim", "Crime Scene"] },
-                  { id: "2", name: "Jane Doe", alibi: "Working late at office", suspicionLevel: 45, connections: ["Victim"] }
-                ]}
-                evidence={[
-                  { id: "1", type: "physical", description: "Fingerprints on weapon", location: "Crime Scene", timestamp: "10:30 PM" },
-                  { id: "2", type: "testimony", description: "Witness saw suspect fleeing", location: "Street", timestamp: "10:45 PM" }
-                ]}
-                timeline={[
-                  { time: "10:00 PM", event: "Victim last seen alive", verified: true },
-                  { time: "10:30 PM", event: "Estimated time of death", verified: true },
-                  { time: "10:45 PM", event: "Suspect spotted nearby", verified: false }
-                ]}
-              />
-            ),
-            timestamp
-          }
-        ])
-        break
+      for (const id of actionTimeoutsRef.current) clearTimeout(id)
+      actionTimeoutsRef.current = []
     }
-  }, [setCanvasComponents])
+  }, [])
 
-  useEffect(() => {
-    if (scenario) {
-      // Add initial canvas components based on scenario
-      setTimeout(() => {
-        addInitialComponents(scenarioId)
-      }, 1000)
-    }
-  }, [scenario, scenarioId, addInitialComponents])
+  const reset = React.useCallback(() => {
+    resetVersionRef.current += 1
+    const resetVersion = resetVersionRef.current
 
-  const handleSendMessage = () => {
-    if (!input.trim()) return
+    const shouldLoadBoard = getScenarioById(scenarioId)?.layout === "board"
 
-    const userMessage = { role: "user", content: input }
-    setMessages((prev) => [...prev, userMessage])
+    for (const id of initTimeoutsRef.current) clearTimeout(id)
+    initTimeoutsRef.current = []
+
+    for (const id of actionTimeoutsRef.current) clearTimeout(id)
+    actionTimeoutsRef.current = []
+
+    const init = getInitialState(scenarioId)
+
+    setDay(init.day)
+    setTotalDays(init.totalDays)
+    setBoard(null)
+    setResources([])
+    setActions([])
+    setMessages(init.messages)
+    setAlert(init.alert)
     setInput("")
+    setIsProcessing(false)
 
-    // Simulate AI response and component generation
-    setTimeout(() => {
-      const aiResponse = generateMockResponse(input, scenarioId)
-      setMessages((prev) => [...prev, { role: "assistant", content: aiResponse }])
-      
-      // Randomly generate new canvas components
-      if (Math.random() > 0.6) {
-        generateCanvasComponent(scenarioId, input)
-      }
-    }, 1000)
-  }
+    setIsLoadingBoard(shouldLoadBoard)
+    setIsLoadingResources(true)
+    setIsLoadingActions(true)
 
-  const generateCanvasComponent = (scenarioId: string, userInput: string) => {
-    const timestamp = Date.now()
-    
-    // Example: Generate components based on user actions
-    if (userInput.toLowerCase().includes("alert") || userInput.toLowerCase().includes("warning")) {
-      setCanvasComponents(prev => [{
-        id: `comp-${timestamp}`,
-        type: "TacticalAlert",
-        component: (
-          <TacticalAlert
-            type="warning"
-            title="New Development"
-            message="The situation has changed. Adjust your strategy accordingly."
-            priority="medium"
-          />
-        ),
-        timestamp
-      }, ...prev])
-    } else if (userInput.toLowerCase().includes("progress") || userInput.toLowerCase().includes("objective")) {
-      setCanvasComponents(prev => [{
-        id: `comp-${timestamp}`,
-        type: "ProgressTracker",
-        component: (
-          <ProgressTracker
-            milestones={[
-              { id: "1", title: "Initial Setup", status: "completed" },
-              { id: "2", title: "Current Objective", status: "active", progress: 60 },
-              { id: "3", title: "Final Goal", status: "locked" }
-            ]}
-          />
-        ),
-        timestamp
-      }, ...prev])
+    if (shouldLoadBoard) {
+      initTimeoutsRef.current.push(
+        setTimeout(() => {
+          if (resetVersionRef.current !== resetVersion) return
+
+          setBoard(init.board)
+          setIsLoadingBoard(false)
+        }, 350)
+      )
     }
-  }
 
-  const handleRemoveComponent = (id: string) => {
-    setCanvasComponents(prev => prev.filter(comp => comp.id !== id))
-  }
+    initTimeoutsRef.current.push(
+      setTimeout(() => {
+        if (resetVersionRef.current !== resetVersion) return
+
+        setResources(init.resources)
+        setIsLoadingResources(false)
+      }, 450)
+    )
+
+    initTimeoutsRef.current.push(
+      setTimeout(() => {
+        if (resetVersionRef.current !== resetVersion) return
+
+        setActions(init.actions)
+        setIsLoadingActions(false)
+      }, 550)
+    )
+  }, [scenarioId])
+
+  React.useEffect(() => {
+    if (!scenario) return
+    reset()
+  }, [scenarioId, scenario, reset])
+
+  const progressLabel = scenarioId === "zombie-survival" ? `Day ${day}/${totalDays}` : ""
+
+  const latestAssistantText = React.useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i].role === "assistant") return messages[i].content
+    }
+    return ""
+  }, [messages])
+
+  const updateResource = React.useCallback((name: string, delta: number) => {
+    setResources((prev) =>
+      prev.map((r) =>
+        r.name === name
+          ? { ...r, value: clamp(0, r.value + delta, 100) }
+          : r
+      )
+    )
+  }, [])
+
+  const nudgePlayer = React.useCallback((dx: number, dy: number) => {
+    setBoard((prev) => {
+      if (!prev) return prev
+      const gridSize = prev.gridSize ?? 10
+      return {
+        ...prev,
+        playerPosition: {
+          x: clamp(0, prev.playerPosition.x + dx, gridSize - 1),
+          y: clamp(0, prev.playerPosition.y + dy, gridSize - 1),
+        },
+      }
+    })
+  }, [])
+
+  const effectiveIsLoadingBoard = isBoardScenario && isLoadingBoard
+  const isInitializing = effectiveIsLoadingBoard || isLoadingResources || isLoadingActions
+  const isBusy = isProcessing || isInitializing
+  const canReset = !isBusy
+
+  const runAction = React.useCallback(
+    (actionIdOrText: string) => {
+      if (!actionIdOrText.trim() || isBusy) return
+
+      const scenarioAtCall = scenarioId
+      const totalDaysAtCall = totalDays
+      const resetVersionAtCall = resetVersionRef.current
+      const normalized = actionIdOrText.toLowerCase()
+      const userText =
+        actions.find((a) => a.id === actionIdOrText)?.label ?? actionIdOrText
+
+      setMessages((prev) => {
+        const next = [...prev, { role: "user" as const, content: userText }]
+        return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
+      })
+      setInput("")
+      setIsProcessing(true)
+
+      const timeoutId = setTimeout(() => {
+        actionTimeoutsRef.current = actionTimeoutsRef.current.filter((id) => id !== timeoutId)
+        if (resetVersionRef.current !== resetVersionAtCall) return
+
+        const aiResponse = generateMockResponse(userText, scenarioAtCall)
+        setMessages((prev) => {
+          const next = [...prev, { role: "assistant" as const, content: aiResponse }]
+          return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
+        })
+
+        if (scenarioAtCall !== "zombie-survival") {
+          if (Math.random() > 0.65) {
+            setAlert({
+              type: "info",
+              title: "Update",
+              message: "New information comes in. Adjust your plan.",
+            })
+          }
+          setIsProcessing(false)
+          return
+        }
+
+        if (normalized.includes("move")) {
+          nudgePlayer(Math.random() > 0.5 ? 1 : -1, Math.random() > 0.5 ? 1 : -1)
+          updateResource("Water", -1)
+          setAlert({
+            type: "info",
+            title: "Relocated",
+            message: "You changed position. Stay quiet and keep moving.",
+          })
+          setIsProcessing(false)
+          return
+        }
+
+        if (normalized.includes("scavenge")) {
+          updateResource("Food", +2)
+          updateResource("Ammo", +5)
+          setAlert({
+            type: "success",
+            title: "Supplies Found",
+            message: "You found usable supplies in the area.",
+          })
+          setIsProcessing(false)
+          return
+        }
+
+        if (normalized.includes("rest")) {
+          updateResource("Health", +10)
+          setDay((d) => clamp(1, d + 1, totalDaysAtCall))
+          setAlert({
+            type: "hint",
+            title: "Regroup",
+            message: "Resting helps, but time is still passing.",
+          })
+          setIsProcessing(false)
+          return
+        }
+
+        if (normalized.includes("fortify")) {
+          updateResource("Food", -1)
+          setAlert({
+            type: "warning",
+            title: "Noise",
+            message: "Fortifying draws attention. Stay alert.",
+          })
+          setIsProcessing(false)
+          return
+        }
+
+        if (Math.random() > 0.7) {
+          setAlert({
+            type: "warning",
+            title: "Nearby Movement",
+            message: "You hear shuffling footsteps close by.",
+          })
+        }
+
+        setIsProcessing(false)
+      }, 650)
+
+      actionTimeoutsRef.current.push(timeoutId)
+    },
+    [actions, isBusy, nudgePlayer, scenarioId, totalDays, updateResource]
+  )
 
   if (!scenario) {
     return (
-      <div className="min-h-screen bg-secondary flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl text-primary mb-4">Scenario not found</h1>
-          <Button onClick={() => router.push("/scenarios")}>
+      <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] grid place-items-center p-6">
+        <div className={cn(componentCardClassName, "max-w-[520px]")}>
+          <div className="text-lg font-bold">Scenario not found</div>
+          <div className="mt-2 text-sm text-[#6E6E73]">
+            The requested scenario doesn’t exist.
+          </div>
+          <Button className="mt-5" onClick={() => router.push("/scenarios")}>
             Back to Scenarios
           </Button>
         </div>
@@ -238,113 +522,195 @@ function PlayPageContent() {
     )
   }
 
+  const resolvedScenario = scenario
+
   return (
-    <div className="min-h-screen bg-secondary flex">
-      {/* Sidebar - Scenario Info & Chat */}
-      <motion.div
-        initial={{ x: -300 }}
-        animate={{ x: 0, width: sidebarCollapsed ? "60px" : "380px" }}
-        transition={{ duration: 0.3 }}
-        className="flex-shrink-0 border-r-2 border-medium bg-tertiary flex flex-col relative"
-      >
-        {/* Collapse Toggle */}
-        <button
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="absolute top-4 -right-3 z-10 w-8 h-8 rounded-full bg-accent-primary hover:bg-accent-primary-dark flex items-center justify-center text-inverse border-2 border-dark"
-        >
-          {sidebarCollapsed ? <Maximize2 className="w-3 h-3" /> : <Minimize2 className="w-3 h-3" />}
-        </button>
+    <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F]">
+      <header className="sticky top-0 z-40 h-[60px] bg-white border-b-2 border-[#D2D2D7]">
+        <div className="mx-auto flex h-full max-w-[1200px] items-center justify-between px-6">
+          <button
+            type="button"
+            onClick={() => router.push("/scenarios")}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F] hover:text-[#0071E3]"
+          >
+            <ArrowLeft className="size-4" />
+            Back
+          </button>
 
-        {!sidebarCollapsed && (
-          <>
-            {/* Header */}
-            <div className="p-4 border-b-2 border-medium">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push("/scenarios")}
-                className="text-secondary mb-3"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-4xl">{scenario.icon}</span>
-                <div>
-                  <h1 
-                    className="text-lg font-bold text-primary"
-                  >
-                    {scenario.title}
-                  </h1>
-                  <p className="text-xs text-secondary">Live Simulation</p>
-                </div>
-              </div>
-            </div>
+          <div className="text-center">
+            <div className="text-sm font-bold">{resolvedScenario.title}</div>
+            {progressLabel && (
+              <div className="text-xs text-[#6E6E73]">{progressLabel}</div>
+            )}
+          </div>
 
-            {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[85%] rounded-lg p-3 ${
-                      msg.role === "user"
-                        ? "bg-accent-primary text-inverse border-2 border-dark"
-                        : "bg-primary text-primary border-2 border-light"
-                    }`}
-                  >
-                    <p className="text-xs whitespace-pre-wrap">{msg.content}</p>
-                  </div>
+          <button
+            type="button"
+            onClick={reset}
+            disabled={!canReset}
+            className={cn(
+              "inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F]",
+              !canReset ? "cursor-not-allowed opacity-60" : "hover:text-[#0071E3]"
+            )}
+          >
+            <RotateCcw className="size-4" />
+            Reset
+          </button>
+        </div>
+      </header>
+
+      {alert && (
+        <TacticalAlert
+          {...alert}
+          onDismiss={() => {
+            setAlert(null)
+          }}
+        />
+      )}
+
+      <main className="pb-[96px]">
+        <ComponentCanvas>
+          {isBoardScenario ? (
+            isLoadingBoard || !board ? (
+              <LoadingCard title="Game Board" height="h-[520px]" />
+            ) : (
+              <GameBoard {...board} />
+            )
+          ) : scenarioId === "salary-negotiation" ? (
+            <SalaryNegotiationBriefing scenario={scenario} />
+          ) : scenarioId === "space-station" ? (
+            <SpaceStationBriefing scenario={scenario} />
+          ) : scenarioId === "detective-mystery" ? (
+            <DetectiveMysteryBriefing scenario={scenario} />
+          ) : (
+            <ScenarioBriefingCard scenario={resolvedScenario} />
+          )}
+
+          {isLoadingResources ? (
+            <LoadingCard
+              title={
+                isBoardScenario
+                  ? "Resources"
+                  : scenarioId === "salary-negotiation"
+                    ? "Negotiation Signals"
+                    : scenarioId === "space-station"
+                      ? "Station Telemetry"
+                      : scenarioId === "detective-mystery"
+                        ? "Case Metrics"
+                        : "Resources"
+              }
+              height="h-[220px]"
+            />
+          ) : isBoardScenario ? (
+            <ResourceMeter resources={resources} />
+          ) : scenarioId === "salary-negotiation" ? (
+            <SalaryNegotiationMetrics resources={resources} />
+          ) : scenarioId === "space-station" ? (
+            <SpaceStationTelemetry resources={resources} />
+          ) : scenarioId === "detective-mystery" ? (
+            <DetectiveMysteryMetrics resources={resources} />
+          ) : (
+            <ResourceMeter resources={resources} />
+          )}
+
+          {isLoadingActions ? (
+            <LoadingCard
+              title={
+                isBoardScenario
+                  ? "Actions"
+                  : scenarioId === "salary-negotiation"
+                    ? "Talking Points"
+                    : scenarioId === "space-station"
+                      ? "Command Deck"
+                      : scenarioId === "detective-mystery"
+                        ? "Investigation Notebook"
+                        : "Actions"
+              }
+              height="h-[220px]"
+            />
+          ) : isBoardScenario ? (
+            <ActionMatrix
+              actions={actions}
+              onActionClick={runAction}
+              disabled={isBusy}
+            />
+          ) : scenarioId === "salary-negotiation" ? (
+            <SalaryNegotiationActions actions={actions} onActionClick={runAction} disabled={isBusy} />
+          ) : scenarioId === "space-station" ? (
+            <SpaceStationCommands actions={actions} onActionClick={runAction} disabled={isBusy} />
+          ) : scenarioId === "detective-mystery" ? (
+            <DetectiveMysteryActions actions={actions} onActionClick={runAction} disabled={isBusy} />
+          ) : (
+            <ActionMatrix
+              actions={actions}
+              onActionClick={runAction}
+              disabled={isBusy}
+            />
+          )}
+
+          <section className={cn(componentCardClassName, "mt-4 p-4")}>
+            <div className="text-xs font-semibold text-[#6E6E73]">Chat</div>
+            <div className="mt-2 max-h-[240px] overflow-y-auto pr-2 text-sm">
+              {messages.map((msg, index) => (
+                <div key={index} className="mb-2">
+                  <span className="font-semibold">{msg.role === "user" ? "You" : "AI"}:</span>{" "}
+                  <span className="text-[#1D1D1F]">{msg.content}</span>
                 </div>
               ))}
             </div>
+            {latestAssistantText && (
+              <div className="mt-3 text-xs text-[#6E6E73]">Latest: {latestAssistantText}</div>
+            )}
+          </section>
+        </ComponentCanvas>
+      </main>
 
-            {/* Input */}
-            <div className="p-4 border-t-2 border-medium">
-              <div className="flex gap-2">
-                <Input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (
-                      e.key === "Enter" &&
-                      !e.shiftKey &&
-                      !e.altKey &&
-                      !e.metaKey &&
-                      !e.ctrlKey
-                    ) {
-                      e.preventDefault()
-                      handleSendMessage()
-                    }
-                  }}
-                  placeholder="Type your action..."
-                  className="flex-1"
-                />
-                <Button onClick={handleSendMessage} size="sm">
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
+      <div className="fixed bottom-0 inset-x-0 z-40 h-[80px] bg-white border-t-2 border-[#D2D2D7]">
+        <div className="mx-auto flex h-full max-w-[1200px] items-center gap-3 px-6">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              const isPlainEnter =
+                e.key === "Enter" &&
+                !e.shiftKey &&
+                !e.altKey &&
+                !e.ctrlKey &&
+                !e.metaKey
 
-        {sidebarCollapsed && (
-          <div className="flex flex-col items-center py-4 gap-4">
-            <span className="text-2xl">{scenario.icon}</span>
-          </div>
-        )}
-      </motion.div>
+              if (!isPlainEnter) return
+              if (e.nativeEvent.isComposing) return
+              if (!input.trim()) return
 
-      {/* Main Canvas Area */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-5xl mx-auto">
-          <ComponentStack
-            components={canvasComponents}
-            onRemove={handleRemoveComponent}
+              e.preventDefault()
+              runAction(input)
+            }}
+            disabled={isBusy}
+            placeholder="Type your action..."
+            className={cn(
+              "h-12 flex-1 rounded-full border-2 border-[#D2D2D7] bg-white px-4",
+              "text-sm text-[#1D1D1F] placeholder:text-[#6E6E73]",
+              "focus:outline-none focus:border-[#0071E3]",
+              "disabled:cursor-not-allowed disabled:opacity-60"
+            )}
           />
+          <button
+            type="button"
+            onClick={() => {
+              if (!isBusy) runAction(input)
+            }}
+            disabled={isBusy}
+            className={cn(
+              "grid size-12 place-items-center rounded-lg",
+              "bg-[#0071E3] text-white",
+              "shadow-[2px_2px_0px_#1D1D1F]",
+              "hover:bg-[#005BB5]",
+              "disabled:bg-[#0071E3]/60 disabled:cursor-not-allowed"
+            )}
+            aria-label="Send"
+          >
+            <Send className="size-4" />
+          </button>
         </div>
       </div>
     </div>
@@ -353,43 +719,83 @@ function PlayPageContent() {
 
 export default function PlayPage() {
   return (
-    <Suspense
+    <React.Suspense
       fallback={
-        <div className="min-h-screen bg-secondary flex items-center justify-center">
-          <p className="text-primary">Loading...</p>
+        <div className="min-h-screen bg-[#F5F5F7] grid place-items-center">
+          <div className="text-sm text-[#1D1D1F]">Loading…</div>
         </div>
       }
     >
       <PlayPageContent />
-    </Suspense>
+    </React.Suspense>
   )
 }
 
-// Mock response generator
-function generateMockResponse(input: string, scenarioId: string): string {
-  const responses: Record<string, string[]> = {
-    "zombie-survival": [
-      "You cautiously move forward. The sound of shuffling feet echoes nearby.",
-      "You find supplies in an abandoned store. Resources updated.",
-      "A group of zombies spots you! Quick decision needed.",
-    ],
-    "salary-negotiation": [
-      "The hiring manager listens carefully. They seem impressed.",
-      "They counter with a slightly higher offer. Progress is being made.",
-      "You've built strong rapport. They're open to discussing benefits.",
-    ],
-    "space-station": [
-      "You access the diagnostic panel. Multiple warnings detected.",
-      "The oxygen recycler is failing faster than expected.",
-      "Mission control acknowledges your status.",
-    ],
-    "detective-mystery": [
-      "You examine the evidence carefully. A pattern emerges.",
-      "The suspect's alibi doesn't add up. Further investigation needed.",
-      "You discover crucial evidence that changes everything.",
-    ],
+function generateMockResponse(input: string, scenarioId: string) {
+  const normalized = input.toLowerCase()
+
+  if (scenarioId === "salary-negotiation") {
+    if (normalized.includes("counter")) return "You counter with a clear, confident number."
+    if (normalized.includes("benefit")) return "You ask about benefits and flexibility instead of only salary."
+    if (normalized.includes("pause")) return "You take a beat to gather your leverage and stay composed."
+    if (normalized.includes("accept")) return "You accept, but you note the key terms you want in writing."
+
+    const responses = [
+      "You keep the conversation friendly and focused.",
+      "They listen closely and consider your reasoning.",
+      "You ask a direct question and wait for their response.",
+    ]
+    return responses[Math.floor(Math.random() * responses.length)]
   }
 
-  const scenarioResponses = responses[scenarioId] || responses["zombie-survival"]
-  return scenarioResponses[Math.floor(Math.random() * scenarioResponses.length)]
+  if (scenarioId === "space-station") {
+    if (normalized.includes("repair")) return "You start repairs and monitor the system readouts."
+    if (normalized.includes("reroute")) return "You reroute power and stabilize the most critical subsystem."
+    if (normalized.includes("scan")) return "Diagnostics reveal more issues than expected."
+    if (normalized.includes("report")) return "Mission control acknowledges and requests updated telemetry."
+
+    const responses = [
+      "Alarms fade for a moment, then another warning comes online.",
+      "The station shudders slightly as systems re-balance.",
+      "You prioritize based on risk and available resources.",
+    ]
+    return responses[Math.floor(Math.random() * responses.length)]
+  }
+
+  if (scenarioId === "detective-mystery") {
+    if (normalized.includes("interview")) return "You press for details and watch for inconsistencies."
+    if (normalized.includes("analyze")) return "You analyze the evidence and identify a useful pattern."
+    if (normalized.includes("stakeout")) return "You wait it out. Someone slips up."
+    if (normalized.includes("accuse")) return "You make your accusation and gauge the reaction."
+
+    const responses = [
+      "A new clue narrows the timeline.",
+      "One lead goes cold, but another gets hotter.",
+      "You connect two facts that didn’t seem related before.",
+    ]
+    return responses[Math.floor(Math.random() * responses.length)]
+  }
+
+  if (normalized.includes("move")) {
+    return "You move carefully. The city feels too quiet."
+  }
+
+  if (normalized.includes("scavenge")) {
+    return "You search nearby buildings and gather anything useful."
+  }
+
+  if (normalized.includes("rest")) {
+    return "You take a moment to breathe. Every sound matters."
+  }
+
+  if (normalized.includes("fortify")) {
+    return "You reinforce your position, trying not to make too much noise."
+  }
+
+  const responses = [
+    "You hesitate. Something is watching from the shadows.",
+    "A distant groan cuts through the silence.",
+    "You keep your senses sharp and plan your next move.",
+  ]
+  return responses[Math.floor(Math.random() * responses.length)]
 }

@@ -71,6 +71,8 @@ function ActionCard({
   onClick: () => void
 }) {
   const { label, icon, costs, successRate, description } = action
+  const clampedSuccessRate =
+    typeof successRate === "number" ? Math.max(0, Math.min(100, successRate)) : null
 
   return (
     <motion.div
@@ -131,12 +133,12 @@ function ActionCard({
       )}
 
       {/* Success Rate Bar */}
-      {successRate !== undefined && (
+      {typeof clampedSuccessRate === "number" && (
         <div className="mt-3">
           <div className="flex justify-between items-center mb-1">
             <span className="text-[10px] text-tertiary">Success Rate</span>
             <span className="text-[10px] text-secondary font-semibold">
-              {successRate}%
+              {Math.round(clampedSuccessRate)}%
             </span>
           </div>
           <div className="h-2 bg-secondary border-2 border-light rounded-full overflow-hidden">
@@ -144,14 +146,14 @@ function ActionCard({
               className="h-full rounded-full"
               style={{
                 background:
-                  successRate >= 70
+                  clampedSuccessRate >= 70
                     ? "var(--accent-success)"
-                    : successRate >= 40
+                    : clampedSuccessRate >= 40
                     ? "var(--accent-warning)"
                     : "var(--accent-danger)"
               }}
               initial={{ width: 0 }}
-              animate={{ width: `${successRate}%` }}
+              animate={{ width: `${clampedSuccessRate}%` }}
               transition={{ duration: 0.8, delay: index * 0.1 }}
             />
           </div>
