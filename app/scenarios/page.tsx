@@ -12,15 +12,19 @@ export default function ScenariosPage() {
   const [showTransitionOverlay, setShowTransitionOverlay] = useState(false)
 
   useEffect(() => {
-    try {
-      const shouldShow = window.sessionStorage.getItem("playbook:transition") === "1"
-      if (!shouldShow) return
+    const timer = window.setTimeout(() => {
+      try {
+        const shouldShow = window.sessionStorage.getItem("playbook:transition") === "1"
+        if (!shouldShow) return
 
-      window.sessionStorage.removeItem("playbook:transition")
-      setShowTransitionOverlay(true)
-    } catch {
-      // Ignore storage failures.
-    }
+        window.sessionStorage.removeItem("playbook:transition")
+        setShowTransitionOverlay(true)
+      } catch {
+        // Ignore storage failures.
+      }
+    }, 0)
+
+    return () => window.clearTimeout(timer)
   }, [])
 
   const handleSelectScenario = (scenarioId: string) => {
