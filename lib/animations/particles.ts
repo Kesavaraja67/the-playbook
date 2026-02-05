@@ -2,6 +2,8 @@
  * Particle physics calculations for orbital motion
  */
 
+// Note: Currently unused. Kept for potential future portal/visual effects.
+
 export interface Particle {
   id: number
   angle: number
