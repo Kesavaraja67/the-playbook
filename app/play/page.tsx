@@ -51,6 +51,130 @@ type InitialState = {
   alert: TacticalAlertState | null
 }
 
+type SpaceStationDecision = {
+  deltas: Array<{ name: string; delta: number }>
+  alert: TacticalAlertState
+}
+
+function applySpaceStationDecision(normalized: string): SpaceStationDecision | null {
+  const isRepairO2 =
+    normalized === "repair_o2" ||
+    normalized.includes("repair o2") ||
+    (normalized.includes("repair") && (normalized.includes("oxygen") || normalized.includes("o2")))
+
+  if (isRepairO2) {
+    return {
+      deltas: [
+        { name: "Oxygen", delta: +12 },
+        { name: "Power", delta: -8 },
+      ],
+      alert: {
+        type: "success",
+        title: "Repair Attempt",
+        message: "Oxygen generation stabilizes. Continue monitoring telemetry.",
+      },
+    }
+  }
+
+  const isRestorePower =
+    normalized === "restore_power" ||
+    normalized.includes("restore power") ||
+    normalized.includes("restore_power")
+
+  if (isRestorePower) {
+    return {
+      deltas: [
+        { name: "Power", delta: +15 },
+        { name: "Solar Output", delta: +8 },
+        { name: "Oxygen", delta: -2 },
+      ],
+      alert: {
+        type: "info",
+        title: "Power Routing",
+        message: "Power distribution rebalanced. Watch for secondary failures.",
+      },
+    }
+  }
+
+  const isInspectWater =
+    normalized === "inspect_water" ||
+    normalized.includes("inspect water") ||
+    (normalized.includes("inspect") && normalized.includes("water"))
+
+  if (isInspectWater) {
+    return {
+      deltas: [
+        { name: "Water", delta: +10 },
+        { name: "Power", delta: -4 },
+      ],
+      alert: {
+        type: "success",
+        title: "Water Recycler",
+        message: "Recycler performance improves. Reduced risk of rationing.",
+      },
+    }
+  }
+
+  const isRealignSolar =
+    normalized === "realign_solar" ||
+    normalized.includes("realign solar") ||
+    (normalized.includes("realign") && normalized.includes("solar"))
+
+  if (isRealignSolar) {
+    return {
+      deltas: [
+        { name: "Solar Output", delta: +15 },
+        { name: "Power", delta: +6 },
+      ],
+      alert: {
+        type: "success",
+        title: "Solar Array",
+        message: "Solar capture efficiency increases. Power reserves climbing.",
+      },
+    }
+  }
+
+  const isBoostMorale =
+    normalized === "boost_morale" ||
+    normalized.includes("boost morale") ||
+    (normalized.includes("boost") && normalized.includes("morale"))
+
+  if (isBoostMorale) {
+    return {
+      deltas: [
+        { name: "Morale", delta: +10 },
+        { name: "Food", delta: -5 },
+      ],
+      alert: {
+        type: "info",
+        title: "Crew Update",
+        message: "Crew morale improves. Maintain clear, calm directives.",
+      },
+    }
+  }
+
+  const isCallForHelp =
+    normalized === "call_for_help" ||
+    normalized.includes("call for help") ||
+    (normalized.includes("call") && normalized.includes("help"))
+
+  if (isCallForHelp) {
+    return {
+      deltas: [
+        { name: "Power", delta: -2 },
+        { name: "Morale", delta: +4 },
+      ],
+      alert: {
+        type: "info",
+        title: "Mission Control",
+        message: "Mission control acknowledges. Awaiting updated status report.",
+      },
+    }
+  }
+
+  return null
+}
+
 function clamp(min: number, value: number, max: number) {
   if (!Number.isFinite(value)) return min
   return Math.max(min, Math.min(max, value))
@@ -487,75 +611,12 @@ function PlayPageContent() {
         if (scenarioAtCall === "space-station") {
           setDay((d) => clamp(1, d + 1, totalDaysAtCall))
 
-          if (normalized.includes("repair_o2") || normalized.includes("repair")) {
-            updateResource("Oxygen", +12)
-            updateResource("Power", -8)
-            setAlert({
-              type: "success",
-              title: "Repair Attempt",
-              message: "Oxygen generation stabilizes. Continue monitoring telemetry.",
-            })
-            setIsProcessing(false)
-            return
-          }
-
-          if (normalized.includes("restore_power") || normalized.includes("power")) {
-            updateResource("Power", +15)
-            updateResource("Solar Output", +8)
-            updateResource("Oxygen", -2)
-            setAlert({
-              type: "info",
-              title: "Power Routing",
-              message: "Power distribution rebalanced. Watch for secondary failures.",
-            })
-            setIsProcessing(false)
-            return
-          }
-
-          if (normalized.includes("inspect_water") || normalized.includes("water")) {
-            updateResource("Water", +10)
-            updateResource("Power", -4)
-            setAlert({
-              type: "success",
-              title: "Water Recycler",
-              message: "Recycler performance improves. Reduced risk of rationing.",
-            })
-            setIsProcessing(false)
-            return
-          }
-
-          if (normalized.includes("realign_solar") || normalized.includes("solar")) {
-            updateResource("Solar Output", +15)
-            updateResource("Power", +6)
-            setAlert({
-              type: "success",
-              title: "Solar Array",
-              message: "Solar capture efficiency increases. Power reserves climbing.",
-            })
-            setIsProcessing(false)
-            return
-          }
-
-          if (normalized.includes("boost_morale") || normalized.includes("morale")) {
-            updateResource("Morale", +10)
-            updateResource("Food", -5)
-            setAlert({
-              type: "info",
-              title: "Crew Update",
-              message: "Crew morale improves. Maintain clear, calm directives.",
-            })
-            setIsProcessing(false)
-            return
-          }
-
-          if (normalized.includes("call_for_help") || normalized.includes("help")) {
-            updateResource("Power", -2)
-            updateResource("Morale", +4)
-            setAlert({
-              type: "info",
-              title: "Mission Control",
-              message: "Mission control acknowledges. Awaiting updated status report.",
-            })
+          const outcome = applySpaceStationDecision(normalized)
+          if (outcome) {
+            for (const delta of outcome.deltas) {
+              updateResource(delta.name, delta.delta)
+            }
+            setAlert(outcome.alert)
             setIsProcessing(false)
             return
           }

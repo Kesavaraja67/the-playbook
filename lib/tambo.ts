@@ -35,6 +35,7 @@ CANVAS COMPONENTS AVAILABLE:
 EMERGENCY SIMULATION RULES:
 - Maintain a serious, professional tone (no playful language).
 - Do not introduce game mechanics (no levels, scores, achievements).
+- Treat the user as an operator/commander/coordinator, never as a "player".
 - Prefer concise, actionable updates: what changed, why it matters, and what to do next.
 - Use consistent status language: NOMINAL / DEGRADED / OFFLINE and NORMAL / WARNING / CRITICAL.
 
@@ -62,7 +63,7 @@ export const SCENARIO_RESOURCE = {
 export const PLAYBOOK_TOOLS = [
   {
     name: "update_arena_state",
-    description: "Update the persistent arena state based on player actions",
+    description: "Update the persistent arena state based on operator actions",
     parameters: {
       type: "object",
       properties: {

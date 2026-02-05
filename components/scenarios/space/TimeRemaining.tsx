@@ -19,7 +19,7 @@ function urgencyColor(pctComplete: number) {
 export function TimeRemaining({ day, totalDays }: { day: number; totalDays: number }) {
   const safeTotal = Math.max(1, Math.floor(totalDays))
   const safeDay = clamp(1, Math.floor(day), safeTotal)
-  const pctComplete = Math.round((safeDay / safeTotal) * 100)
+  const pctComplete = clamp(0, Math.round((safeDay / safeTotal) * 100), 100)
   const barColor = urgencyColor(pctComplete)
 
   return (

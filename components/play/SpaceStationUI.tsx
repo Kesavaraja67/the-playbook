@@ -91,11 +91,19 @@ export function SpaceStationTelemetry({
   const solarSystemStatus = systemStatusFor(solar)
 
   const alerts: string[] = []
-  if (oxygenSystemStatus !== "nominal") alerts.push("Oxygen generator offline")
-  if (powerSystemStatus !== "nominal") alerts.push(`Power reserves at ${Math.round(clampToPct(power))}%`)
+  if (oxygenSystemStatus === "offline") alerts.push("Oxygen generator offline")
+  if (oxygenSystemStatus === "degraded") alerts.push("Oxygen generation degraded")
+
+  if (powerSystemStatus === "offline") alerts.push("Power distribution offline")
+  if (powerSystemStatus === "degraded") {
+    alerts.push(`Power reserves at ${Math.round(clampToPct(power))}%`)
+  }
+
+  if (waterSystemStatus === "offline") alerts.push("Water recycler offline")
+  if (solarSystemStatus === "offline") alerts.push("Solar array offline")
   if (alerts.length === 0) alerts.push("No critical alerts")
 
-  const sections = [
+  const sections: [StatusSection, StatusSection, StatusSection] = [
     {
       title: "LIFE SUPPORT",
       metrics: [
@@ -153,7 +161,7 @@ export function SpaceStationTelemetry({
         },
       ],
     },
-  ] satisfies StatusSection[]
+  ]
 
   const systems: SystemRow[] = [
     {
@@ -198,10 +206,7 @@ export function SpaceStationTelemetry({
 
   return (
     <div className="space-y-4">
-      <CriticalStatusDisplay
-        alerts={alerts}
-        sections={sections as [StatusSection, StatusSection, StatusSection]}
-      />
+      <CriticalStatusDisplay alerts={alerts} sections={sections} />
       <SystemsTable systems={systems} disabled={disabled} onActionClick={onActionClick} />
       <TimeRemaining day={day} totalDays={totalDays} />
     </div>

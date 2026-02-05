@@ -14,9 +14,15 @@ function formatCosts(costs: Action["costs"]) {
   return costs
     .map((cost) => {
       const key = cost.resource.toLowerCase()
-      if (key.includes("time")) return `Time +${cost.amount}h`
-      if (key.includes("power")) return `Power -${cost.amount}%`
-      return `${cost.resource} ${cost.amount}`
+
+      const magnitude = Math.abs(cost.amount)
+      const pct = `${cost.resource} ${cost.amount >= 0 ? "-" : "+"}${magnitude}%`
+
+      if (key.includes("time")) {
+        return `Time ${cost.amount >= 0 ? "+" : "-"}${magnitude}h`
+      }
+
+      return pct
     })
     .join(" • ")
 }
