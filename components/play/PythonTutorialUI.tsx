@@ -85,7 +85,7 @@ function stripPythonComments(code: string) {
 function hasStringAssignment(code: string, variableName: string) {
   const normalized = stripPythonComments(code)
   const name = escapeRegExp(variableName)
-  const re = new RegExp(`(^|\\n)\\s*${name}\\s*=\\s*(['\"]).*\\2`, "m")
+  const re = new RegExp(`(^|\\n)\\s*${name}\\s*=\\s*(['\"])(?:\\\\.|[^\\n])+\\2`, "m")
   return re.test(normalized)
 }
 
