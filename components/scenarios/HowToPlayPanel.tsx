@@ -40,7 +40,7 @@ export function HowToPlayPanel() {
     <section
       className={cn(
         componentCardClassName,
-        "border-accent-primary bg-[#E8F4FD] p-4"
+        "border-accent-primary bg-info-panel p-4"
       )}
     >
       <button
@@ -74,53 +74,51 @@ export function HowToPlayPanel() {
         )}
       </button>
 
-      {isOpen && (
-        <div
-          id={contentId}
-          role="region"
-          aria-labelledby={labelId}
-          className="mt-2 px-2"
-        >
-          <ul className="space-y-1 text-sm text-text-primary">
-            <li>
-              <span className="mr-2" aria-hidden>
-                🎯
-              </span>
-              <strong>Goal:</strong> Survive 7 days and reach evacuation.
-            </li>
-            <li>
-              <span className="mr-2" aria-hidden>
-                📍
-              </span>
-              <strong>Your position:</strong> Blue circle on the map.
-            </li>
-            <li>
-              <span className="mr-2" aria-hidden>
-                🧟
-              </span>
-              <strong>Zombies:</strong> Red circles (avoid them!).
-            </li>
-            <li>
-              <span className="mr-2" aria-hidden>
-                📦
-              </span>
-              <strong>Resources:</strong> Green circles (collect them).
-            </li>
-            <li>
-              <span className="mr-2" aria-hidden>
-                ⚡
-              </span>
-              <strong>Actions:</strong> Choose action buttons below.
-            </li>
-            <li>
-              <span className="mr-2" aria-hidden>
-                💡
-              </span>
-              <strong>Tip:</strong> Watch your health and ammo carefully!
-            </li>
-          </ul>
-        </div>
-      )}
+      <div
+        id={contentId}
+        role="region"
+        aria-labelledby={labelId}
+        className={cn("mt-2 px-2", !isOpen && "hidden")}
+      >
+        <ul className="space-y-1 text-sm text-text-primary">
+          <li>
+            <span className="mr-2" aria-hidden>
+              🎯
+            </span>
+            <strong>Goal:</strong> Survive 7 days and reach evacuation.
+          </li>
+          <li>
+            <span className="mr-2" aria-hidden>
+              📍
+            </span>
+            <strong>Your position:</strong> Blue circle on the map.
+          </li>
+          <li>
+            <span className="mr-2" aria-hidden>
+              🧟
+            </span>
+            <strong>Zombies:</strong> Red circles (avoid them!).
+          </li>
+          <li>
+            <span className="mr-2" aria-hidden>
+              📦
+            </span>
+            <strong>Resources:</strong> Green circles (collect them).
+          </li>
+          <li>
+            <span className="mr-2" aria-hidden>
+              ⚡
+            </span>
+            <strong>Actions:</strong> Choose action buttons below.
+          </li>
+          <li>
+            <span className="mr-2" aria-hidden>
+              💡
+            </span>
+            <strong>Tip:</strong> Watch your health and ammo carefully!
+          </li>
+        </ul>
+      </div>
     </section>
   )
 }
