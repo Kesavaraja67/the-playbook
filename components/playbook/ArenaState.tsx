@@ -1,12 +1,13 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
 import { motion } from "framer-motion"
 
+type ArenaValue = string | number | boolean | null | undefined
+type ArenaState = Record<string, ArenaValue>
+
 interface ArenaStateProps {
-  state: Record<string, any>
+  state: ArenaState
   scenarioId: string
 }
 
@@ -55,52 +56,66 @@ export function ArenaState({ state, scenarioId }: ArenaStateProps) {
 }
 
 // Zombie Survival State
-function renderZombieState(state: Record<string, any>) {
+function renderZombieState(state: ArenaState) {
+  const health = asNumber(state.health, 100)
+  const ammo = asNumber(state.ammo, 0)
+  const food = asNumber(state.food, 0)
+  const survivors = asNumber(state.survivors, 0)
+  const timeRemaining = asNumber(state.timeRemaining, 0)
+  const location = asString(state.location, "Unknown")
+
   return (
     <div className="space-y-4">
-      <StatBar label="Health" value={state.health || 100} max={100} color="red" />
-      <StatBar label="Ammo" value={state.ammo || 0} max={50} color="yellow" />
-      <StatBar label="Food" value={state.food || 0} max={10} color="green" />
+      <StatBar label="Health" value={health} max={100} color="red" />
+      <StatBar label="Ammo" value={ammo} max={50} color="yellow" />
+      <StatBar label="Food" value={food} max={10} color="green" />
       
       <div className="grid grid-cols-2 gap-4 mt-6">
-        <StatCard label="Survivors" value={state.survivors || 0} icon="👥" />
-        <StatCard label="Time Left" value={`${state.timeRemaining || 0}h`} icon="⏰" />
+        <StatCard label="Survivors" value={survivors} icon="👥" />
+        <StatCard label="Time Left" value={`${timeRemaining}h`} icon="⏰" />
       </div>
       
       <div className="mt-4 p-3 bg-primary border-2 border-light rounded-lg">
         <p className="text-sm text-secondary">Location</p>
-        <p className="text-lg font-semibold text-primary">{state.location || "Unknown"}</p>
+        <p className="text-lg font-semibold text-primary">{location}</p>
       </div>
     </div>
   )
 }
 
 // Salary Negotiation State
-function renderSalaryState(state: Record<string, any>) {
+function renderSalaryState(state: ArenaState) {
+  const currentOffer = asNumber(state.currentOffer, 0)
+  const targetSalary = asNumber(state.targetSalary, 0)
+  const leverage = asNumber(state.leverage, 50)
+  const confidence = asNumber(state.confidence, 50)
+  const round = asNumber(state.round, 1)
+  const relationship = asString(state.relationship, "neutral")
+
   return (
     <div className="space-y-4">
       <div className="p-4 bg-primary border-2 border-medium rounded-lg">
         <p className="text-sm text-secondary">Current Offer</p>
         <p className="text-3xl font-bold text-primary">
-          ${(state.currentOffer || 0).toLocaleString()}
+          ${currentOffer.toLocaleString()}
         </p>
       </div>
       
       <div className="p-4 bg-primary border-2 border-medium rounded-lg">
         <p className="text-sm text-secondary">Target Salary</p>
         <p className="text-3xl font-bold text-accent-success">
-          ${(state.targetSalary || 0).toLocaleString()}
+          ${targetSalary.toLocaleString()}
         </p>
       </div>
       
-      <StatBar label="Leverage" value={state.leverage || 50} max={100} color="blue" />
-      <StatBar label="Confidence" value={state.confidence || 50} max={100} color="purple" />
+      <StatBar label="Leverage" value={leverage} max={100} color="blue" />
+      <StatBar label="Confidence" value={confidence} max={100} color="purple" />
       
       <div className="grid grid-cols-2 gap-4 mt-6">
-        <StatCard label="Round" value={state.round || 1} icon="🔄" />
+        <StatCard label="Round" value={round} icon="🔄" />
         <StatCard 
           label="Relationship" 
-          value={state.relationship || "neutral"} 
+          value={relationship} 
           icon="🤝" 
         />
       </div>
@@ -109,49 +124,63 @@ function renderSalaryState(state: Record<string, any>) {
 }
 
 // Space Station State
-function renderSpaceState(state: Record<string, any>) {
+function renderSpaceState(state: ArenaState) {
+  const oxygen = asNumber(state.oxygen, 0)
+  const power = asNumber(state.power, 0)
+  const hull = asNumber(state.hull, 0)
+  const crew = asNumber(state.crew, 0)
+  const systems = asString(state.systems, "unknown")
+  const orbit = asString(state.orbit, "Unknown")
+
   return (
     <div className="space-y-4">
-      <StatBar label="Oxygen" value={state.oxygen || 0} max={100} color="cyan" />
-      <StatBar label="Power" value={state.power || 0} max={100} color="yellow" />
-      <StatBar label="Hull Integrity" value={state.hull || 0} max={100} color="red" />
+      <StatBar label="Oxygen" value={oxygen} max={100} color="cyan" />
+      <StatBar label="Power" value={power} max={100} color="yellow" />
+      <StatBar label="Hull Integrity" value={hull} max={100} color="red" />
       
       <div className="grid grid-cols-2 gap-4 mt-6">
-        <StatCard label="Crew" value={state.crew || 0} icon="👨‍🚀" />
-        <StatCard label="Systems" value={state.systems || "unknown"} icon="⚙️" />
+        <StatCard label="Crew" value={crew} icon="👨‍🚀" />
+        <StatCard label="Systems" value={systems} icon="⚙️" />
       </div>
       
       <div className="mt-4 p-3 bg-primary border-2 border-accent-danger rounded-lg">
         <p className="text-sm text-accent-danger font-semibold">Orbit Status</p>
-        <p className="text-lg text-primary">{state.orbit || "Unknown"}</p>
+        <p className="text-lg text-primary">{orbit}</p>
       </div>
     </div>
   )
 }
 
 // Detective Mystery State
-function renderDetectiveState(state: Record<string, any>) {
+function renderDetectiveState(state: ArenaState) {
+  const evidence = asNumber(state.evidence, 0)
+  const suspects = asNumber(state.suspects, 0)
+  const leads = asNumber(state.leads, 0)
+  const time = asNumber(state.time, 0)
+  const reputation = asNumber(state.reputation, 50)
+  const location = asString(state.location, "Unknown")
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        <StatCard label="Evidence" value={state.evidence || 0} icon="📋" />
-        <StatCard label="Suspects" value={state.suspects || 0} icon="🕵️" />
-        <StatCard label="Leads" value={state.leads || 0} icon="🔍" />
-        <StatCard label="Time Left" value={`${state.time || 0}h`} icon="⏰" />
+        <StatCard label="Evidence" value={evidence} icon="📋" />
+        <StatCard label="Suspects" value={suspects} icon="🕵️" />
+        <StatCard label="Leads" value={leads} icon="🔍" />
+        <StatCard label="Time Left" value={`${time}h`} icon="⏰" />
       </div>
       
-      <StatBar label="Reputation" value={state.reputation || 50} max={100} color="purple" />
+      <StatBar label="Reputation" value={reputation} max={100} color="purple" />
       
       <div className="mt-4 p-3 bg-primary border-2 border-light rounded-lg">
         <p className="text-sm text-secondary">Current Location</p>
-        <p className="text-lg font-semibold text-primary">{state.location || "Unknown"}</p>
+        <p className="text-lg font-semibold text-primary">{location}</p>
       </div>
     </div>
   )
 }
 
 // Generic State (fallback)
-function renderGenericState(state: Record<string, any>) {
+function renderGenericState(state: ArenaState) {
   return (
     <div className="space-y-2">
       {Object.entries(state).map(([key, value]) => (
@@ -224,4 +253,12 @@ function StatCard({
       <p className="text-xl font-bold text-primary">{value}</p>
     </div>
   )
+}
+
+function asNumber(value: ArenaValue, fallback: number): number {
+  return typeof value === "number" ? value : fallback
+}
+
+function asString(value: ArenaValue, fallback: string): string {
+  return typeof value === "string" ? value : fallback
 }

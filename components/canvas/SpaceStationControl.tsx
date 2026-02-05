@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { AlertTriangle, Zap, Droplet, Utensils, Clock } from "lucide-react"
+import { Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface SystemStatus {

@@ -218,7 +218,7 @@ export default function CanvasDemoPage() {
             <li>✨ <strong>ActionMatrix:</strong> Interactive action cards with costs and success rates</li>
             <li>✨ <strong>ProgressTracker:</strong> Timeline visualization with milestone states</li>
             <li>✨ <strong>TacticalAlert:</strong> Priority-based notifications with pulse animations</li>
-            <li>✨ <strong>DiscoveryCard:</strong> Animated item reveals (click "Scavenge" to trigger)</li>
+            <li>✨ <strong>DiscoveryCard:</strong> Animated item reveals (click &quot;Scavenge&quot; to trigger)</li>
           </ul>
         </div>
       </div>

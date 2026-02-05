@@ -11,23 +11,19 @@ interface Star {
 }
 
 export function Starfield() {
-  const [stars, setStars] = useState<Star[]>([])
-  const mouseX = useMotionValue(0)
-  const mouseY = useMotionValue(0)
-  
-  const springX = useSpring(mouseX, { stiffness: 50, damping: 20 })
-  const springY = useSpring(mouseY, { stiffness: 50, damping: 20 })
-
-  useEffect(() => {
-    // Generate 200 random points
-    const newStars: Star[] = Array.from({ length: 200 }, (_, i) => ({
+  const [stars] = useState<Star[]>(() =>
+    Array.from({ length: 200 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
       size: Math.random() * 2 + 1,
     }))
-    setStars(newStars)
-  }, [])
+  )
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+  
+  const springX = useSpring(mouseX, { stiffness: 50, damping: 20 })
+  const springY = useSpring(mouseY, { stiffness: 50, damping: 20 })
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {

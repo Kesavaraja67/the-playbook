@@ -8,7 +8,7 @@ export interface Scenario {
   description: string
   difficulty: "easy" | "medium" | "hard" | "extreme"
   objectives: string[]
-  initialState: Record<string, any>
+  initialState: Record<string, unknown>
   icon: string
 }
 
