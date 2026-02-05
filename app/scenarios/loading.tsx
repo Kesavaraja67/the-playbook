@@ -1,7 +1,12 @@
 export default function Loading() {
   return (
     <div className="min-h-screen bg-[#F5F5F7] px-6 py-8">
-      <div className="mx-auto max-w-6xl">
+      <main
+        className="mx-auto max-w-6xl"
+        aria-busy="true"
+        role="status"
+        aria-label="Loading scenarios"
+      >
         <header className="flex items-center justify-between">
           <div className="h-5 w-40 rounded bg-white" />
           <div className="h-5 w-20 rounded bg-white" />
@@ -46,7 +51,7 @@ export default function Loading() {
             </div>
           ))}
         </div>
-      </div>
+      </main>
     </div>
   )
 }

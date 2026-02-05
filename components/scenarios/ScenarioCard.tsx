@@ -35,8 +35,10 @@ export function ScenarioCard({
   onClick,
 }: ScenarioCardProps) {
   return (
-    <motion.div
-      className="h-[400px] w-full max-w-[320px] cursor-pointer rounded-[16px] border-2 border-[#D2D2D7] bg-white p-6"
+    <motion.button
+      type="button"
+      aria-label={`Start scenario: ${title}`}
+      className="group h-[400px] w-full max-w-[320px] cursor-pointer appearance-none rounded-[16px] border-2 border-[#D2D2D7] bg-white p-6 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3] focus-visible:ring-offset-2"
       style={{ boxShadow: "4px 4px 0px #1D1D1F" }}
       whileHover={{
         boxShadow: "8px 8px 0px #1D1D1F",
@@ -45,14 +47,6 @@ export function ScenarioCard({
       }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
       onClick={onClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault()
-          onClick()
-        }
-      }}
     >
       <div className="flex h-full flex-col">
         <div
@@ -82,20 +76,16 @@ export function ScenarioCard({
             ))}
           </div>
 
-          <button
-            type="button"
-            className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-[#1D1D1F] px-4 py-3 text-[16px] font-bold text-white transition-colors duration-200 hover:bg-[#0071E3]"
-            onClick={(e) => {
-              e.stopPropagation()
-              onClick()
-            }}
+          <div
+            className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-[#1D1D1F] px-4 py-3 text-[16px] font-bold text-white transition-colors duration-200 group-hover:bg-[#0071E3] group-focus-visible:bg-[#0071E3]"
+            aria-hidden="true"
           >
             Start Scenario
             <ArrowRight className="h-5 w-5" />
-          </button>
+          </div>
         </div>
       </div>
-    </motion.div>
+    </motion.button>
   )
 }
 

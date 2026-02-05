@@ -10,7 +10,7 @@ import { scenarios } from "@/lib/scenarios"
 
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "700"],
+  weight: ["400", "600", "700"],
 })
 
 export default function ScenariosPage() {
@@ -19,13 +19,16 @@ export default function ScenariosPage() {
   const [category, setCategory] = useState<ScenarioCategoryFilter>("all")
   const [isLoading, setIsLoading] = useState(true)
   const [isFiltering, setIsFiltering] = useState(false)
-  const filterTimeoutRef = useRef<number | null>(null)
+  const filterTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => setIsLoading(false), 250)
+    const timeout = setTimeout(() => setIsLoading(false), 250)
     return () => {
-      window.clearTimeout(timeout)
-      if (filterTimeoutRef.current) window.clearTimeout(filterTimeoutRef.current)
+      clearTimeout(timeout)
+      if (filterTimeoutRef.current) {
+        clearTimeout(filterTimeoutRef.current)
+        filterTimeoutRef.current = null
+      }
     }
   }, [])
 
@@ -39,11 +42,14 @@ export default function ScenariosPage() {
   }
 
   const handleCategoryChange = (nextCategory: ScenarioCategoryFilter) => {
-    if (filterTimeoutRef.current) window.clearTimeout(filterTimeoutRef.current)
+    if (filterTimeoutRef.current) {
+      clearTimeout(filterTimeoutRef.current)
+      filterTimeoutRef.current = null
+    }
     setIsFiltering(true)
     setCategory(nextCategory)
 
-    filterTimeoutRef.current = window.setTimeout(() => {
+    filterTimeoutRef.current = setTimeout(() => {
       setIsFiltering(false)
       filterTimeoutRef.current = null
     }, 150)
@@ -65,7 +71,7 @@ export default function ScenariosPage() {
 
           <button
             type="button"
-            onClick={() => router.push("/")}
+            onClick={() => router.back()}
             className="text-[14px] font-semibold text-[#1D1D1F] transition-colors hover:text-[#0071E3]"
           >
             ← Back
