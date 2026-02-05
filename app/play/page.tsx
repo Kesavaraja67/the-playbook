@@ -20,18 +20,25 @@ function buildSystemPrompt(scenarioId: string): string {
     (s) => s.id === scenarioId
   )?.systemPrompt
 
-  if (!scenario) return scenarioPrompt ?? PLAYBOOK_SYSTEM_PROMPT
+  const parts: string[] = [PLAYBOOK_SYSTEM_PROMPT]
 
-  return [
-    scenarioPrompt ?? PLAYBOOK_SYSTEM_PROMPT,
+  if (scenarioPrompt) {
+    parts.push("", "SCENARIO PROMPT:", scenarioPrompt)
+  }
+
+  if (!scenario) return parts.join("\n")
+
+  parts.push(
     "",
     `Scenario: ${scenario.title}`,
     `Description: ${scenario.description}`,
     "Objectives:",
     ...scenario.objectives.map((o) => `- ${o}`),
     "",
-    `Initial state: ${JSON.stringify(scenario.initialState)}`,
-  ].join("\n")
+    `Initial state: ${JSON.stringify(scenario.initialState)}`
+  )
+
+  return parts.join("\n")
 }
 
 function PlayPageContent() {
@@ -73,7 +80,6 @@ function PlayPageContent() {
       key={scenarioId}
       apiKey={TAMBO_API_KEY}
       components={components}
-      contextKey={`play:${scenarioId}`}
       initialMessages={[
         {
           role: "system",
@@ -204,7 +210,7 @@ function extractText(content: unknown): string {
   if (typeof content === "string") return content
   if (!Array.isArray(content)) return ""
 
-  return content
+  const textParts = content
     .map((part) => {
       if (!part || typeof part !== "object") return ""
       const maybeType = (part as { type?: unknown }).type
@@ -212,6 +218,13 @@ function extractText(content: unknown): string {
       const maybeText = (part as { text?: unknown }).text
       return typeof maybeText === "string" ? maybeText : ""
     })
+    .filter(Boolean)
+
+  if (textParts.length === 0 && content.length > 0) {
+    return "[Non-text response omitted]"
+  }
+
+  return textParts
     .join("")
 }
 

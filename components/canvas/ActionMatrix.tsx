@@ -31,6 +31,17 @@ interface ActionMatrixProps {
 export function ActionMatrix({ actions, onActionClick }: ActionMatrixProps) {
   const gridCols = actions.length <= 2 ? 2 : actions.length <= 4 ? 2 : 3
 
+  const safeOnActionClick = (actionId: string) => {
+    if (!onActionClick) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("ActionMatrix: onActionClick is not provided; clicks are ignored.")
+      }
+      return
+    }
+
+    onActionClick(actionId)
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -54,7 +65,7 @@ export function ActionMatrix({ actions, onActionClick }: ActionMatrixProps) {
             key={action.id}
             action={action}
             index={index}
-            onClick={() => onActionClick?.(action.id)}
+            onClick={() => safeOnActionClick(action.id)}
           />
         ))}
       </div>

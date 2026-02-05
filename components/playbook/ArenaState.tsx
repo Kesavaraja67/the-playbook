@@ -154,12 +154,21 @@ function renderDetectiveState(state: Record<string, unknown>) {
 function renderGenericState(state: Record<string, unknown>) {
   return (
     <div className="space-y-2">
-      {Object.entries(state).map(([key, value]) => (
-        <div key={key} className="flex justify-between items-center p-2 bg-slate-800/50 rounded">
-          <span className="text-sm text-slate-400 capitalize">{key}</span>
-          <span className="text-sm font-semibold text-white">{String(value)}</span>
-        </div>
-      ))}
+      {Object.entries(state).map(([key, value]) => {
+        const displayValue =
+          value == null
+            ? "—"
+            : typeof value === "object"
+              ? JSON.stringify(value)
+              : String(value)
+
+        return (
+          <div key={key} className="flex justify-between items-center p-2 bg-slate-800/50 rounded">
+            <span className="text-sm text-slate-400 capitalize">{key}</span>
+            <span className="text-sm font-semibold text-white">{displayValue}</span>
+          </div>
+        )
+      })}
     </div>
   )
 }

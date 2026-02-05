@@ -12,6 +12,7 @@ import { TacticalAlert, tacticalAlertSchema } from "@/components/tambo/TacticalA
 */
 
 // Ensure API key is available
+// NOTE: NEXT_PUBLIC_* env vars are inlined at build time.
 export const TAMBO_API_KEY = process.env.NEXT_PUBLIC_TAMBO_API_KEY
 
 if (
@@ -62,6 +63,10 @@ GENERATION RULES:
 - Update existing components rather than always creating new ones
 - Maintain visual consistency with the Cyber Dreamscape theme
 - Provide meaningful data that advances the narrative
+
+USER ACTION FORMAT:
+- If the user clicks an action in ActionMatrix, you will receive a user message starting with
+  "USER_ACTION:" followed by a JSON payload. Treat it as the user's selected action.
 
 Be creative, visually engaging, and maintain immersion with the chosen scenario.`
 
