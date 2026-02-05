@@ -19,6 +19,8 @@ const mcpServers = [
 ]
 
 export function TamboProviderWrapper({ children }: { children: React.ReactNode }) {
+  // `NEXT_PUBLIC_*` env vars are exposed to the browser. This API key is expected to
+  // be scoped as a public/client token (not a secret with elevated privileges).
   const apiKey = process.env.NEXT_PUBLIC_TAMBO_API_KEY
   const isDevelopment = process.env.NODE_ENV === "development"
 
