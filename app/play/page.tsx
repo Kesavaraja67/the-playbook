@@ -308,7 +308,18 @@ function PlayPageContent() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                  onKeyDown={(e) => {
+                    if (
+                      e.key === "Enter" &&
+                      !e.shiftKey &&
+                      !e.altKey &&
+                      !e.metaKey &&
+                      !e.ctrlKey
+                    ) {
+                      e.preventDefault()
+                      handleSendMessage()
+                    }
+                  }}
                   placeholder="Type your action..."
                   className="flex-1"
                 />
