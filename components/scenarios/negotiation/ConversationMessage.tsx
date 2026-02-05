@@ -6,7 +6,7 @@ export type ConversationSender = "recruiter" | "you"
 
 export type ConversationMessageProps = {
   sender: ConversationSender
-  avatar: string
+  avatar?: string
   time?: string
   children: React.ReactNode
 }
@@ -16,8 +16,14 @@ const senderLabel: Record<ConversationSender, string> = {
   you: "You",
 }
 
+const defaultAvatar: Record<ConversationSender, string> = {
+  recruiter: "👔",
+  you: "👤",
+}
+
 export function ConversationMessage({ sender, avatar, time, children }: ConversationMessageProps) {
   const isYou = sender === "you"
+  const resolvedAvatar = avatar ?? defaultAvatar[sender]
 
   return (
     <div className={cn("flex w-full", isYou ? "justify-end" : "justify-start")}>
@@ -37,7 +43,7 @@ export function ConversationMessage({ sender, avatar, time, children }: Conversa
         >
           <div className="flex items-center gap-2">
             <span className="text-base leading-none" aria-hidden>
-              {avatar}
+              {resolvedAvatar}
             </span>
             <span className={cn("font-semibold", isYou ? "text-inverse" : "text-primary")}>
               {senderLabel[sender]}

@@ -675,27 +675,26 @@ function PlayPageContent() {
                   </div>
                 </div>
 
-                <div className="mt-4 max-h-[420px] overflow-y-auto pr-2">
-                  <ConversationThread
-                    messages={messages.map((msg, index) => {
-                      const sender = msg.role === "assistant" ? "recruiter" : "you"
-                      const avatar = msg.role === "assistant" ? "👔" : "👤"
-                      const time = new Date(
-                        conversationStartMs + index * 2 * 60 * 1000
-                      ).toLocaleTimeString(undefined, {
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })
+                <ConversationThread
+                  className="mt-4 max-h-[420px] pr-2"
+                  messages={messages.map((msg, index) => {
+                    const sender = msg.role === "assistant" ? "recruiter" : "you"
+                    const avatar = msg.role === "assistant" ? "👔" : "👤"
+                    const time = new Date(
+                      conversationStartMs + index * 2 * 60 * 1000
+                    ).toLocaleTimeString(undefined, {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })
 
-                      return {
-                        sender,
-                        avatar,
-                        time,
-                        content: msg.content,
-                      }
-                    })}
-                  />
-                </div>
+                    return {
+                      sender,
+                      avatar,
+                      time,
+                      content: msg.content,
+                    }
+                  })}
+                />
               </section>
 
               {isLoadingResources ? (

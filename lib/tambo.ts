@@ -256,6 +256,14 @@ export const PLAYBOOK_TOOLS = [
                 type: "string",
                 enum: ["recruiter", "you"],
               },
+              id: {
+                type: "string",
+                description: "Stable identifier for rendering (recommended if messages can be re-ordered)",
+              },
+              avatar: {
+                type: "string",
+                description: "Optional avatar glyph",
+              },
               content: { type: "string" },
               time: {
                 type: "string",
@@ -275,8 +283,21 @@ export const PLAYBOOK_TOOLS = [
     parameters: {
       type: "object",
       properties: {
+        actions: {
+          type: "array",
+          description: "Canonical list of quick response actions. If present, takes precedence over responses.",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              label: { type: "string" },
+            },
+            required: ["id", "label"],
+          },
+        },
         responses: {
           type: "array",
+          description: "Legacy alias for actions. Ignored when actions is present.",
           items: {
             type: "object",
             properties: {
@@ -287,7 +308,7 @@ export const PLAYBOOK_TOOLS = [
           },
         },
       },
-      required: ["responses"],
+      anyOf: [{ required: ["actions"] }, { required: ["responses"] }],
     },
   },
   {
