@@ -116,7 +116,7 @@ export const scenarios: Scenario[] = [
     id: "detective-mystery",
     title: "Detective Mystery",
     description:
-      "A high-profile murder case lands on your desk. Interview suspects, gather evidence, and solve the crime before the trail goes cold.",
+      "The Dockside Murder lands on your desk. Interview suspects, gather evidence, and solve the crime before the trail goes cold.",
     category: "game",
     tags: ["Mystery", "Investigation", "Logic"],
     difficulty: "medium",

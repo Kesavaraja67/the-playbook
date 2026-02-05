@@ -39,6 +39,9 @@ GENERATION RULES:
 - Maintain visual consistency with the Cyber Dreamscape theme
 - Provide meaningful data that advances the narrative
 
+SCENARIO NOTES:
+- detective-mystery: keep the tone serious but engaging. Emphasize time pressure (countdown), evidence collection, suspect interviews, and high-stakes accusations. When proposing actions, include success percentages and time costs in hours.
+
 Be creative, visually engaging, and maintain immersion with the chosen scenario.`
 
 /**
