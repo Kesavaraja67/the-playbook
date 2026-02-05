@@ -53,6 +53,9 @@ GENERATION RULES:
 - Maintain visual consistency with the design system
 - Provide meaningful data that advances decision-making
 
+SCENARIO NOTES:
+- detective-mystery: keep the tone serious but engaging. Emphasize time pressure (countdown), evidence collection, suspect interviews, and high-stakes accusations. When proposing actions, include success percentages and time costs in hours.
+
 Maintain immersion with realistic constraints, tradeoffs, and consequences.`
 
 /**
