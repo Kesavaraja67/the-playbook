@@ -9,6 +9,7 @@ export default {
   ],
   theme: {
     extend: {
+      // These colors are backed by CSS variables defined in src/styles/design-system.css.
       colors: {
         "electric-cyan": "var(--electric-cyan)",
         "neon-magenta": "var(--neon-magenta)",
