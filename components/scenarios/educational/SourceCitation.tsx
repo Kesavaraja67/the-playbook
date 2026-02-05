@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 export type SourceCitationProps = {
   source: string
   url?: string
+  /** ISO 8601 timestamp (e.g. `new Date().toISOString()`). */
   fetchedAt?: string
 }
 

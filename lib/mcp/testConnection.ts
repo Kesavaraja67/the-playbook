@@ -1,4 +1,6 @@
-export const DEFAULT_TAMBO_MCP_SERVER_URL = "https://mcp.tambo.co/mcp"
+import { DEFAULT_TAMBO_MCP_SERVER_URL } from "./constants"
+
+export { DEFAULT_TAMBO_MCP_SERVER_URL }
 
 export type McpConnectionTestResult =
   | {
