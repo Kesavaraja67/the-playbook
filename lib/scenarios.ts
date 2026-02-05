@@ -7,6 +7,7 @@ export interface Scenario {
   category: ScenarioCategory
   tags: string[]
   difficulty: "easy" | "medium" | "hard" | "extreme"
+  layout: "board" | "briefing"
   objectives: string[]
   initialState: Record<string, unknown>
   icon: string
@@ -41,6 +42,7 @@ export const scenarios: Scenario[] = [
     category: "game",
     tags: ["Survival", "Strategy", "Resources"],
     difficulty: "hard",
+    layout: "board",
     objectives: [
       "Find medical supplies",
       "Rescue 3 survivors",
@@ -65,6 +67,7 @@ export const scenarios: Scenario[] = [
     category: "professional",
     tags: ["Negotiation", "Career", "Communication"],
     difficulty: "medium",
+    layout: "briefing",
     objectives: [
       "Research market rates",
       "Build your case",
@@ -89,6 +92,7 @@ export const scenarios: Scenario[] = [
     category: "simulation",
     tags: ["Crisis", "Engineering", "Teamwork"],
     difficulty: "extreme",
+    layout: "briefing",
     objectives: [
       "Diagnose the malfunction",
       "Repair oxygen systems",
@@ -113,6 +117,7 @@ export const scenarios: Scenario[] = [
     category: "game",
     tags: ["Mystery", "Investigation", "Logic"],
     difficulty: "medium",
+    layout: "briefing",
     objectives: [
       "Interview all suspects",
       "Collect physical evidence",

@@ -219,6 +219,9 @@ function LoadingCard({ title, height }: { title: string; height: string }) {
 }
 
 function ScenarioBriefingCard({ scenario }: { scenario: Scenario }) {
+  const objectives = scenario.objectives ?? []
+  const hasObjectives = objectives.length > 0
+
   return (
     <section className={componentCardClassName}>
       <div className="flex items-start gap-4">
@@ -230,14 +233,16 @@ function ScenarioBriefingCard({ scenario }: { scenario: Scenario }) {
           <div className="mt-1 text-sm font-semibold">{scenario.title}</div>
           <div className="mt-3 text-sm text-[#6E6E73]">{scenario.description}</div>
 
-          <div className="mt-5">
-            <div className="text-xs font-semibold text-[#6E6E73]">Objectives</div>
-            <ul className="mt-2 list-disc pl-5 text-sm">
-              {scenario.objectives.map((objective) => (
-                <li key={objective}>{objective}</li>
-              ))}
-            </ul>
-          </div>
+          {hasObjectives && (
+            <div className="mt-5">
+              <div className="text-xs font-semibold text-[#6E6E73]">Objectives</div>
+              <ul className="mt-2 list-disc pl-5 text-sm">
+                {objectives.map((objective) => (
+                  <li key={objective}>{objective}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </section>
@@ -249,6 +254,7 @@ function PlayPageContent() {
   const searchParams = useSearchParams()
   const scenarioId = searchParams.get("scenario") || "zombie-survival"
   const scenario = getScenarioById(scenarioId)
+  const isBoardScenario = scenario?.layout === "board"
 
   const [day, setDay] = React.useState(1)
   const [totalDays, setTotalDays] = React.useState(7)
@@ -281,7 +287,7 @@ function PlayPageContent() {
     resetVersionRef.current += 1
     const resetVersion = resetVersionRef.current
 
-    const shouldLoadBoard = scenarioId === "zombie-survival"
+    const shouldLoadBoard = getScenarioById(scenarioId)?.layout === "board"
 
     for (const id of initTimeoutsRef.current) clearTimeout(id)
     initTimeoutsRef.current = []
@@ -373,11 +379,10 @@ function PlayPageContent() {
     })
   }, [])
 
-  const isInitializing =
-    (scenarioId === "zombie-survival" && isLoadingBoard) ||
-    isLoadingResources ||
-    isLoadingActions
+  const effectiveIsLoadingBoard = isBoardScenario && isLoadingBoard
+  const isInitializing = effectiveIsLoadingBoard || isLoadingResources || isLoadingActions
   const isBusy = isProcessing || isInitializing
+  const canReset = !isInitializing
 
   const runAction = React.useCallback(
     (actionIdOrText: string) => {
@@ -521,11 +526,11 @@ function PlayPageContent() {
           <button
             type="button"
             onClick={reset}
-            disabled={isBusy}
-            aria-disabled={isBusy || undefined}
+            disabled={!canReset}
+            aria-disabled={!canReset || undefined}
             className={cn(
               "inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F]",
-              isBusy ? "cursor-not-allowed opacity-60" : "hover:text-[#0071E3]"
+              !canReset ? "cursor-not-allowed opacity-60" : "hover:text-[#0071E3]"
             )}
           >
             <RotateCcw className="size-4" />
@@ -545,7 +550,7 @@ function PlayPageContent() {
 
       <main className="pb-[96px]">
         <ComponentCanvas>
-          {scenarioId === "zombie-survival" ? (
+          {isBoardScenario ? (
             isLoadingBoard || !board ? (
               <LoadingCard title="Game Board" height="h-[520px]" />
             ) : (
@@ -594,10 +599,16 @@ function PlayPageContent() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key !== "Enter") return
+              const isPlainEnter =
+                e.key === "Enter" &&
+                !e.shiftKey &&
+                !e.altKey &&
+                !e.ctrlKey &&
+                !e.metaKey
+
+              if (!isPlainEnter) return
               if (isBusy) return
               if (e.nativeEvent.isComposing) return
-              if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return
 
               e.preventDefault()
               runAction(input)
