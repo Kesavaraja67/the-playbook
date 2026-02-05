@@ -11,12 +11,14 @@ type InitializeButtonProps = {
 export function InitializeButton({ onClick, disabled }: InitializeButtonProps) {
   const [isPressed, setIsPressed] = useState(false)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isMountedRef = useRef(true)
   const shouldReduceMotion = useReducedMotion()
   const isButtonDisabled = Boolean(disabled) || isPressed
   const allowHover = !isButtonDisabled
 
   useEffect(() => {
     return () => {
+      isMountedRef.current = false
       if (timeoutRef.current === null) return
       clearTimeout(timeoutRef.current)
     }
@@ -38,7 +40,9 @@ export function InitializeButton({ onClick, disabled }: InitializeButtonProps) {
           try {
             onClick()
           } finally {
-            setIsPressed(false)
+            if (isMountedRef.current) {
+              setIsPressed(false)
+            }
           }
         }, 100)
       }}
@@ -46,7 +50,7 @@ export function InitializeButton({ onClick, disabled }: InitializeButtonProps) {
       style={{
         backgroundColor: "#0071E3",
         borderColor: "#1D1D1F",
-        opacity: disabled ? 0.9 : 1,
+        opacity: isButtonDisabled ? 0.9 : 1,
       }}
       whileHover={
         allowHover
@@ -61,13 +65,13 @@ export function InitializeButton({ onClick, disabled }: InitializeButtonProps) {
         boxShadow: isPressed ? "0px 0px 0px #1D1D1F" : "8px 8px 0px #1D1D1F",
         x: isPressed ? 8 : 0,
         y: isPressed ? 8 : 0,
-        scale: disabled || shouldReduceMotion || isPressed ? 1 : [1, 1.02, 1],
+        scale: isButtonDisabled || shouldReduceMotion ? 1 : [1, 1.02, 1],
       }}
       transition={{
         boxShadow: { duration: 0.1 },
         x: { duration: 0.1 },
         y: { duration: 0.1 },
-        scale: disabled || shouldReduceMotion || isPressed
+        scale: isButtonDisabled || shouldReduceMotion
           ? { duration: 0 }
           : {
               duration: 2,
