@@ -502,7 +502,6 @@ function PlayPageContent() {
   const resetVersionRef = React.useRef(0)
   const detectiveEvidenceRef = React.useRef<EvidenceItem[]>(detectiveEvidence)
   const detectiveSuspectsRef = React.useRef<Suspect[]>(detectiveSuspects)
-  const detectiveTimerRef = React.useRef<ReturnType<typeof setInterval> | null>(null)
   const detectiveOutOfTimeAlertShownRef = React.useRef(false)
 
   React.useEffect(() => {
@@ -512,11 +511,6 @@ function PlayPageContent() {
 
       for (const id of actionTimeoutsRef.current) clearTimeout(id)
       actionTimeoutsRef.current = []
-
-      if (detectiveTimerRef.current) {
-        clearInterval(detectiveTimerRef.current)
-        detectiveTimerRef.current = null
-      }
     }
   }, [])
 
@@ -528,45 +522,42 @@ function PlayPageContent() {
     detectiveSuspectsRef.current = detectiveSuspects
   }, [detectiveSuspects])
 
+  const shouldRunDetectiveTimer =
+    scenarioId === "detective-mystery" && detectiveTimeRemainingSeconds > 0
+
   React.useEffect(() => {
-    if (scenarioId !== "detective-mystery") {
-      detectiveOutOfTimeAlertShownRef.current = false
+    if (!shouldRunDetectiveTimer) return
 
-      if (detectiveTimerRef.current) {
-        clearInterval(detectiveTimerRef.current)
-        detectiveTimerRef.current = null
-      }
-
-      return
-    }
-
-    if (detectiveTimeRemainingSeconds <= 0) {
-      if (detectiveTimerRef.current) {
-        clearInterval(detectiveTimerRef.current)
-        detectiveTimerRef.current = null
-      }
-
-      if (!detectiveOutOfTimeAlertShownRef.current) {
-        detectiveOutOfTimeAlertShownRef.current = true
-        setAlert({
-          type: "warning",
-          title: "Case went cold",
-          message: "You ran out of time. Reset the case file to try again.",
-        })
-      }
-
-      return
-    }
-
-    detectiveOutOfTimeAlertShownRef.current = false
-
-    if (detectiveTimerRef.current) return
-
-    detectiveTimerRef.current = setInterval(() => {
+    const id = setInterval(() => {
       setDetectiveTimeRemainingSeconds((prev) =>
         prev > 0 ? Math.max(0, prev - DETECTIVE_SECONDS_PER_TICK) : prev
       )
     }, 1000)
+
+    return () => {
+      clearInterval(id)
+    }
+  }, [shouldRunDetectiveTimer])
+
+  React.useEffect(() => {
+    if (scenarioId !== "detective-mystery") {
+      detectiveOutOfTimeAlertShownRef.current = false
+      return
+    }
+
+    if (detectiveTimeRemainingSeconds > 0) {
+      detectiveOutOfTimeAlertShownRef.current = false
+      return
+    }
+
+    if (detectiveOutOfTimeAlertShownRef.current) return
+
+    detectiveOutOfTimeAlertShownRef.current = true
+    setAlert({
+      type: "warning",
+      title: "Case went cold",
+      message: "You ran out of time. Reset the case file to try again.",
+    })
   }, [scenarioId, detectiveTimeRemainingSeconds, setAlert])
 
   const reset = React.useCallback(() => {
