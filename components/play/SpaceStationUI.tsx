@@ -70,6 +70,7 @@ const commandHints: Record<string, string> = {
 }
 
 export function SpaceStationBriefing({ scenario }: { scenario: Scenario }) {
+  const objectives = scenario.objectives ?? []
   const crew = asNumber(scenario.initialState.crew, 6)
   const orbit = asString(scenario.initialState.orbit, "decaying")
   const systems = asString(scenario.initialState.systems, "degraded")
@@ -90,7 +91,7 @@ export function SpaceStationBriefing({ scenario }: { scenario: Scenario }) {
           <p className="mt-4 text-sm text-[#1D1D1F]">{scenario.description}</p>
 
           <div className="mt-5 grid gap-3 md:grid-cols-2">
-            {scenario.objectives.slice(0, 4).map((objective) => (
+            {objectives.slice(0, 4).map((objective) => (
               <div
                 key={objective}
                 className="rounded-lg border-2 border-[#D2D2D7] bg-[#F5F5F7] p-3 text-sm"

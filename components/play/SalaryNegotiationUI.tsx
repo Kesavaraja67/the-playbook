@@ -92,6 +92,7 @@ const actionDescriptions: Record<string, string> = {
 }
 
 export function SalaryNegotiationBriefing({ scenario }: { scenario: Scenario }) {
+  const objectives = scenario.objectives ?? []
   const currentOffer = asNumber(scenario.initialState.currentOffer, 85_000)
   const targetSalary = asNumber(scenario.initialState.targetSalary, 100_000)
   const marketRate = asNumber(scenario.initialState.marketRate, 95_000)
@@ -135,7 +136,7 @@ export function SalaryNegotiationBriefing({ scenario }: { scenario: Scenario }) 
         <div>
           <div className="text-xs font-semibold text-[#6E6E73]">Checklist</div>
           <ul className="mt-3 space-y-2 text-sm">
-            {scenario.objectives.slice(0, 4).map((objective) => (
+            {objectives.slice(0, 4).map((objective) => (
               <li key={objective} className="flex items-start gap-2">
                 <span aria-hidden className="mt-0.5 text-[#0071E3]">
                   ●
