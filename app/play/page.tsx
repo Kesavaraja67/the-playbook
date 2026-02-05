@@ -265,9 +265,9 @@ function PlayPageContent() {
 
     setDay(init.day)
     setTotalDays(init.totalDays)
-    setBoard(init.board)
-    setResources(init.resources)
-    setActions(init.actions)
+    setBoard(null)
+    setResources([])
+    setActions([])
     setMessages(init.messages)
     setAlert(init.alert)
     setInput("")
@@ -281,6 +281,7 @@ function PlayPageContent() {
       setTimeout(() => {
         if (resetVersionRef.current !== resetVersion) return
 
+        setBoard(init.board)
         setIsLoadingBoard(false)
       }, 350)
     )
@@ -289,6 +290,7 @@ function PlayPageContent() {
       setTimeout(() => {
         if (resetVersionRef.current !== resetVersion) return
 
+        setResources(init.resources)
         setIsLoadingResources(false)
       }, 450)
     )
@@ -297,6 +299,7 @@ function PlayPageContent() {
       setTimeout(() => {
         if (resetVersionRef.current !== resetVersion) return
 
+        setActions(init.actions)
         setIsLoadingActions(false)
       }, 550)
     )
