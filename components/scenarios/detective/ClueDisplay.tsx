@@ -22,24 +22,14 @@ export function ClueDisplay({ clue, className }: ClueDisplayProps) {
     setRendered("")
 
     let frameId = 0
-    let cancelled = false
     const start = performance.now()
     const msPerChar = 40
-    let lastRendered = ""
 
     const tick = (now: number) => {
-      if (cancelled) return
       const elapsed = now - start
-      const charsToShow = Math.min(
-        clue.length,
-        Math.max(1, Math.floor(elapsed / msPerChar) + 1)
-      )
-
+      const charsToShow = Math.min(clue.length, Math.floor(elapsed / msPerChar))
       const nextRendered = clue.slice(0, charsToShow)
-      if (nextRendered !== lastRendered) {
-        lastRendered = nextRendered
-        setRendered(nextRendered)
-      }
+      setRendered((prev) => (prev === nextRendered ? prev : nextRendered))
 
       if (charsToShow < clue.length) {
         frameId = requestAnimationFrame(tick)
@@ -49,7 +39,6 @@ export function ClueDisplay({ clue, className }: ClueDisplayProps) {
     frameId = requestAnimationFrame(tick)
 
     return () => {
-      cancelled = true
       cancelAnimationFrame(frameId)
     }
   }, [clue])
