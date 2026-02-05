@@ -701,7 +701,9 @@ function PlayPageContent() {
           <button
             type="button"
             onClick={() => {
-              if (!isBusy) runAction(input)
+              const trimmed = input.trim()
+              if (!trimmed || isBusy) return
+              runAction(trimmed)
             }}
             disabled={isBusy}
             className={cn(
