@@ -19,17 +19,34 @@ export function ClueDisplay({ clue, className }: ClueDisplayProps) {
       return
     }
 
-    let frame = 0
     setRendered("")
 
-    const id = setInterval(() => {
-      frame += 1
-      setRendered(clue.slice(0, frame))
-      if (frame >= clue.length) clearInterval(id)
-    }, 16)
+    let frameId = 0
+    const start = performance.now()
+    const msPerChar = 40
+    let renderedChars = 0
+
+    const tick = (now: number) => {
+      const elapsed = now - start
+      const nextRenderedChars = Math.min(
+        clue.length,
+        Math.max(1, Math.floor(elapsed / msPerChar) + 1)
+      )
+
+      if (nextRenderedChars !== renderedChars) {
+        renderedChars = nextRenderedChars
+        setRendered(clue.slice(0, renderedChars))
+      }
+
+      if (renderedChars < clue.length) {
+        frameId = requestAnimationFrame(tick)
+      }
+    }
+
+    frameId = requestAnimationFrame(tick)
 
     return () => {
-      clearInterval(id)
+      cancelAnimationFrame(frameId)
     }
   }, [clue])
 
