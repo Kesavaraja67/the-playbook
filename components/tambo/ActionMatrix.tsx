@@ -164,15 +164,16 @@ function ActionMatrixGrid({
 function TamboActionMatrix({ actions, disabled = false }: ActionMatrixProps) {
   const { sendThreadMessage, isIdle } = useTamboThread()
   const [sending, setSending] = React.useState(false)
+  const canTriggerActions = !disabled && isIdle && !sending
 
   return (
     <ActionMatrixGrid
       actions={actions}
-      disabled={disabled || !isIdle || sending}
+      disabled={!canTriggerActions}
       headline="⚡ Actions"
       helper="Actions are temporarily disabled."
       onActionClick={async (action) => {
-        if (disabled || !isIdle || sending) return
+        if (!canTriggerActions) return
 
         setSending(true)
         try {

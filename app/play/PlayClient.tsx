@@ -126,12 +126,13 @@ function PlayThreadUI({
   const router = useRouter()
   const { thread, isIdle } = useTamboThread()
   const { value, setValue, submit, isPending } = useTamboThreadInput()
+  const canSubmit = isIdle && !isPending
 
   const handleSubmit = React.useCallback(() => {
     if (!value.trim()) return
-    if (isPending || !isIdle) return
+    if (!canSubmit) return
     void submit()
-  }, [isIdle, isPending, submit, value])
+  }, [canSubmit, submit, value])
 
   const renderedComponents = React.useMemo(() => {
     const componentsForRender = thread.messages
@@ -168,10 +169,10 @@ function PlayThreadUI({
           <button
             type="button"
             onClick={onReset}
-            disabled={isPending || !isIdle}
+            disabled={!canSubmit}
             className={cn(
               "inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F]",
-              isPending || !isIdle
+              !canSubmit
                 ? "cursor-not-allowed opacity-60"
                 : "hover:text-[#0071E3]"
             )}
@@ -251,8 +252,8 @@ function PlayThreadUI({
               e.preventDefault()
               handleSubmit()
             }}
-            disabled={isPending || !isIdle}
-            placeholder={isPending || !isIdle ? "Generating…" : "Type your action..."}
+            disabled={!canSubmit}
+            placeholder={canSubmit ? "Type your action..." : "Generating…"}
             className={cn(
               "h-12 flex-1 rounded-full border-2 border-[#D2D2D7] bg-white px-4",
               "text-sm text-[#1D1D1F] placeholder:text-[#6E6E73]",
@@ -263,7 +264,7 @@ function PlayThreadUI({
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={isPending || !isIdle}
+            disabled={!canSubmit}
             className={cn(
               "grid size-12 place-items-center rounded-lg",
               "bg-[#0071E3] text-white",
