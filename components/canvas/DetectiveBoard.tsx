@@ -90,7 +90,12 @@ export function DetectiveBoard({
         </h4>
         <div className="space-y-2">
           {timeline.map((event, index) => (
-            <TimelineEvent key={index} event={event} index={index} />
+            <TimelineEvent
+              key={index}
+              event={event}
+              index={index}
+              hasConnector={index < timeline.length - 1}
+            />
           ))}
         </div>
       </div>
@@ -182,7 +187,7 @@ function EvidenceCard({
     physical: "var(--accent-primary)",
     testimony: "var(--accent-warning)",
     document: "var(--accent-info)",
-    digital: "var(--accent-tambo)"
+    digital: "var(--accent-info)"
   }
 
   return (
@@ -214,10 +219,12 @@ function EvidenceCard({
 
 function TimelineEvent({
   event,
-  index
+  index,
+  hasConnector
 }: {
   event: { time: string; event: string; verified: boolean }
   index: number
+  hasConnector: boolean
 }) {
   return (
     <motion.div
@@ -233,7 +240,9 @@ function TimelineEvent({
           transition={{ delay: index * 0.05 + 0.2 }}
           className={`w-2 h-2 rounded-full ${event.verified ? "bg-accent-success" : "bg-tertiary"}`}
         />
-        {index < 2 && <div className="w-0.5 h-6 bg-[var(--border-light)] mt-1" />}
+        {hasConnector && (
+          <div className="w-0.5 h-6 bg-[var(--border-light)] mt-1" />
+        )}
       </div>
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-1">

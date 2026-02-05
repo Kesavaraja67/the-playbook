@@ -15,8 +15,12 @@ export interface Particle {
  * Generate particles with randomized properties
  */
 export function generateParticles(count: number): Particle[] {
-  const colors = ["var(--accent-primary)", "var(--accent-info)", "var(--accent-tambo)"]
-  
+  const colors = [
+    "var(--accent-primary, #0071e3)",
+    "var(--accent-info, #5e5ce6)",
+    "var(--accent-tambo, #ff006e)",
+  ]
+
   return Array.from({ length: count }, (_, i) => ({
     id: i,
     angle: (Math.PI * 2 * i) / count,

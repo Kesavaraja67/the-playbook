@@ -256,7 +256,14 @@ function StatCard({
 }
 
 function asNumber(value: ArenaValue, fallback: number): number {
-  return typeof value === "number" ? value : fallback
+  if (typeof value === "number" && Number.isFinite(value)) return value
+
+  if (typeof value === "string") {
+    const n = Number(value)
+    return Number.isFinite(n) ? n : fallback
+  }
+
+  return fallback
 }
 
 function asString(value: ArenaValue, fallback: string): string {
