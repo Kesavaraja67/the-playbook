@@ -1,33 +1,73 @@
 "use client"
 
 import * as React from "react"
+import { usePathname } from "next/navigation"
 import { TamboProvider } from "@tambo-ai/react"
-import { MCPTransport, TamboMcpProvider } from "@tambo-ai/react/mcp"
+import { MCPTransport } from "@tambo-ai/react/mcp"
 
 import { TamboCitationGuard } from "@/components/providers/TamboCitationGuard"
 import { components, tools } from "@/lib/tambo-client"
 import { DEFAULT_TAMBO_MCP_SERVER_URL } from "@/lib/mcp/constants"
+import { getScenarioById } from "@/lib/scenarios"
 
 const tamboMissingApiKeyLogKey = "tambo.missingApiKeyLogged"
 const tamboMissingApiKeyWindowFlag = "__tamboMissingApiKeyLogged" as const
 
 type TamboWindow = Window & Partial<Record<typeof tamboMissingApiKeyWindowFlag, boolean>>
 
-const mcpServers = [
-  {
-    name: "tambo-docs",
-    serverKey: "tambo-docs",
-    description: "Tambo documentation and support (remote MCP server)",
-    transport: MCPTransport.HTTP,
-    url: process.env.NEXT_PUBLIC_TAMBO_MCP_URL ?? DEFAULT_TAMBO_MCP_SERVER_URL,
-  },
-]
-
 export function TamboProviderWrapper({ children }: { children: React.ReactNode }) {
   // `NEXT_PUBLIC_*` env vars are exposed to the browser. This API key is expected to
   // be scoped as a public/client token (not a secret with elevated privileges).
   const apiKey = process.env.NEXT_PUBLIC_TAMBO_API_KEY
   const isDevelopment = process.env.NODE_ENV === "development"
+
+  const pathname = usePathname()
+
+  const [scenarioId, setScenarioId] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    if (!pathname.startsWith("/play")) {
+      setScenarioId(null)
+      return
+    }
+
+    const rawScenarioId = new URLSearchParams(window.location.search)
+      .get("scenario")
+      ?.trim()
+
+    setScenarioId(rawScenarioId && rawScenarioId.length > 0 ? rawScenarioId : "zombie-survival")
+  }, [pathname])
+
+  const scenarioSystemPrompt = React.useMemo(() => {
+    if (!scenarioId) return null
+    return getScenarioById(scenarioId)?.systemPrompt ?? null
+  }, [scenarioId])
+
+  const initialMessages = React.useMemo(() => {
+    if (!scenarioSystemPrompt) return []
+
+    return [
+      {
+        role: "system" as const,
+        content: [{ type: "text" as const, text: scenarioSystemPrompt }],
+      },
+    ]
+  }, [scenarioSystemPrompt])
+
+  const mcpServers = React.useMemo(() => {
+    const rawUrl = (process.env.NEXT_PUBLIC_TAMBO_MCP_URL ?? "").trim()
+    const url = rawUrl.length > 0 ? rawUrl : DEFAULT_TAMBO_MCP_SERVER_URL
+
+    return [
+      {
+        name: "tambo-docs",
+        serverKey: "tambo-docs",
+        description: "Tambo documentation and support (remote MCP server)",
+        transport: MCPTransport.HTTP,
+        url,
+      },
+    ]
+  }, [])
 
   React.useEffect(() => {
     if (typeof window === "undefined") return
@@ -85,11 +125,16 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
   }
 
   return (
-    <TamboProvider apiKey={apiKey} components={components} tools={tools} mcpServers={mcpServers}>
-      <TamboMcpProvider>
-        <TamboCitationGuard />
-        {children}
-      </TamboMcpProvider>
+    <TamboProvider
+      apiKey={apiKey}
+      components={components}
+      tools={tools}
+      mcpServers={mcpServers}
+      initialMessages={initialMessages}
+      contextKey={scenarioId ?? undefined}
+    >
+      <TamboCitationGuard />
+      {children}
     </TamboProvider>
   )
 }

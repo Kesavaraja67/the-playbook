@@ -493,6 +493,7 @@ export function PythonTutorialUI({ scenario }: { scenario: Scenario }) {
               stepIndex={stepIndex}
               stepTitle={step.content.title}
               stepHint={step.hint}
+              scenarioId={scenario.id}
             />
           </div>
         </ComponentCanvas>
