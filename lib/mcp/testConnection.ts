@@ -1,7 +1,5 @@
 import { DEFAULT_TAMBO_MCP_SERVER_URL } from "./constants"
 
-export { DEFAULT_TAMBO_MCP_SERVER_URL }
-
 export type McpConnectionTestResult =
   | {
       ok: true
@@ -14,7 +12,7 @@ export type McpConnectionTestResult =
       url: string
       status?: number
       error: string
-      kind: "http" | "network"
+      kind: "http" | "network" | "timeout"
     }
 
 export async function testMCPConnection(
@@ -52,13 +50,17 @@ export async function testMCPConnection(
       serverInfo,
     }
   } catch (error) {
+    const isAbortError =
+      (error instanceof DOMException && error.name === "AbortError") ||
+      (error instanceof Error && error.name === "AbortError")
+
     const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error)
 
     return {
       ok: false,
       url,
-      error: message,
-      kind: "network",
+      error: isAbortError ? `Timeout after ${timeoutMs}ms` : message,
+      kind: isAbortError ? "timeout" : "network",
     }
   } finally {
     clearTimeout(timeoutId)
