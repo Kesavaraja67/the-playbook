@@ -20,22 +20,7 @@ function createCitationGuardMessageId({
   assistantMessageId: string
   toolMessageId: string
 }) {
-  const base = `${assistantMessageId}:${toolMessageId}`
-
-  if (typeof crypto !== "undefined") {
-    if ("randomUUID" in crypto && typeof crypto.randomUUID === "function") {
-      return `${CITATION_GUARD_ID_PREFIX}${crypto.randomUUID()}:${base}`
-    }
-
-    if ("getRandomValues" in crypto && typeof crypto.getRandomValues === "function") {
-      const bytes = new Uint8Array(16)
-      crypto.getRandomValues(bytes)
-      const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")
-      return `${CITATION_GUARD_ID_PREFIX}${hex}:${base}`
-    }
-  }
-
-  return `${CITATION_GUARD_ID_PREFIX}${base}:${Date.now()}`
+  return `${CITATION_GUARD_ID_PREFIX}${assistantMessageId}:${toolMessageId}`
 }
 
 function getMcpServerKeyFromToolName(toolName: string) {

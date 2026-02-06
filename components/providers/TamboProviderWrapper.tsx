@@ -44,39 +44,40 @@ function ScenarioKeySync({
 
 function ScenarioThreadReset({ scenarioId }: { scenarioId: string | null }) {
   const { startNewThread, isIdle } = useTamboThread()
-  const lastScenarioIdRef = React.useRef<string | null>(null)
-  const pendingResetRef = React.useRef(false)
+
+  const stateRef = React.useRef({ lastScenarioId: null as string | null, pendingReset: false })
 
   React.useEffect(() => {
-    const lastScenarioId = lastScenarioIdRef.current
-    lastScenarioIdRef.current = scenarioId
+    const state = stateRef.current
 
     if (!scenarioId) {
-      pendingResetRef.current = false
+      state.lastScenarioId = null
+      state.pendingReset = false
       return
     }
 
-    if (scenarioId === lastScenarioId) {
-      if (!pendingResetRef.current) return
-      if (!isIdle) return
+    if (scenarioId === state.lastScenarioId) {
+      if (state.pendingReset && isIdle) {
+        state.pendingReset = false
+        startNewThread()
+      }
+      return
+    }
 
-      pendingResetRef.current = false
+    if (!state.lastScenarioId) {
+      state.lastScenarioId = scenarioId
+      state.pendingReset = false
+      return
+    }
+
+    state.lastScenarioId = scenarioId
+
+    if (isIdle) {
+      state.pendingReset = false
       startNewThread()
-      return
+    } else {
+      state.pendingReset = true
     }
-
-    if (!lastScenarioId) {
-      pendingResetRef.current = false
-      return
-    }
-
-    if (!isIdle) {
-      pendingResetRef.current = true
-      return
-    }
-
-    pendingResetRef.current = false
-    startNewThread()
   }, [isIdle, scenarioId, startNewThread])
 
   return null
