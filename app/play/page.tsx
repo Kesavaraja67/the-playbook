@@ -1225,7 +1225,7 @@ function StandardPlayPageContent({
           }
 
           if (scenarioAtCall === "space-station") {
-            setDay((d) => clamp(1, d + 1, totalDaysAtCall))
+            let dayClampMax = totalDaysAtCall
 
             const powerAvailable = getResourceValue("Power", 0)
             const allocatePower = (required: number) =>
@@ -1319,6 +1319,7 @@ function StandardPlayPageContent({
               updateResource("Power", output.dailyConsumptionReduction.power)
               updateResource("Food", output.dailyConsumptionReduction.food)
               setTotalDays((prev) => prev + output.daysExtended)
+              dayClampMax = totalDaysAtCall + output.daysExtended
 
               aiResponse = output.crewResponse
               setAlert({
@@ -1336,6 +1337,7 @@ function StandardPlayPageContent({
             }
 
             if (!isMountedRef.current || isCanceled()) return
+            setDay((d) => clamp(1, d + 1, dayClampMax))
             setMessages((prev) => {
               const next = [...prev, { role: "assistant" as const, content: aiResponse }]
               return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
