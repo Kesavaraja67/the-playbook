@@ -11,7 +11,8 @@ export function rollDice(sides: number): number {
 }
 
 export function successCheck(probability: number): boolean {
-  return Math.random() < probability
+  const p = Number.isFinite(probability) ? Math.min(1, Math.max(0, probability)) : 0
+  return Math.random() < p
 }
 
 export function calculateDamage(base: number, variance: number): number {
@@ -27,6 +28,12 @@ export function calculateDamage(base: number, variance: number): number {
 export function weightedRandom<T>(items: Array<{ item: T; weight: number }>): T {
   if (items.length === 0) {
     throw new Error("weightedRandom: items must not be empty")
+  }
+
+  for (const { weight } of items) {
+    if (!Number.isFinite(weight) || weight < 0) {
+      throw new Error("weightedRandom: weights must be finite and >= 0")
+    }
   }
 
   const totalWeight = items.reduce((sum, { weight }) => sum + weight, 0)
