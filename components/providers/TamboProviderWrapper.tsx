@@ -8,7 +8,7 @@ import { MCPTransport } from "@tambo-ai/react/mcp"
 import { TamboCitationGuard } from "@/components/providers/TamboCitationGuard"
 import { components, tools } from "@/lib/tambo-client"
 import { DEFAULT_TAMBO_MCP_SERVER_URL } from "@/lib/mcp/constants"
-import { getScenarioById } from "@/lib/scenarios"
+import { DEFAULT_SCENARIO_ID, getScenarioById } from "@/lib/scenarios"
 
 const tamboMissingApiKeyLogKey = "tambo.missingApiKeyLogged"
 const tamboMissingApiKeyWindowFlag = "__tamboMissingApiKeyLogged" as const
@@ -23,6 +23,7 @@ function ScenarioKeySync({
   setScenarioId: (scenarioId: string | null) => void
 }) {
   const searchParams = useSearchParams()
+  const scenarioParam = searchParams.get("scenario") ?? ""
 
   React.useEffect(() => {
     if (!pathname.startsWith("/play")) {
@@ -30,9 +31,9 @@ function ScenarioKeySync({
       return
     }
 
-    const rawScenarioId = (searchParams.get("scenario") ?? "").trim()
-    setScenarioId(rawScenarioId.length > 0 ? rawScenarioId : "zombie-survival")
-  }, [pathname, searchParams, setScenarioId])
+    const rawScenarioId = scenarioParam.trim()
+    setScenarioId(rawScenarioId.length > 0 ? rawScenarioId : DEFAULT_SCENARIO_ID)
+  }, [pathname, scenarioParam, setScenarioId])
 
   return null
 }
@@ -46,6 +47,12 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
   const pathname = usePathname()
 
   const [scenarioId, setScenarioId] = React.useState<string | null>(null)
+
+  const scenarioKeySync = (
+    <React.Suspense fallback={null}>
+      <ScenarioKeySync pathname={pathname} setScenarioId={setScenarioId} />
+    </React.Suspense>
+  )
 
   const scenarioSystemPrompt = React.useMemo(() => {
     if (!scenarioId) return null
@@ -116,9 +123,7 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
 
     return (
       <>
-        <React.Suspense fallback={null}>
-          <ScenarioKeySync pathname={pathname} setScenarioId={setScenarioId} />
-        </React.Suspense>
+        {scenarioKeySync}
         <div
           role="alert"
           className={
@@ -138,9 +143,7 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
 
   return (
     <>
-      <React.Suspense fallback={null}>
-        <ScenarioKeySync pathname={pathname} setScenarioId={setScenarioId} />
-      </React.Suspense>
+      {scenarioKeySync}
       <TamboProvider
         apiKey={apiKey}
         components={components}

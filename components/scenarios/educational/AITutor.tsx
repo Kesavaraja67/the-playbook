@@ -20,10 +20,17 @@ type TutorMessage = {
 }
 
 function getTextFromTamboMessage(message: TamboThreadMessage) {
-  return message.content
+  const textParts = message.content
     .map((part) => (part.type === "text" ? (part.text ?? "") : ""))
     .filter(Boolean)
-    .join("\n")
+  if (textParts.length > 0) {
+    return textParts.join("\n")
+  }
+
+  const hasNonTextContent = message.content.some((part) => part.type !== "text")
+  return hasNonTextContent
+    ? "[This message includes non-text content that can’t be displayed here.]"
+    : ""
 }
 
 export type AITutorProps = {
@@ -179,11 +186,13 @@ function TamboAITutor({ stepIndex, stepTitle, stepHint, scenarioId }: AITutorPro
 
   React.useEffect(() => {
     if (!scenarioId) return
+    // Intentionally starting a fresh thread when switching scenarios.
+    // `contextKey` is supplied on send so tool/citation state stays scoped.
     startNewThread()
   }, [scenarioId, startNewThread])
 
   const visibleMessages = React.useMemo(() => {
-    return thread.messages.filter((message) => message.role !== "system" && message.role !== "tool")
+    return thread.messages.filter((message) => message.role === "user" || message.role === "assistant")
   }, [thread.messages])
 
   React.useEffect(() => {

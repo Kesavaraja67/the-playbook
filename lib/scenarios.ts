@@ -23,6 +23,8 @@ export type ScenarioCategory =
   | "simulation"
   | "educational"
 
+export const DEFAULT_SCENARIO_ID = "zombie-survival"
+
 export const scenarioCategoryOrder: readonly ScenarioCategory[] = [
   "game",
   "professional",
