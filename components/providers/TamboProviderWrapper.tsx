@@ -7,7 +7,7 @@ import { MCPTransport } from "@tambo-ai/react/mcp"
 import { components, tools } from "@/lib/tambo-client"
 import { DEFAULT_TAMBO_MCP_SERVER_URL } from "@/lib/mcp/constants"
 
-let hasLoggedMissingApiKey = false
+const tamboMissingApiKeyLogKey = "tambo.missingApiKeyLogged"
 
 const mcpServers = [
   {
@@ -26,9 +26,14 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
 
   React.useEffect(() => {
     if (apiKey) return
-    if (hasLoggedMissingApiKey) return
 
-    hasLoggedMissingApiKey = true
+    try {
+      if (window.sessionStorage.getItem(tamboMissingApiKeyLogKey) === "true") return
+      window.sessionStorage.setItem(tamboMissingApiKeyLogKey, "true")
+    } catch {
+      // Ignore sessionStorage failures (for example: restricted storage environments).
+    }
+
     console.warn("NEXT_PUBLIC_TAMBO_API_KEY is not set; running without TamboProvider")
   }, [apiKey])
 
