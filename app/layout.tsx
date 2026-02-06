@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+import { AppMotionShell } from "@/components/motion/AppMotionShell";
 import { TamboClientRootProvider } from "@/components/tambo/TamboClientRootProvider";
 
 const geistSans = Geist({
@@ -29,7 +30,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <TamboClientRootProvider>{children}</TamboClientRootProvider>
+        <TamboClientRootProvider>
+          <AppMotionShell>{children}</AppMotionShell>
+        </TamboClientRootProvider>
       </body>
     </html>
   );

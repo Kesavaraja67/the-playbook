@@ -283,7 +283,7 @@ export function VoiceInput({
               className={cn(
                 "h-12 w-full rounded-lg border-2 border-light bg-primary px-4",
                 "text-sm text-primary placeholder:text-tertiary",
-                "focus:outline-none focus:border-accent-primary",
+                "transition-[border-color,box-shadow,transform] duration-200 ease-out focus:outline-none focus:border-accent-primary focus:shadow-md focus:scale-[1.01] motion-reduce:transition-none motion-reduce:transform-none",
                 "disabled:cursor-not-allowed disabled:opacity-60",
                 inputClassName
               )}
@@ -294,7 +294,7 @@ export function VoiceInput({
             <button
               type="button"
               onClick={() => onChange("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-primary"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary transition-colors hover:text-primary"
               aria-label="Clear input"
             >
               <X className="size-4" />

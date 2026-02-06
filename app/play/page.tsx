@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { motion } from "framer-motion"
 import dynamic from "next/dynamic"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft, RotateCcw } from "lucide-react"
@@ -1777,15 +1778,20 @@ function StandardPlayPageContent({
         }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F]">
-      <header className="sticky top-0 z-40 h-[60px] bg-white border-b-2 border-[#D2D2D7]">
+    <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] app-ambient">
+      <motion.header
+        className="sticky top-0 z-40 h-[60px] bg-white border-b border-[#E5E5E5]"
+        initial={{ opacity: 0, y: -14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] as const }}
+      >
         <div className="mx-auto flex h-full max-w-[1200px] items-center justify-between px-6">
           <button
             type="button"
             onClick={() => router.push("/scenarios")}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F] hover:text-[#0071E3]"
+            className="group inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F] hover:text-[#0071E3] transition-colors"
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeft className="size-4 transition-transform duration-200 group-hover:-translate-x-0.5 group-hover:-rotate-12" />
             Back
           </button>
 
@@ -1801,15 +1807,15 @@ function StandardPlayPageContent({
             onClick={() => reset(scenarioId)}
             disabled={!canReset}
             className={cn(
-              "inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F]",
+              "group inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F] transition-colors",
               !canReset ? "cursor-not-allowed opacity-60" : "hover:text-[#0071E3]"
             )}
           >
-            <RotateCcw className="size-4" />
+            <RotateCcw className="size-4 transition-transform duration-300 group-active:rotate-180" />
             Reset
           </button>
         </div>
-      </header>
+      </motion.header>
 
       {alert && (
         <TacticalAlert
@@ -2054,7 +2060,12 @@ function StandardPlayPageContent({
       </main>
 
       {scenarioId === "salary-negotiation" ? null : (
-        <div className="fixed bottom-0 inset-x-0 z-40 bg-white border-t-2 border-[#D2D2D7] py-4">
+        <motion.div
+          className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-[#E5E5E5] py-4"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] as const, delay: 0.05 }}
+        >
           <div className="mx-auto max-w-[1200px] px-6">
             <VoiceInput
               value={input}
@@ -2065,7 +2076,7 @@ function StandardPlayPageContent({
               inputClassName="rounded-full bg-white border-[#D2D2D7] focus:border-[#0071E3]"
             />
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   )

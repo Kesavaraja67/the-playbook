@@ -5,7 +5,49 @@
 @import "../src/styles/utilities.css";
 @import "../src/styles/components.css";
 
+@keyframes playbook-ambient-shift {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1.02);
+  }
+  50% {
+    transform: translate3d(2%, 1%, 0) scale(1.04);
+  }
+  100% {
+    transform: translate3d(-2%, -1%, 0) scale(1.02);
+  }
+}
+
+.app-ambient {
+  position: relative;
+  isolation: isolate;
+}
+
+.app-ambient::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  filter: blur(40px);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0, 113, 227, 0.12), transparent 55%),
+    radial-gradient(circle at 80% 35%, rgba(94, 92, 230, 0.09), transparent 60%),
+    radial-gradient(circle at 45% 80%, rgba(52, 199, 89, 0.07), transparent 55%);
+  animation: playbook-ambient-shift 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+.app-ambient > :where(:not(.fixed):not(.absolute):not(.relative):not(.sticky)) {
+  position: relative;
+  z-index: 1;
+}
+
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   * {
     border-color: var(--border-light);
   }
@@ -18,6 +60,16 @@
   body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    .app-ambient::before {
+      animation: none;
+    }
   }
 }
 

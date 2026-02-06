@@ -24,11 +24,15 @@ export function ScenarioCard({
     <motion.button
       type="button"
       aria-label={`Start scenario: ${title}`}
-      className="group h-[400px] w-full max-w-[320px] cursor-pointer appearance-none rounded-[16px] border-2 border-[#D2D2D7] bg-white p-6 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3] focus-visible:ring-offset-2"
-      style={{ boxShadow: "4px 4px 0px #1D1D1F" }}
+      className="group h-[400px] w-full max-w-[320px] cursor-pointer appearance-none rounded-[16px] border border-[#D2D2D7] bg-white p-6 text-left shadow-sm will-change-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3] focus-visible:ring-offset-2"
       whileHover={{
-        boxShadow: "8px 8px 0px #1D1D1F",
-        x: -2,
+        y: -10,
+        scale: 1.01,
+        boxShadow: "0 20px 25px rgba(0, 0, 0, 0.12), 0 10px 10px rgba(0, 0, 0, 0.06)",
+        borderColor: "rgba(0, 0, 0, 0.12)",
+      }}
+      whileTap={{
+        scale: 0.98,
         y: -2,
       }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
@@ -63,11 +67,11 @@ export function ScenarioCard({
           </div>
 
           <div
-            className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-[#1D1D1F] px-4 py-3 text-[16px] font-bold text-white transition-colors duration-200 group-hover:bg-[#0071E3] group-focus-visible:bg-[#0071E3]"
+            className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-[#1D1D1F] px-4 py-3 text-[16px] font-bold text-white transition-colors duration-200 group-hover:bg-[#0071E3] group-focus-visible:bg-[#0071E3]"
             aria-hidden="true"
           >
             Start Scenario
-            <ArrowRight className="h-5 w-5" />
+            <ArrowRight className="h-5 w-5 transition-transform duration-200 group-hover:translate-x-0.5" />
           </div>
         </div>
       </div>
