@@ -60,9 +60,11 @@ export default function ScenariosPage() {
 
   const [pendingScenario, setPendingScenario] = useState<Scenario | null>(null)
   const navTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isActiveRef = useRef(true)
 
   useEffect(() => {
     return () => {
+      isActiveRef.current = false
       if (navTimeoutRef.current === null) return
       clearTimeout(navTimeoutRef.current)
     }
@@ -80,6 +82,7 @@ export default function ScenariosPage() {
     setPendingScenario(scenario)
 
     navTimeoutRef.current = setTimeout(() => {
+      if (!isActiveRef.current) return
       router.push(`/play?scenario=${scenario.id}`)
     }, 360)
   }

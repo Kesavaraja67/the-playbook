@@ -15,11 +15,13 @@ export function CleanPortal() {
   const router = useRouter()
   const [isTransitioning, setIsTransitioning] = useState(false)
   const navTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isActiveRef = useRef(true)
 
   useEffect(() => {
     router.prefetch("/scenarios")
 
     return () => {
+      isActiveRef.current = false
       if (navTimeoutRef.current === null) return
       clearTimeout(navTimeoutRef.current)
     }
@@ -32,6 +34,7 @@ export function CleanPortal() {
     setPlaybookTransitionFlag()
 
     navTimeoutRef.current = setTimeout(() => {
+      if (!isActiveRef.current) return
       router.push("/scenarios")
     }, 420)
   }

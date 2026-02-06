@@ -1778,7 +1778,7 @@ function StandardPlayPageContent({
         }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] app-ambient">
+    <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F]">
       <motion.header
         className="sticky top-0 z-40 h-[60px] bg-white border-b border-[#E5E5E5]"
         initial={{ opacity: 0, y: -14 }}
