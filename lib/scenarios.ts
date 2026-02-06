@@ -183,6 +183,10 @@ export function getScenarioById(id: string): Scenario | undefined {
   return scenarios.find((s) => s.id === id)
 }
 
+export function getDefaultScenario(): Scenario {
+  return getScenarioById(DEFAULT_SCENARIO_ID) ?? scenarios[0]
+}
+
 /** Get difficulty color */
 export function getDifficultyColor(difficulty: Scenario["difficulty"]): string {
   const colors = {

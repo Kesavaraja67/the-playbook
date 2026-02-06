@@ -27,13 +27,15 @@ function ScenarioKeySync({
   const scenarioParam = searchParams.get("scenario") ?? ""
 
   React.useEffect(() => {
-    if (!pathname.startsWith("/play")) {
+    const isPlayRoute = pathname === "/play" || pathname.startsWith("/play/")
+    if (!isPlayRoute) {
       setScenarioId(null)
       return
     }
 
     const rawScenarioId = scenarioParam.trim()
-    setScenarioId(rawScenarioId.length > 0 ? rawScenarioId : DEFAULT_SCENARIO_ID)
+    const candidateScenarioId = rawScenarioId.length > 0 ? rawScenarioId : DEFAULT_SCENARIO_ID
+    setScenarioId(getScenarioById(candidateScenarioId)?.id ?? DEFAULT_SCENARIO_ID)
   }, [pathname, scenarioParam, setScenarioId])
 
   return null
@@ -106,7 +108,7 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
 
     const win = window as TamboWindow
 
-    if (apiKey) {
+    if (HAS_TAMBO_API_KEY) {
       try {
         window.sessionStorage.removeItem(tamboMissingApiKeyLogKey)
       } catch {
@@ -132,7 +134,7 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
 
     win[tamboMissingApiKeyWindowFlag] = true
     console.warn("NEXT_PUBLIC_TAMBO_API_KEY is not set; running without TamboProvider")
-  }, [apiKey])
+  }, [])
 
   if (!HAS_TAMBO_API_KEY) {
     if (!isDevelopment) return <>{children}</>

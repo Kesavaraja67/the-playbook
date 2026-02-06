@@ -20,6 +20,8 @@ type TutorMessage = {
 }
 
 function getTextFromTamboMessage(message: TamboThreadMessage) {
+  if (message.renderedComponent) return ""
+
   const textParts = message.content
     .map((part) => (part.type === "text" ? (part.text ?? "") : ""))
     .filter(Boolean)
