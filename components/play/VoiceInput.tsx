@@ -66,14 +66,15 @@ export function VoiceInput({
   } = useTamboVoice()
 
   const recognitionRef = React.useRef<SpeechRecognitionLike | null>(null)
+  const activeBackendRef = React.useRef<"speech" | "tambo" | null>(null)
   const voiceBaseValueRef = React.useRef("")
 
-  const initialSpeechSupported =
-    typeof window !== "undefined" && Boolean(getSpeechRecognitionCtor())
-  const initialMediaRecorderSupported = typeof window !== "undefined" && "MediaRecorder" in window
-
-  const [speechSupported] = React.useState(initialSpeechSupported)
-  const [mediaRecorderSupported] = React.useState(initialMediaRecorderSupported)
+  const [speechSupported] = React.useState(
+    () => typeof window !== "undefined" && Boolean(getSpeechRecognitionCtor())
+  )
+  const [mediaRecorderSupported] = React.useState(
+    () => typeof window !== "undefined" && "MediaRecorder" in window
+  )
   const [isSpeechListening, setIsSpeechListening] = React.useState(false)
   const [speechError, setSpeechError] = React.useState<string | null>(null)
 
@@ -107,8 +108,14 @@ export function VoiceInput({
     return () => {
       recognitionRef.current?.stop()
       recognitionRef.current = null
+      activeBackendRef.current = null
     }
   }, [])
+
+  React.useEffect(() => {
+    if (isSpeechListening || isRecording) return
+    activeBackendRef.current = null
+  }, [isRecording, isSpeechListening])
 
   const startSpeechRecognition = React.useCallback(() => {
     const SpeechRecognitionCtor = getSpeechRecognitionCtor()
@@ -119,6 +126,7 @@ export function VoiceInput({
 
     const recognition = new SpeechRecognitionCtor()
     recognitionRef.current = recognition
+    activeBackendRef.current = "speech"
 
     voiceBaseValueRef.current = value.trim()
     setSpeechError(null)
@@ -169,11 +177,13 @@ export function VoiceInput({
         errorMessage ? `Speech recognition error: ${errorMessage}` : "Speech recognition error"
       )
       setIsSpeechListening(false)
+      activeBackendRef.current = null
     }
 
     recognition.onend = () => {
       setIsSpeechListening(false)
       recognitionRef.current = null
+      activeBackendRef.current = null
     }
 
     try {
@@ -182,6 +192,7 @@ export function VoiceInput({
       setSpeechError(error instanceof Error ? error.message : "Unable to start speech recognition")
       setIsSpeechListening(false)
       recognitionRef.current = null
+      activeBackendRef.current = null
     }
   }, [onChange, value])
 
@@ -200,18 +211,34 @@ export function VoiceInput({
     }
 
     if (voiceMode === "tambo") {
+      activeBackendRef.current = "tambo"
       startRecording()
     }
   }, [isBusy, startRecording, startSpeechRecognition, value, voiceMode])
 
   const stopVoice = React.useCallback(() => {
-    if (isSpeechListening) {
-      stopSpeechRecognition()
+    let backendToStop = activeBackendRef.current
+
+    if (!backendToStop) {
+      if (isSpeechListening) backendToStop = "speech"
+      else if (isRecording) backendToStop = "tambo"
     }
 
-    if (isRecording) {
-      stopRecording()
+    if (backendToStop === "speech" && isSpeechListening) {
+      stopSpeechRecognition()
+      activeBackendRef.current = null
+      return
     }
+
+    if (backendToStop === "tambo" && isRecording) {
+      stopRecording()
+      activeBackendRef.current = null
+      return
+    }
+
+    if (isSpeechListening) stopSpeechRecognition()
+    if (isRecording) stopRecording()
+    activeBackendRef.current = null
   }, [isRecording, isSpeechListening, stopRecording, stopSpeechRecognition])
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
