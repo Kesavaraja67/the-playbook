@@ -47,10 +47,11 @@ export function CleanPortal() {
   const [isTransitioning, setIsTransitioning] = useState(false)
   const shouldReduceMotion = useReducedMotion()
 
-  const navTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const navTimeoutRef = useRef<number | null>(null)
   const isActiveRef = useRef(true)
 
   useEffect(() => {
+    isActiveRef.current = true
     router.prefetch("/scenarios")
 
     return () => {

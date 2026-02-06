@@ -55,10 +55,11 @@ export default function ScenariosPage() {
   const [category, setCategory] = useState<ScenarioCategoryFilter>("all")
   const [pendingScenario, setPendingScenario] = useState<Scenario | null>(null)
 
-  const navTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const navTimeoutRef = useRef<number | null>(null)
   const isActiveRef = useRef(true)
 
   useEffect(() => {
+    isActiveRef.current = true
     router.prefetch("/play")
 
     return () => {
@@ -74,8 +75,11 @@ export default function ScenariosPage() {
   }, [category])
 
   const handleSelectScenario = (scenario: Scenario) => {
-    if (pendingScenario) return
     setPendingScenario(scenario)
+
+    if (navTimeoutRef.current !== null) {
+      clearTimeout(navTimeoutRef.current)
+    }
 
     const delayMs = shouldReduceMotion ? 0 : 380
     navTimeoutRef.current = window.setTimeout(() => {
@@ -85,7 +89,12 @@ export default function ScenariosPage() {
   }
 
   const handleBack = () => {
-    if (pendingScenario) return
+    if (navTimeoutRef.current !== null) {
+      clearTimeout(navTimeoutRef.current)
+      navTimeoutRef.current = null
+    }
+
+    setPendingScenario(null)
     router.push("/")
   }
 
@@ -122,7 +131,6 @@ export default function ScenariosPage() {
           <button
             type="button"
             onClick={handleBack}
-            disabled={Boolean(pendingScenario)}
             className="text-[14px] font-medium text-text-secondary transition-colors hover:text-accent-primary disabled:cursor-not-allowed disabled:opacity-60"
           >
             ← Back
@@ -199,7 +207,6 @@ export default function ScenariosPage() {
                       description={scenario.description}
                       category={scenario.category}
                       tags={scenario.tags}
-                      disabled={Boolean(pendingScenario)}
                       onClick={() => handleSelectScenario(scenario)}
                     />
                   </motion.div>
