@@ -2,8 +2,8 @@
 
 import * as React from "react"
 import { usePathname, useSearchParams } from "next/navigation"
-import { TamboProvider, useTamboThread } from "@tambo-ai/react"
-import { MCPTransport, TamboMcpProvider } from "@tambo-ai/react/mcp"
+import { TamboProvider, useTamboMcpServerInfos, useTamboThread } from "@tambo-ai/react"
+import { MCPTransport, TamboMcpProvider, useTamboMcpServers } from "@tambo-ai/react/mcp"
 
 import { TamboCitationGuard } from "@/components/providers/TamboCitationGuard"
 import { HAS_TAMBO_API_KEY, TAMBO_API_KEY } from "@/lib/config"
@@ -73,6 +73,73 @@ function ScenarioThreadReset({ scenarioId }: { scenarioId: string | null }) {
   return null
 }
 
+function TamboMcpDevDiagnostics() {
+  const mcpServerInfos = useTamboMcpServerInfos()
+  const mcpServers = useTamboMcpServers()
+
+  const hasLoggedInfosRef = React.useRef(false)
+  const hasLoggedServerKeysRef = React.useRef(new Set<string>())
+
+  React.useEffect(() => {
+    if (process.env.NODE_ENV !== "development") return
+    if (hasLoggedInfosRef.current) return
+    if (mcpServerInfos.length === 0) return
+
+    hasLoggedInfosRef.current = true
+
+    console.info("Tambo MCP: configured servers", {
+      servers: mcpServerInfos.map((server) => ({
+        name: server.name,
+        serverKey: server.serverKey,
+        transport: server.transport,
+        url: server.url,
+      })),
+    })
+  }, [mcpServerInfos])
+
+  React.useEffect(() => {
+    if (process.env.NODE_ENV !== "development") return
+    if (mcpServers.length === 0) return
+
+    for (const server of mcpServers) {
+      if (hasLoggedServerKeysRef.current.has(server.serverKey)) continue
+      hasLoggedServerKeysRef.current.add(server.serverKey)
+
+      if (server.client) {
+        void server.client
+          .listTools()
+          .then((tools) => {
+            console.info("Tambo MCP: tools discovered", {
+              serverKey: server.serverKey,
+              toolCount: tools.length,
+              toolNames: tools.map((tool) => tool.name).slice(0, 8),
+            })
+          })
+          .catch((error) => {
+            console.warn("Tambo MCP: failed to list tools", {
+              serverKey: server.serverKey,
+              error: error instanceof Error ? `${error.name}: ${error.message}` : String(error),
+            })
+          })
+        continue
+      }
+
+      if ("connectionError" in server) {
+        console.warn("Tambo MCP: server failed to connect", {
+          serverKey: server.serverKey,
+          url: server.url,
+          error:
+            server.connectionError instanceof Error
+              ? `${server.connectionError.name}: ${server.connectionError.message}`
+              : String(server.connectionError),
+        })
+      }
+    }
+  }, [mcpServers])
+
+  return null
+}
+
 export function TamboProviderWrapper({ children }: { children: React.ReactNode }) {
   // `NEXT_PUBLIC_*` env vars are exposed to the browser. This API key is expected to
   // be scoped as a public/client token (not a secret with elevated privileges).
@@ -106,6 +173,8 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
   }, [scenarioSystemPrompt])
 
   const mcpServers = React.useMemo(() => {
+    // `NEXT_PUBLIC_*` env vars are substituted at build time in Next.js client bundles.
+    // We resolve the MCP server URL once to keep the provider props stable across renders.
     const rawUrl = (process.env.NEXT_PUBLIC_TAMBO_MCP_URL ?? "").trim()
     const url = rawUrl.length > 0 ? rawUrl : DEFAULT_TAMBO_MCP_SERVER_URL
 
@@ -187,6 +256,7 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
         contextKey={scenarioId ?? undefined}
       >
         <TamboMcpProvider key={scenarioId ?? "default"} contextKey={scenarioId ?? undefined}>
+          <TamboMcpDevDiagnostics />
           <ScenarioThreadReset scenarioId={scenarioId} />
           <TamboCitationGuard />
           {children}
