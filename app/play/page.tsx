@@ -775,6 +775,7 @@ function StandardPlayPageContent({
   const [spaceCommsStatus, setSpaceCommsStatus] = React.useState<
     "online" | "degraded" | "offline"
   >("degraded")
+  const [spaceRationing, setSpaceRationing] = React.useState({ oxygen: 0, power: 0, food: 0 })
 
   const [detectiveEvidence, setDetectiveEvidence] = React.useState<EvidenceItem[]>(() =>
     getDetectiveInitialEvidence()
@@ -793,6 +794,7 @@ function StandardPlayPageContent({
   const resetVersionRef = React.useRef(0)
   const resourcesRef = React.useRef<Resource[]>(resources)
   const boardRef = React.useRef<BoardState | null>(board)
+  const spaceRationingRef = React.useRef(spaceRationing)
   const detectiveEvidenceRef = React.useRef<EvidenceItem[]>(detectiveEvidence)
   const detectiveSuspectsRef = React.useRef<Suspect[]>(detectiveSuspects)
   const detectiveOutOfTimeAlertShownRef = React.useRef(false)
@@ -835,6 +837,10 @@ function StandardPlayPageContent({
   React.useEffect(() => {
     boardRef.current = board
   }, [board])
+
+  React.useEffect(() => {
+    spaceRationingRef.current = spaceRationing
+  }, [spaceRationing])
 
   const shouldRunDetectiveTimer =
     scenarioId === "detective-mystery" && detectiveTimeRemainingSeconds > 0
@@ -906,6 +912,7 @@ function StandardPlayPageContent({
     }
 
     setSpaceCommsStatus("degraded")
+    setSpaceRationing({ oxygen: 0, power: 0, food: 0 })
 
     if (nextScenarioId === "detective-mystery") {
       setDetectiveEvidence(getDetectiveInitialEvidence())
@@ -1060,26 +1067,26 @@ function StandardPlayPageContent({
           setBoard((prev) => {
             if (!prev) return prev
             const gridSize = prev.gridSize ?? 10
-            const existing = new Set<string>()
-            for (const enemy of prev.enemies ?? []) existing.add(`${enemy.x},${enemy.y}`)
-            existing.add(`${prev.playerPosition.x},${prev.playerPosition.y}`)
+
+            const occupied = new Set<string>()
+            for (const enemy of prev.enemies ?? []) occupied.add(`${enemy.x},${enemy.y}`)
+            occupied.add(`${prev.playerPosition.x},${prev.playerPosition.y}`)
 
             const availableCells: Array<{ x: number; y: number }> = []
             for (let x = 0; x < gridSize; x += 1) {
               for (let y = 0; y < gridSize; y += 1) {
                 const key = `${x},${y}`
-                if (!existing.has(key)) availableCells.push({ x, y })
+                if (!occupied.has(key)) availableCells.push({ x, y })
               }
             }
 
             if (availableCells.length === 0) return prev
 
             const nextEnemies = [...(prev.enemies ?? [])]
-            for (let i = 0; i < count && availableCells.length > 0; i += 1) {
+            const spawnCount = Math.min(count, availableCells.length)
+            for (let i = 0; i < spawnCount; i += 1) {
               const idx = randomInRange(0, availableCells.length - 1)
               const cell = availableCells.splice(idx, 1)[0]
-              if (!cell) break
-
               nextEnemies.push({ x: cell.x, y: cell.y, type: "Zombie" })
             }
 
@@ -1120,7 +1127,6 @@ function StandardPlayPageContent({
 
             if (parsedAsk !== null && askMatch?.[2]) parsedAsk *= 1000
             if (parsedAsk !== null && !askMatch?.[2] && parsedAsk < 50_000) parsedAsk = null
-
             const offeredSalary = parsedAsk ?? negotiationTargetSalary
 
             const normalizedText = userText.toLowerCase()
@@ -1227,6 +1233,8 @@ function StandardPlayPageContent({
           if (scenarioAtCall === "space-station") {
             let dayClampMax = totalDaysAtCall
 
+            if (!isMountedRef.current || isCanceled()) return
+
             const powerAvailable = getResourceValue("Power", 0)
             const allocatePower = (required: number) =>
               clamp(0, Math.min(required, Math.round(powerAvailable / 2)), 50)
@@ -1315,9 +1323,7 @@ function StandardPlayPageContent({
               debugTool(rationResourcesTool.name, { rationLevel: level }, output)
 
               updateResource("Morale", output.crewMoraleImpact)
-              updateResource("Oxygen", output.dailyConsumptionReduction.oxygen)
-              updateResource("Power", output.dailyConsumptionReduction.power)
-              updateResource("Food", output.dailyConsumptionReduction.food)
+              setSpaceRationing(output.dailyConsumptionReduction)
               setTotalDays((prev) => prev + output.daysExtended)
               dayClampMax = totalDaysAtCall + output.daysExtended
 
@@ -1335,6 +1341,11 @@ function StandardPlayPageContent({
                 aiResponse = generateMockResponse(userText, scenarioAtCall)
               }
             }
+
+            const rationing = spaceRationingRef.current
+            if (rationing.oxygen) updateResource("Oxygen", rationing.oxygen)
+            if (rationing.power) updateResource("Power", rationing.power)
+            if (rationing.food) updateResource("Food", rationing.food)
 
             if (!isMountedRef.current || isCanceled()) return
             setDay((d) => clamp(1, d + 1, dayClampMax))
