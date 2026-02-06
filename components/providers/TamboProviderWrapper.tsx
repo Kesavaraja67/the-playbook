@@ -8,6 +8,8 @@ import { components, tools } from "@/lib/tambo-client"
 import { DEFAULT_TAMBO_MCP_SERVER_URL } from "@/lib/mcp/constants"
 
 const tamboMissingApiKeyLogKey = "tambo.missingApiKeyLogged"
+const tamboMissingApiKeyWindowFlag = "__tamboMissingApiKeyLogged"
+
 const mcpServers = [
   {
     name: "tambo-docs",
@@ -25,25 +27,33 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
 
   React.useEffect(() => {
     if (apiKey) {
+      const win = window as Window & Record<string, unknown>
+
       try {
         window.sessionStorage.removeItem(tamboMissingApiKeyLogKey)
       } catch {
         // Ignore sessionStorage failures (for example: restricted storage environments).
       }
 
+      delete win[tamboMissingApiKeyWindowFlag]
+
       return
     }
 
-    if (typeof window !== "undefined") {
-      try {
-        if (window.sessionStorage.getItem(tamboMissingApiKeyLogKey) === "true") return
-        window.sessionStorage.setItem(tamboMissingApiKeyLogKey, "true")
-      } catch {
-        const w = window as typeof window & { __tamboMissingApiKeyLogged?: boolean }
-        if (w.__tamboMissingApiKeyLogged) return
-        w.__tamboMissingApiKeyLogged = true
+    const win = window as Window & Record<string, unknown>
+    if (win[tamboMissingApiKeyWindowFlag] === true) return
+
+    try {
+      if (window.sessionStorage.getItem(tamboMissingApiKeyLogKey) === "true") {
+        win[tamboMissingApiKeyWindowFlag] = true
+        return
       }
+      window.sessionStorage.setItem(tamboMissingApiKeyLogKey, "true")
+    } catch {
+      // Ignore sessionStorage failures (for example: restricted storage environments).
     }
+
+    win[tamboMissingApiKeyWindowFlag] = true
 
     console.warn("NEXT_PUBLIC_TAMBO_API_KEY is not set; running without TamboProvider")
   }, [apiKey])
