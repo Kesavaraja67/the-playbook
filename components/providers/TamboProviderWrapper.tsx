@@ -45,6 +45,8 @@ function ScenarioKeySync({
 function ScenarioThreadReset({ scenarioId }: { scenarioId: string | null }) {
   const { startNewThread, isIdle } = useTamboThread()
 
+  // Resets the active Tambo thread when switching between `/play` scenarios.
+  // If a generation/tool run is in progress, defer the reset until the thread is idle.
   const stateRef = React.useRef({ lastScenarioId: null as string | null, pendingReset: false })
 
   React.useEffect(() => {
