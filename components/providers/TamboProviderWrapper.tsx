@@ -116,6 +116,7 @@ function TamboMcpDevDiagnostics() {
       hasLoggedServerKeysRef.current.add(server.serverKey)
 
       if (server.client) {
+        // Dev-only diagnostics: `listTools()` makes a one-time network call per server.
         void server.client
           .listTools()
           .then((tools) => {
