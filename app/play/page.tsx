@@ -789,6 +789,7 @@ function StandardPlayPageContent({
 
   const initTimeoutsRef = React.useRef<Array<ReturnType<typeof setTimeout>>>([])
   const actionTimeoutsRef = React.useRef<Array<ReturnType<typeof setTimeout>>>([])
+  const isMountedRef = React.useRef(true)
   const resetVersionRef = React.useRef(0)
   const resourcesRef = React.useRef<Resource[]>(resources)
   const boardRef = React.useRef<BoardState | null>(board)
@@ -808,7 +809,10 @@ function StandardPlayPageContent({
   }, [setAlert])
 
   React.useEffect(() => {
+    isMountedRef.current = true
     return () => {
+      isMountedRef.current = false
+
       for (const id of initTimeoutsRef.current) clearTimeout(id)
       initTimeoutsRef.current = []
 
@@ -1034,7 +1038,10 @@ function StandardPlayPageContent({
 
       const timeoutId = setTimeout(async () => {
         actionTimeoutsRef.current = actionTimeoutsRef.current.filter((id) => id !== timeoutId)
-        if (resetVersionRef.current !== resetVersionAtCall) return
+        if (!isMountedRef.current || resetVersionRef.current !== resetVersionAtCall) return
+
+        const shouldAbort = () =>
+          !isMountedRef.current || resetVersionRef.current !== resetVersionAtCall
 
         let aiResponse = generateMockResponse(userText, scenarioAtCall)
 
@@ -1091,10 +1098,15 @@ function StandardPlayPageContent({
           if (count <= 0) return
           setBoard((prev) => {
             if (!prev?.enemies?.length) return prev
-            const remaining = Math.max(0, prev.enemies.length - count)
+
+            const enemies = [...prev.enemies]
+            for (let i = 0; i < count && enemies.length > 0; i += 1) {
+              enemies.splice(randomInRange(0, enemies.length - 1), 1)
+            }
+
             return {
               ...prev,
-              enemies: prev.enemies.slice(0, remaining),
+              enemies,
             }
           })
         }
@@ -1130,6 +1142,7 @@ function StandardPlayPageContent({
                 yearsExperience: 6,
                 location: "remote",
               })
+              if (shouldAbort()) return
               debugTool(researchMarketDataTool.name, { jobTitle: "senior developer" }, output)
 
               setNegotiationMarketRate(output.averageSalary)
@@ -1152,6 +1165,7 @@ function StandardPlayPageContent({
                 maxBudget,
                 priority,
               })
+              if (shouldAbort()) return
               debugTool(proposeCompTradeoffsTool.name, { priority }, output)
 
               const suggestions = output.suggestions
@@ -1179,6 +1193,7 @@ function StandardPlayPageContent({
                 currentOffer: negotiationCurrentOffer,
                 maxBudget,
               })
+              if (shouldAbort()) return
               debugTool(presentCounterOfferTool.name, { offeredSalary, justification, tone }, output)
 
               setNegotiationCurrentOffer(output.newOffer)
@@ -1194,6 +1209,7 @@ function StandardPlayPageContent({
               })
             }
 
+            if (shouldAbort()) return
             setMessages((prev) => {
               const next = [...prev, { role: "assistant" as const, content: aiResponse }]
               return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
@@ -1203,6 +1219,7 @@ function StandardPlayPageContent({
           }
 
           if (scenarioAtCall === "space-station") {
+            if (shouldAbort()) return
             setDay((d) => clamp(1, d + 1, totalDaysAtCall))
 
             const powerAvailable = getResourceValue("Power", 0)
@@ -1212,12 +1229,14 @@ function StandardPlayPageContent({
             const runRepair = async (system: Parameters<typeof repairSystemTool.tool>[0]["system"], required: number) => {
               const powerAllocated = allocatePower(required)
               const output = await repairSystemTool.tool({ system, powerAllocated })
+              if (shouldAbort()) return null
               debugTool(repairSystemTool.name, { system, powerAllocated }, output)
               return output
             }
 
             if (normalized.includes("repair_o2") || normalized.includes("oxygen") || normalized.includes("o2")) {
               const output = await runRepair("oxygen_generator", 20)
+              if (!output) return
               updateResource("Power", -Math.round(output.powerConsumed * 0.4))
               updateResource(
                 "Oxygen",
@@ -1232,6 +1251,7 @@ function StandardPlayPageContent({
               })
             } else if (normalized.includes("inspect_water") || normalized.includes("water")) {
               const output = await runRepair("water_recycler", 15)
+              if (!output) return
               updateResource("Power", -Math.round(output.powerConsumed * 0.4))
               updateResource(
                 "Water",
@@ -1246,6 +1266,7 @@ function StandardPlayPageContent({
               })
             } else if (normalized.includes("realign_solar") || normalized.includes("solar")) {
               const output = await runRepair("solar_panels", 25)
+              if (!output) return
               updateResource("Power", -Math.round(output.powerConsumed * 0.4))
               updateResource(
                 "Solar Output",
@@ -1264,6 +1285,7 @@ function StandardPlayPageContent({
                 powerToUse: 12,
                 communicationsStatus: spaceCommsStatus,
               })
+              if (shouldAbort()) return
               debugTool(attemptEmergencyContactTool.name, { communicationsStatus: spaceCommsStatus }, output)
               updateResource("Power", -Math.round(output.powerUsed * 0.4))
               aiResponse = output.message
@@ -1284,6 +1306,7 @@ function StandardPlayPageContent({
                   : "light"
 
               const output = await rationResourcesTool.tool({ rationLevel: level })
+              if (shouldAbort()) return
               debugTool(rationResourcesTool.name, { rationLevel: level }, output)
 
               updateResource("Morale", output.crewMoraleImpact)
@@ -1307,6 +1330,7 @@ function StandardPlayPageContent({
               }
             }
 
+            if (shouldAbort()) return
             setMessages((prev) => {
               const next = [...prev, { role: "assistant" as const, content: aiResponse }]
               return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
@@ -1328,6 +1352,7 @@ function StandardPlayPageContent({
                     : "warehouse"
 
             if (normalized.includes("move")) {
+              if (shouldAbort()) return
               nudgePlayer(Math.random() > 0.5 ? 1 : -1, Math.random() > 0.5 ? 1 : -1)
               updateResource("Water", -1)
               setAlert({
@@ -1342,6 +1367,7 @@ function StandardPlayPageContent({
                 location,
                 searchThoroughness: thoroughness,
               })
+              if (shouldAbort()) return
               debugTool(searchLocationTool.name, { location, searchThoroughness: thoroughness }, output)
 
               for (const item of output.items) {
@@ -1390,6 +1416,7 @@ function StandardPlayPageContent({
                 ammoToUse,
                 zombieCount: Math.max(1, zombieCount),
               })
+              if (shouldAbort()) return
               debugTool(combatZombiesTool.name, { strategy, ammoToUse, zombieCount }, output)
 
               updateResource("Ammo", -output.ammoUsed)
@@ -1407,6 +1434,7 @@ function StandardPlayPageContent({
               const materialsToUse = clamp(1, Math.round(materials / 5), 20)
 
               const output = await fortifyLocationTool.tool({ materialsToUse })
+              if (shouldAbort()) return
               debugTool(fortifyLocationTool.name, { materialsToUse }, output)
 
               updateResource("Materials", -output.materialsUsed * 5)
@@ -1419,6 +1447,7 @@ function StandardPlayPageContent({
                 message: `Expected zombie damage reduction: ${output.zombieAttackReduction}%.`,
               })
             } else if (normalized.includes("rest")) {
+              if (shouldAbort()) return
               updateResource("Health", +10)
               setDay((d) => clamp(1, d + 1, totalDaysAtCall))
               setAlert({
@@ -1429,6 +1458,7 @@ function StandardPlayPageContent({
               aiResponse = generateMockResponse(userText, scenarioAtCall)
             }
 
+            if (shouldAbort()) return
             setMessages((prev) => {
               const next = [...prev, { role: "assistant" as const, content: aiResponse }]
               return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
