@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { z } from "zod"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 
 import { componentCardClassName } from "@/components/play/ComponentCanvas"
 import { cn } from "@/lib/utils"
@@ -27,8 +28,8 @@ export type GameBoardProps = z.input<typeof gameBoardSchema>
 
 type Marker = z.infer<typeof markerSchema>
 
-const boardGridColor = "#D2D2D7"
-const boardBgColor = "#F5F5F7"
+const boardBgColor = "var(--bg-secondary)"
+const boardGridLineColor = "rgba(0, 0, 0, 0.08)"
 
 function clampToGrid(value: number, gridSize: number) {
   return Math.max(0, Math.min(gridSize - 1, value))
@@ -60,6 +61,7 @@ function MarkerDot({
   bg,
   label,
   className,
+  animateIn = true,
 }: {
   x: number
   y: number
@@ -68,33 +70,64 @@ function MarkerDot({
   bg: string
   label: string
   className?: string
+  animateIn?: boolean
 }) {
-  const left = x * cellSize + cellSize / 2
-  const top = y * cellSize + cellSize / 2
+  const shouldReduceMotion = useReducedMotion()
+  const size = 40
+
+  const px = x * cellSize + cellSize / 2 - size / 2
+  const py = y * cellSize + cellSize / 2 - size / 2
 
   return (
-    <div
+    <motion.div
       className={cn(
-        "group absolute grid size-10 place-items-center rounded-full text-xl text-white",
-        "border-[3px] border-[#1D1D1F]",
-        "shadow-[2px_2px_0px_#1D1D1F]",
+        "group relative absolute left-0 top-0 grid place-items-center rounded-full text-xl text-white",
+        "border border-light shadow-sm",
+        "transition-[box-shadow,transform] duration-200 ease-out",
         className
       )}
-      style={{ left, top, transform: "translate(-50%, -50%)", backgroundColor: bg }}
+      style={{ width: size, height: size, backgroundColor: bg }}
       aria-label={label}
+      initial={
+        shouldReduceMotion || !animateIn
+          ? false
+          : {
+              opacity: 0,
+              scale: 0,
+              rotate: -10,
+            }
+      }
+      animate={{ x: px, y: py, opacity: 1, scale: 1, rotate: 0 }}
+      exit={
+        shouldReduceMotion
+          ? undefined
+          : {
+              opacity: 0,
+              scale: 0.6,
+            }
+      }
+      transition={
+        shouldReduceMotion
+          ? { duration: 0 }
+          : {
+              type: "spring",
+              stiffness: 420,
+              damping: 28,
+            }
+      }
     >
       <span aria-hidden>{icon}</span>
       <div
         className={cn(
           "pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2",
-          "whitespace-nowrap rounded-md border-2 border-[#1D1D1F] bg-white px-2 py-1",
-          "text-xs font-medium text-[#1D1D1F] shadow-[2px_2px_0px_#1D1D1F]",
-          "opacity-0 transition-opacity group-hover:opacity-100"
+          "whitespace-nowrap rounded-md border border-light bg-tertiary px-2 py-1",
+          "text-xs font-medium text-text-primary shadow-md",
+          "opacity-0 transition-opacity duration-200 group-hover:opacity-100"
         )}
       >
         {label}
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -104,6 +137,7 @@ export function GameBoard({
   resources = [],
   gridSize = 10,
 }: GameBoardProps) {
+  const shouldReduceMotion = useReducedMotion()
   const safeGridSize = Math.max(2, Math.min(20, Math.floor(gridSize)))
   const cellSize = 50
   const boardSize = safeGridSize * cellSize
@@ -115,20 +149,17 @@ export function GameBoard({
 
   return (
     <section className={componentCardClassName}>
-      <h3 className="text-[#1D1D1F] text-xl font-bold mb-4">🎮 Game Board</h3>
+      <h3 className="mb-4 text-xl font-semibold text-text-primary">🎮 Game Board</h3>
 
       <div className="flex justify-center">
         <div className="max-w-full overflow-x-auto">
           <div
-            className={cn(
-              "relative mx-auto rounded-lg border-2",
-              "border-[#D2D2D7]"
-            )}
+            className={cn("relative mx-auto rounded-xl border border-light shadow-sm")}
             style={{
               width: boardSize,
               height: boardSize,
               backgroundColor: boardBgColor,
-              backgroundImage: `linear-gradient(${boardGridColor} 1px, transparent 1px), linear-gradient(90deg, ${boardGridColor} 1px, transparent 1px)`,
+              backgroundImage: `linear-gradient(${boardGridLineColor} 1px, transparent 1px), linear-gradient(90deg, ${boardGridLineColor} 1px, transparent 1px)`,
               backgroundSize: `${cellSize}px ${cellSize}px`,
             }}
           >
@@ -137,58 +168,72 @@ export function GameBoard({
               y={clampedPlayer.y}
               cellSize={cellSize}
               icon="📍"
-              bg="#0071E3"
+              bg="#4A90E2"
               label="You"
-              className="z-10"
+              animateIn={false}
+              className={cn(
+                "z-10",
+                shouldReduceMotion
+                  ? undefined
+                  : "after:absolute after:inset-0 after:rounded-full after:bg-white/25 after:animate-ping"
+              )}
             />
 
-            {enemies.map((enemy, index) => (
-              <MarkerDot
-                key={`${enemy.x}-${enemy.y}-${index}`}
-                x={clampToGrid(enemy.x, safeGridSize)}
-                y={clampToGrid(enemy.y, safeGridSize)}
-                cellSize={cellSize}
-                icon={iconForEnemy(enemy)}
-                bg="#FF3B30"
-                label={getMarkerLabel(enemy, "Enemy")}
-                className="animate-pulse"
-              />
-            ))}
+            <AnimatePresence>
+              {enemies.map((enemy, index) => (
+                <MarkerDot
+                  key={`${enemy.x}-${enemy.y}-${index}`}
+                  x={clampToGrid(enemy.x, safeGridSize)}
+                  y={clampToGrid(enemy.y, safeGridSize)}
+                  cellSize={cellSize}
+                  icon={iconForEnemy(enemy)}
+                  bg="#EF4444"
+                  label={getMarkerLabel(enemy, "Enemy")}
+                  className={cn(
+                    "animate-playbook-wiggle",
+                    shouldReduceMotion ? undefined : "shadow-md"
+                  )}
+                />
+              ))}
+            </AnimatePresence>
 
-            {resources.map((resource, index) => (
-              <MarkerDot
-                key={`${resource.x}-${resource.y}-${index}`}
-                x={clampToGrid(resource.x, safeGridSize)}
-                y={clampToGrid(resource.y, safeGridSize)}
-                cellSize={cellSize}
-                icon={iconForResource(resource)}
-                bg="#34C759"
-                label={getMarkerLabel(resource, "Loot")}
-              />
-            ))}
+            <AnimatePresence>
+              {resources.map((resource, index) => (
+                <MarkerDot
+                  key={`${resource.x}-${resource.y}-${index}`}
+                  x={clampToGrid(resource.x, safeGridSize)}
+                  y={clampToGrid(resource.y, safeGridSize)}
+                  cellSize={cellSize}
+                  icon={iconForResource(resource)}
+                  bg="#10B981"
+                  label={getMarkerLabel(resource, "Loot")}
+                  className="animate-playbook-float"
+                />
+              ))}
+            </AnimatePresence>
           </div>
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-4 text-sm text-[#1D1D1F]">
+      <div className="mt-5 flex flex-wrap gap-4 text-sm text-text-primary">
         <div className="flex items-center gap-2">
           <div
-            className="size-6 rounded-full border-2 border-[#1D1D1F]"
-            style={{ backgroundColor: "#0071E3" }}
+            className="size-6 rounded-full border border-light shadow-sm"
+            style={{ backgroundColor: "#4A90E2" }}
           />
           <span>You</span>
         </div>
         <div className="flex items-center gap-2">
           <div
-            className="size-6 rounded-full border-2 border-[#1D1D1F]"
-            style={{ backgroundColor: "#FF3B30" }}
+            className="size-6 rounded-full border border-light shadow-sm"
+            style={{ backgroundColor: "#EF4444" }}
           />
           <span>Enemies</span>
         </div>
         <div className="flex items-center gap-2">
           <div
-            className="size-6 rounded-full border-2 border-[#1D1D1F]"
-            style={{ backgroundColor: "#34C759" }}
+            className="size-6 rounded-full border border-light shadow-sm"
+            style={{ backgroundColor: "#10B981" }}
           />
           <span>Resources</span>
         </div>

@@ -1,4 +1,5 @@
 import * as React from "react"
+import { motion, useReducedMotion } from "framer-motion"
 
 import { cn } from "@/lib/utils"
 
@@ -22,18 +23,29 @@ const defaultAvatar: Record<ConversationSender, string> = {
 }
 
 export function ConversationMessage({ sender, avatar, time, children }: ConversationMessageProps) {
+  const shouldReduceMotion = useReducedMotion()
   const isYou = sender === "you"
   const resolvedAvatar = avatar ?? defaultAvatar[sender]
 
+  const initialX = isYou ? 18 : -18
+
   return (
     <div className={cn("flex w-full", isYou ? "justify-end" : "justify-start")}>
-      <div
+      <motion.div
         className={cn(
-          "w-fit max-w-[720px] rounded-[14px] border-2 p-4 shadow-sm",
+          "w-fit max-w-[720px] rounded-[14px] border p-4 shadow-sm",
+          "transition-[box-shadow,transform,border-color] duration-200 ease-out",
           isYou
             ? "bg-accent-primary border-accent-primary text-inverse"
             : "bg-secondary border-light text-primary"
         )}
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 10, x: initialX, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
+        transition={
+          shouldReduceMotion
+            ? { duration: 0 }
+            : { duration: 0.45, ease: [0.4, 0, 0.2, 1] }
+        }
       >
         <div
           className={cn(
@@ -55,7 +67,7 @@ export function ConversationMessage({ sender, avatar, time, children }: Conversa
         <div className={cn("mt-2 whitespace-pre-wrap text-sm leading-relaxed", isYou && "text-inverse")}>
           {children}
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

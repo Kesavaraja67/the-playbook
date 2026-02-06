@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import dynamic from "next/dynamic"
+import { motion, useReducedMotion } from "framer-motion"
 
 import { componentCardClassName } from "@/components/play/ComponentCanvas"
 import { Button } from "@/components/ui/button"
@@ -13,6 +14,7 @@ const VoiceInput = dynamic(
 )
 
 type TutorMessage = {
+  id: string
   role: "student" | "tutor"
   content: string
 }
@@ -61,35 +63,67 @@ function generateTutorReply(input: string, opts: { stepIndex: number; stepTitle:
 }
 
 export function AITutor({ stepIndex, stepTitle, stepHint }: AITutorProps) {
+  const shouldReduceMotion = useReducedMotion()
   const [messages, setMessages] = React.useState<TutorMessage[]>(() => [
     {
+      id: "welcome",
       role: "tutor",
       content:
         "Hi! I’m your tutor. Ask anything — I’ll keep it beginner-friendly and help you move forward.",
     },
   ])
   const [input, setInput] = React.useState("")
+  const [isTutorTyping, setIsTutorTyping] = React.useState(false)
 
   const listRef = React.useRef<HTMLDivElement | null>(null)
+  const typingTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   React.useEffect(() => {
     const el = listRef.current
     if (!el) return
-    el.scrollTop = el.scrollHeight
-  }, [messages])
+
+    el.scrollTo({
+      top: el.scrollHeight,
+      behavior: shouldReduceMotion ? "auto" : "smooth",
+    })
+  }, [messages, shouldReduceMotion])
+
+  React.useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const send = React.useCallback(
     (text: string) => {
       const trimmed = text.trim()
       if (!trimmed) return
 
-      setMessages((prev) => [...prev, { role: "student", content: trimmed }])
+      setMessages((prev) => [
+        ...prev,
+        { id: `${Date.now()}-student`, role: "student", content: trimmed },
+      ])
       setInput("")
 
       const reply = generateTutorReply(trimmed, { stepIndex, stepTitle, stepHint })
-      setMessages((prev) => [...prev, { role: "tutor", content: reply }])
+
+      setIsTutorTyping(true)
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
+
+      const delayMs = shouldReduceMotion ? 0 : 450
+      typingTimeoutRef.current = setTimeout(() => {
+        setIsTutorTyping(false)
+        setMessages((prev) => [
+          ...prev,
+          { id: `${Date.now()}-tutor`, role: "tutor", content: reply },
+        ])
+      }, delayMs)
     },
-    [stepHint, stepIndex, stepTitle]
+    [shouldReduceMotion, stepHint, stepIndex, stepTitle]
   )
 
   const quickQuestions = [
@@ -100,23 +134,65 @@ export function AITutor({ stepIndex, stepTitle, stepHint }: AITutorProps) {
 
   return (
     <section className={componentCardClassName}>
-      <h3 className="text-xl font-bold text-[#1D1D1F]">💬 Your AI Tutor</h3>
+      <h3 className="text-xl font-semibold text-text-primary">💬 Your AI Tutor</h3>
 
       <div
         ref={listRef}
         className={cn(
-          "mt-4 max-h-[240px] overflow-y-auto rounded-lg border-2 border-[#D2D2D7] bg-white p-4",
-          "text-sm text-[#1D1D1F]"
+          "mt-4 max-h-[240px] overflow-y-auto rounded-xl border border-light bg-tertiary p-4",
+          "text-sm text-text-primary shadow-sm"
         )}
       >
-        {messages.map((msg, index) => (
-          <div key={index} className="mb-3">
-            <div className="text-xs font-semibold text-[#6E6E73]">
-              {msg.role === "student" ? "You" : "Tutor"}
+        {messages.map((msg) => {
+          const isStudent = msg.role === "student"
+
+          return (
+            <motion.div
+              key={msg.id}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.35, ease: [0.4, 0, 0.2, 1] }}
+              className={cn("mb-3 flex", isStudent ? "justify-end" : "justify-start")}
+            >
+              <div
+                className={cn(
+                  "max-w-[80%] rounded-[14px] border px-3 py-2 shadow-sm",
+                  isStudent
+                    ? "border-accent-primary bg-accent-primary text-text-inverse"
+                    : "border-light bg-bg-secondary text-text-primary"
+                )}
+              >
+                <div className={cn("text-xs font-semibold", isStudent ? "text-text-inverse/80" : "text-text-secondary")}>
+                  {isStudent ? "You" : "Tutor"}
+                </div>
+                <div className="mt-1 whitespace-pre-wrap leading-relaxed">{msg.content}</div>
+              </div>
+            </motion.div>
+          )
+        })}
+
+        {isTutorTyping ? (
+          <div className="mb-3 flex justify-start">
+            <div className="rounded-[14px] border border-light bg-bg-secondary px-3 py-2 shadow-sm">
+              <div className="text-xs font-semibold text-text-secondary">Tutor</div>
+              <div className="mt-2 flex items-center gap-1" aria-label="Tutor is typing">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <motion.span
+                    key={index}
+                    className="size-1.5 rounded-full bg-text-tertiary"
+                    animate={shouldReduceMotion ? undefined : { y: [0, -4, 0] }}
+                    transition={{
+                      duration: shouldReduceMotion ? 0 : 0.6,
+                      repeat: shouldReduceMotion ? 0 : Infinity,
+                      ease: "easeInOut",
+                      delay: index * 0.12,
+                    }}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="mt-1 whitespace-pre-wrap leading-relaxed">{msg.content}</div>
           </div>
-        ))}
+        ) : null}
       </div>
 
       <VoiceInput
@@ -127,14 +203,14 @@ export function AITutor({ stepIndex, stepTitle, stepHint }: AITutorProps) {
         placeholder="Ask a question…"
         sendLabel="Send"
         inputClassName={cn(
-          "h-11 rounded-lg border-[#D2D2D7] bg-white px-3",
-          "text-[#1D1D1F] placeholder:text-[#6E6E73]",
-          "focus:border-[#0071E3]"
+          "h-11 rounded-lg bg-tertiary border-light px-3",
+          "text-text-primary placeholder:text-text-tertiary",
+          "focus:border-accent-primary"
         )}
       />
 
       <div className="mt-4">
-        <div className="text-xs font-semibold text-[#6E6E73]">Quick Questions</div>
+        <div className="text-xs font-semibold text-text-secondary">Quick Questions</div>
         <div className="mt-2 flex flex-wrap gap-2">
           {quickQuestions.map((question) => (
             <Button

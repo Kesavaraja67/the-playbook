@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { motion, useReducedMotion } from "framer-motion"
 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -32,22 +33,37 @@ export function CodePlayground({
   showHint,
   disabled,
 }: CodePlaygroundProps) {
-  const feedbackStyles =
+  const shouldReduceMotion = useReducedMotion()
+  const feedbackColors =
     feedback.state === "correct"
-      ? "border-[#34C759] bg-[#34C759]/10"
+      ? { borderColor: "rgba(16,185,129,0.35)", backgroundColor: "rgba(16,185,129,0.08)" }
       : feedback.state === "incorrect"
-        ? "border-[#FF3B30] bg-[#FF3B30]/10"
-        : "border-[#D2D2D7] bg-white"
+        ? { borderColor: "rgba(239,68,68,0.35)", backgroundColor: "rgba(239,68,68,0.08)" }
+        : { borderColor: "var(--border-light)", backgroundColor: "var(--bg-tertiary)" }
 
   return (
     <div>
-      <div
-        className={cn(
-          "rounded-lg border-2 p-4 shadow-[2px_2px_0px_#1D1D1F]",
-          feedbackStyles
-        )}
+      <motion.div
+        className={cn("rounded-xl border p-4 shadow-md")}
+        style={feedbackColors}
+        animate={
+          shouldReduceMotion
+            ? undefined
+            : feedback.state === "incorrect"
+              ? { x: [0, -6, 6, -4, 4, 0] }
+              : feedback.state === "correct"
+                ? { scale: [1, 1.01, 1] }
+                : undefined
+        }
+        transition={
+          shouldReduceMotion
+            ? { duration: 0 }
+            : feedback.state === "incorrect"
+              ? { duration: 0.35, ease: [0.4, 0, 0.2, 1] }
+              : { duration: 0.35, ease: [0.4, 0, 0.2, 1] }
+        }
       >
-        <div className="text-xs font-semibold text-[#6E6E73]">
+        <div className="text-xs font-semibold text-text-secondary">
           Python Playground
         </div>
 
@@ -57,9 +73,9 @@ export function CodePlayground({
           placeholder={`# Write your code here\n`}
           spellCheck={false}
           className={cn(
-            "mt-3 min-h-[140px] resize-y border-2 border-[#D2D2D7] bg-[#F5F5F7]",
-            "font-mono text-[13px] leading-relaxed text-[#1D1D1F]",
-            "placeholder:text-[#6E6E73]"
+            "mt-3 min-h-[140px] resize-y bg-bg-secondary",
+            "font-mono text-[13px] leading-relaxed text-text-primary",
+            "placeholder:text-text-tertiary"
           )}
           disabled={disabled}
         />
@@ -73,22 +89,25 @@ export function CodePlayground({
           </Button>
 
           {feedback.state !== "idle" && (
-            <div
+            <motion.div
               className={cn(
                 "ml-auto text-sm font-semibold",
-                feedback.state === "correct" ? "text-[#248A3D]" : "text-[#C81D11]"
+                feedback.state === "correct" ? "text-accent-success" : "text-accent-danger"
               )}
               role={feedback.state === "incorrect" ? "alert" : undefined}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.25, ease: [0.4, 0, 0.2, 1] }}
             >
               {feedback.message}
-            </div>
+            </motion.div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {showHint && hint && (
-        <div className="mt-3 rounded-lg border-2 border-[#D2D2D7] bg-[#F5F5F7] p-4 text-sm text-[#1D1D1F]">
-          <div className="text-xs font-semibold text-[#6E6E73]">Hint</div>
+        <div className="mt-3 rounded-xl border border-light bg-bg-secondary p-4 text-sm text-text-primary shadow-sm">
+          <div className="text-xs font-semibold text-text-secondary">Hint</div>
           <div className="mt-2 leading-relaxed">{hint}</div>
         </div>
       )}

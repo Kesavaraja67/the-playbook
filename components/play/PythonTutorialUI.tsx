@@ -3,6 +3,7 @@
 import * as React from "react"
 import { ArrowLeft, RotateCcw } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { motion, useReducedMotion } from "framer-motion"
 
 import { ComponentCanvas } from "@/components/play/ComponentCanvas"
 import { AITutor } from "@/components/scenarios/educational/AITutor"
@@ -320,6 +321,7 @@ const tutorialSteps: TutorialStepConfig[] = [
 
 export function PythonTutorialUI({ scenario }: { scenario: Scenario }) {
   const router = useRouter()
+  const shouldReduceMotion = useReducedMotion()
 
   const learningObjectives = React.useMemo(
     () =>
@@ -401,21 +403,26 @@ export function PythonTutorialUI({ scenario }: { scenario: Scenario }) {
   const canGoNext = stepIndex < totalSteps - 1 && completedSteps[stepIndex]
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F]">
-      <header className="sticky top-0 z-40 h-[60px] bg-white border-b-2 border-[#D2D2D7]">
+    <div className="min-h-dvh bg-bg-secondary text-text-primary">
+      <motion.header
+        initial={shouldReduceMotion ? false : { opacity: 0, y: -14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: shouldReduceMotion ? 0 : 0.5, ease: [0.4, 0, 0.2, 1] }}
+        className="sticky top-0 z-40 h-[64px] bg-tertiary backdrop-blur border-b border-light"
+      >
         <div className="mx-auto flex h-full max-w-[1200px] items-center justify-between px-6">
           <button
             type="button"
             onClick={() => router.push("/scenarios")}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F] hover:text-[#0071E3]"
+            className="group inline-flex items-center gap-2 text-sm font-medium text-text-secondary transition-colors hover:text-accent-primary"
           >
-            <ArrowLeft className="size-4" />
+            <ArrowLeft className="size-4 transition-transform duration-200 group-hover:-rotate-12" />
             Back
           </button>
 
           <div className="text-center">
-            <div className="text-sm font-bold">{scenario.title}</div>
-            <div className="text-xs text-[#6E6E73]">
+            <div className="text-sm font-semibold text-text-primary">{scenario.title}</div>
+            <div className="text-xs text-text-secondary">
               Step {stepIndex + 1}/{totalSteps}
             </div>
           </div>
@@ -423,13 +430,13 @@ export function PythonTutorialUI({ scenario }: { scenario: Scenario }) {
           <button
             type="button"
             onClick={reset}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F] hover:text-[#0071E3]"
+            className="group inline-flex items-center gap-2 text-sm font-medium text-text-secondary transition-colors hover:text-accent-primary"
           >
-            <RotateCcw className="size-4" />
+            <RotateCcw className="size-4 transition-transform duration-200 group-hover:rotate-12" />
             Reset
           </button>
         </div>
-      </header>
+      </motion.header>
 
       <main className="pb-10">
         <ComponentCanvas>
@@ -477,12 +484,9 @@ export function PythonTutorialUI({ scenario }: { scenario: Scenario }) {
             />
 
             <section
-              className={cn(
-                "rounded-lg border-2 border-[#D2D2D7] bg-white p-4",
-                "shadow-[2px_2px_0px_#1D1D1F]"
-              )}
+              className={cn("ds-card p-4")}
             >
-              <div className="text-xs font-semibold text-[#6E6E73]">Stats</div>
+              <div className="text-xs font-semibold text-text-secondary">Stats</div>
               <div className="mt-2 text-sm">
                 Attempts: <span className="font-semibold">{attempts}</span> · Hints used:{" "}
                 <span className="font-semibold">{hintsUsed}</span>

@@ -41,10 +41,10 @@ export function LessonContent({
     <section className={componentCardClassName}>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="text-xs font-semibold text-[#6E6E73]">
+          <div className="text-xs font-semibold text-text-secondary">
             LESSON CONTENT
           </div>
-          <h3 className="mt-2 text-xl font-bold text-[#1D1D1F]">
+          <h3 className="mt-2 text-xl font-semibold text-text-primary">
             📖 Step {stepNumber}: {step.title}
           </h3>
         </div>
@@ -64,7 +64,7 @@ export function LessonContent({
         </div>
       </div>
 
-      <div className="mt-4 space-y-3 text-sm text-[#1D1D1F]">
+      <div className="mt-4 space-y-3 text-sm text-text-primary">
         {step.lesson.map((paragraph) => (
           <p key={paragraph} className="leading-relaxed">
             {paragraph}
@@ -74,11 +74,11 @@ export function LessonContent({
 
       {step.exampleCode && (
         <div className="mt-5">
-          <div className="text-xs font-semibold text-[#6E6E73]">Example</div>
+          <div className="text-xs font-semibold text-text-secondary">Example</div>
           <pre
             className={cn(
-              "mt-2 overflow-x-auto rounded-lg border-2 border-[#D2D2D7] bg-[#F5F5F7] p-4",
-              "text-sm text-[#1D1D1F]"
+              "mt-2 overflow-x-auto rounded-lg border border-light bg-bg-secondary p-4 shadow-sm",
+              "text-sm text-text-primary"
             )}
           >
             <code className="font-mono">{step.exampleCode}</code>
@@ -87,13 +87,13 @@ export function LessonContent({
       )}
 
       <div className="mt-6">
-        <div className="text-xs font-semibold text-[#6E6E73]">✅ {step.exerciseTitle}</div>
-        <div className="mt-2 text-sm text-[#1D1D1F]">{step.exercisePrompt}</div>
+        <div className="text-xs font-semibold text-text-secondary">✅ {step.exerciseTitle}</div>
+        <div className="mt-2 text-sm text-text-primary">{step.exercisePrompt}</div>
 
         <div className="mt-4">{children}</div>
       </div>
 
-      <div className="mt-6 flex items-center justify-between text-xs text-[#6E6E73]">
+      <div className="mt-6 flex items-center justify-between text-xs text-text-secondary">
         <div>
           Step {stepNumber} / {totalSteps}
         </div>

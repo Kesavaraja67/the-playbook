@@ -31,10 +31,10 @@ export const scenarioCategoryOrder: readonly ScenarioCategory[] = [
 ]
 
 export const scenarioCategoryMeta = {
-  game: { label: "Games", color: "#5E5CE6" },
-  professional: { label: "Professional", color: "#0071E3" },
-  simulation: { label: "Simulation", color: "#34C759" },
-  educational: { label: "Educational", color: "#FF9F0A" },
+  game: { label: "Games", color: "#64748B" },
+  professional: { label: "Professional", color: "#4A90E2" },
+  simulation: { label: "Simulation", color: "#10B981" },
+  educational: { label: "Educational", color: "#F59E0B" },
 } satisfies Record<ScenarioCategory, { label: string; color: string }>
 
 export const scenarios: Scenario[] = [

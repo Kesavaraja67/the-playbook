@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { motion, useReducedMotion } from "framer-motion"
 
 import type { ActionMatrixProps } from "@/components/tambo/ActionMatrix"
 import { componentCardClassName } from "@/components/play/ComponentCanvas"
@@ -36,14 +37,18 @@ export function EmergencyActionsPanel({
   onActionClick: (id: string) => void
   disabled: boolean
 }) {
+  const shouldReduceMotion = useReducedMotion()
+
   return (
     <section className={componentCardClassName}>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-[#1D1D1F] text-xl font-bold">EMERGENCY ACTIONS PANEL</h3>
-          <div className="mt-1 text-xs text-[#6E6E73]">Select an action. Monitor readouts after execution.</div>
+          <h3 className="text-xl font-semibold text-text-primary">EMERGENCY ACTIONS PANEL</h3>
+          <div className="mt-1 text-xs text-text-secondary">
+            Select an action. Monitor readouts after execution.
+          </div>
         </div>
-        {disabled && <div className="text-xs font-semibold text-[#6E6E73]">Busy…</div>}
+        {disabled && <div className="text-xs font-semibold text-text-secondary">Busy…</div>}
       </div>
 
       <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -51,7 +56,7 @@ export function EmergencyActionsPanel({
           const costs = formatCosts(action.costs)
 
           return (
-            <button
+            <motion.button
               key={action.id}
               type="button"
               disabled={disabled}
@@ -60,12 +65,29 @@ export function EmergencyActionsPanel({
                 onActionClick(action.id)
               }}
               className={cn(
-                "rounded-lg border-2 border-[#D2D2D7] bg-[#F5F5F7] p-4 text-left",
-                "shadow-[2px_2px_0px_#1D1D1F] transition-all",
+                "group rounded-xl border border-light bg-bg-secondary p-4 text-left shadow-sm",
+                "transition-[border-color,box-shadow,transform] duration-200 ease-out",
                 disabled
                   ? "cursor-not-allowed opacity-60"
-                  : "hover:border-[#0071E3] hover:-translate-y-0.5"
+                  : "hover:border-accent-primary hover:shadow-md"
               )}
+              whileHover={
+                disabled || shouldReduceMotion
+                  ? undefined
+                  : {
+                      y: -4,
+                      boxShadow: "var(--shadow-md)",
+                    }
+              }
+              whileTap={
+                disabled || shouldReduceMotion
+                  ? undefined
+                  : {
+                      scale: 0.97,
+                      y: 0,
+                    }
+              }
+              transition={{ type: "spring", stiffness: 420, damping: 30 }}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
@@ -73,15 +95,19 @@ export function EmergencyActionsPanel({
                     {action.icon}
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-[#1D1D1F]">{action.label}</div>
-                    {costs && <div className="mt-1 text-xs text-[#6E6E73]">{costs}</div>}
+                    <div className="text-sm font-semibold text-text-primary">{action.label}</div>
+                    {costs && <div className="mt-1 text-xs text-text-secondary">{costs}</div>}
                   </div>
                 </div>
-                <div className="rounded-md border-2 border-[#1D1D1F] bg-white px-2 py-1 text-[11px] font-bold">
+                <motion.div
+                  className="rounded-md border border-light bg-tertiary px-2 py-1 text-[11px] font-semibold text-text-primary shadow-sm"
+                  whileHover={disabled ? undefined : { scale: 1.03 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 30 }}
+                >
                   EXEC
-                </div>
+                </motion.div>
               </div>
-            </button>
+            </motion.button>
           )
         })}
       </div>

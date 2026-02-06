@@ -32,7 +32,14 @@ export function ConversationThread({
 
   React.useEffect(() => {
     if (stickToBottomRef.current || lastSender === "you") {
-      endRef.current?.scrollIntoView({ block: "end" })
+      const prefersReducedMotion =
+        typeof window !== "undefined" &&
+        window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches
+
+      endRef.current?.scrollIntoView({
+        block: "end",
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+      })
     }
   }, [messages.length, lastSender])
 

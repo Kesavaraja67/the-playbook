@@ -11,12 +11,13 @@ const buttonVariants = cva(
       variant: {
         default: "ds-button-primary",
         destructive:
-          "bg-accent-danger text-inverse border-2 border-dark shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
+          "bg-accent-danger text-inverse border border-medium shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
         outline:
-          "bg-primary text-primary border-2 border-medium shadow-sm hover:bg-secondary hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
+          "bg-tertiary text-primary border border-light shadow-sm hover:border-medium hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
         secondary:
-          "bg-secondary text-primary border-2 border-medium shadow-sm hover:bg-tertiary hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
-        ghost: "bg-primary text-primary border-2 border-transparent hover:border-medium",
+          "bg-secondary text-primary border border-light shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
+        ghost:
+          "bg-transparent text-primary border border-transparent hover:bg-secondary hover:border-light",
         link: "text-accent-primary underline-offset-4 hover:underline",
       },
       size: {

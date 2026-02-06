@@ -60,25 +60,29 @@ export function ClueDisplay({ clue, className }: ClueDisplayProps) {
     <section
       className={cn(
         componentCardClassName,
-        "border-[#0071E3] bg-gradient-to-br from-white to-[#F5F5F7]",
+        "border-accent-primary",
         className
       )}
+      style={{
+        background:
+          "radial-gradient(circle at 18% 20%, rgba(74,144,226,0.10), transparent 55%), var(--bg-tertiary)",
+      }}
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-xl font-bold text-[#1D1D1F]">Latest Clue</h3>
-          <div className="mt-1 text-xs text-[#6E6E73]">Log it. Connect it. Move.</div>
+          <h3 className="text-xl font-semibold text-text-primary">Latest Clue</h3>
+          <div className="mt-1 text-xs text-text-secondary">Log it. Connect it. Move.</div>
         </div>
-        <div className="text-xs font-semibold text-[#6E6E73]" aria-hidden>
+        <div className="text-xs font-semibold text-text-secondary" aria-hidden>
           💬
         </div>
       </div>
 
-      <div className="mt-4 rounded-lg border-2 border-[#D2D2D7] bg-white p-4">
+      <div className="mt-4 rounded-lg border border-light bg-bg-secondary p-4 shadow-sm">
         {rendered ? (
-          <p className="text-sm text-[#1D1D1F]">“{rendered}”</p>
+          <p className="text-sm text-text-primary">“{rendered}”</p>
         ) : (
-          <p className="text-sm text-[#6E6E73]">No new clue yet.</p>
+          <p className="text-sm text-text-secondary">No new clue yet.</p>
         )}
       </div>
     </section>

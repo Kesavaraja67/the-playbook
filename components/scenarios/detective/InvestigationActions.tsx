@@ -3,6 +3,7 @@
 import { componentCardClassName } from "@/components/play/ComponentCanvas"
 import type { ActionMatrixProps } from "@/components/tambo/ActionMatrix"
 import { cn } from "@/lib/utils"
+import { motion, useReducedMotion } from "framer-motion"
 
 export type InvestigationAction = ActionMatrixProps["actions"][number]
 
@@ -14,14 +15,16 @@ export type InvestigationActionsProps = {
 }
 
 export function InvestigationActions({ actions, disabled, className, onActionClick }: InvestigationActionsProps) {
+  const shouldReduceMotion = useReducedMotion()
+
   return (
     <section className={cn(componentCardClassName, className)}>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-xl font-bold text-[#1D1D1F]">Investigation Actions</h3>
-          <div className="mt-1 text-xs text-[#6E6E73]">Pick your next move carefully.</div>
+          <h3 className="text-xl font-semibold text-text-primary">Investigation Actions</h3>
+          <div className="mt-1 text-xs text-text-secondary">Pick your next move carefully.</div>
         </div>
-        {disabled && <div className="text-xs font-semibold text-[#6E6E73]">Busy…</div>}
+        {disabled && <div className="text-xs font-semibold text-text-secondary">Busy…</div>}
       </div>
 
       <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -32,53 +35,70 @@ export function InvestigationActions({ actions, disabled, className, onActionCli
             typeof action.successRate === "number" ? Math.round(action.successRate) : null
 
           return (
-          <button
-            key={action.id}
-            type="button"
-            disabled={disabled}
-            onClick={() => {
-              if (disabled) return
-              onActionClick(action.id)
-            }}
-            className={cn(
-              "rounded-lg border-2 border-[#D2D2D7] bg-white p-4 text-left",
-              "shadow-[2px_2px_0px_#1D1D1F] transition-all",
-              disabled
-                ? "cursor-not-allowed opacity-60"
-                : "hover:border-[#0071E3] hover:-translate-y-0.5"
-            )}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="text-sm font-bold text-[#1D1D1F]">
-                  {action.icon} {action.label}
+            <motion.button
+              key={action.id}
+              type="button"
+              disabled={disabled}
+              onClick={() => {
+                if (disabled) return
+                onActionClick(action.id)
+              }}
+              className={cn(
+                "group rounded-xl border border-light bg-tertiary p-4 text-left shadow-sm",
+                "transition-[border-color,box-shadow,transform] duration-200 ease-out",
+                disabled
+                  ? "cursor-not-allowed opacity-60"
+                  : "hover:border-accent-primary hover:shadow-md"
+              )}
+              whileHover={
+                disabled || shouldReduceMotion
+                  ? undefined
+                  : {
+                      y: -4,
+                      boxShadow: "var(--shadow-md)",
+                    }
+              }
+              whileTap={
+                disabled || shouldReduceMotion
+                  ? undefined
+                  : {
+                      scale: 0.97,
+                      y: 0,
+                    }
+              }
+              transition={{ type: "spring", stiffness: 420, damping: 30 }}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-sm font-semibold text-text-primary">
+                    {action.icon} {action.label}
+                  </div>
+                  {action.description && (
+                    <div className="mt-1 text-xs text-text-secondary">{action.description}</div>
+                  )}
                 </div>
-                {action.description && (
-                  <div className="mt-1 text-xs text-[#6E6E73]">{action.description}</div>
+
+                <div className="shrink-0 text-right">
+                  <div className="text-[11px] font-semibold text-text-secondary">Success</div>
+                  <div className="text-sm font-semibold text-text-primary">
+                    {successRate === null ? "—" : `${successRate}%`}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <div className="text-xs font-semibold text-text-secondary">Cost</div>
+                {typeof timeCostHours === "number" ? (
+                  <div className="rounded-full border border-light bg-bg-secondary px-2 py-0.5 text-[11px] font-semibold text-text-primary">
+                    ⏱️ {timeCostHours}h
+                  </div>
+                ) : (
+                  <div className="rounded-full border border-light bg-bg-secondary px-2 py-0.5 text-[11px] font-semibold text-text-secondary">
+                    None
+                  </div>
                 )}
               </div>
-
-              <div className="shrink-0 text-right">
-                <div className="text-[11px] font-semibold text-[#6E6E73]">Success</div>
-                <div className="text-sm font-bold text-[#1D1D1F]">
-                  {successRate === null ? "—" : `${successRate}%`}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between gap-3">
-              <div className="text-xs font-semibold text-[#6E6E73]">Cost</div>
-              {typeof timeCostHours === "number" ? (
-                <div className="rounded-full border-2 border-[#D2D2D7] bg-[#F5F5F7] px-2 py-0.5 text-[11px] font-semibold text-[#1D1D1F]">
-                  ⏱️ {timeCostHours}h
-                </div>
-              ) : (
-                <div className="rounded-full border-2 border-[#D2D2D7] bg-[#F5F5F7] px-2 py-0.5 text-[11px] font-semibold text-[#6E6E73]">
-                  None
-                </div>
-              )}
-            </div>
-          </button>
+            </motion.button>
           )
         })}
       </div>

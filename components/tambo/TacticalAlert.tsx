@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { z } from "zod"
+import { motion, useReducedMotion } from "framer-motion"
 
 import { cn } from "@/lib/utils"
 
@@ -19,21 +20,29 @@ const alertStyles: Record<
   z.infer<typeof tacticalAlertSchema>["type"],
   { bg: string; icon: string }
 > = {
-  warning: { bg: "#FF3B30", icon: "⚠️" },
-  hint: { bg: "#FF9F0A", icon: "💡" },
-  info: { bg: "#0071E3", icon: "ℹ️" },
-  success: { bg: "#34C759", icon: "✅" },
+  warning: { bg: "#EF4444", icon: "⚠️" },
+  hint: { bg: "#F59E0B", icon: "💡" },
+  info: { bg: "#4A90E2", icon: "ℹ️" },
+  success: { bg: "#10B981", icon: "✅" },
 }
 
 export function TacticalAlert({ type, title, message, onDismiss }: TacticalAlertProps) {
+  const shouldReduceMotion = useReducedMotion()
   const style = alertStyles[type]
 
   return (
-    <aside
+    <motion.aside
+      initial={shouldReduceMotion ? false : { opacity: 0, x: 32, y: -8, scale: 0.98 }}
+      animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+      exit={shouldReduceMotion ? undefined : { opacity: 0, x: 40 }}
+      transition={
+        shouldReduceMotion
+          ? { duration: 0 }
+          : { type: "spring", stiffness: 420, damping: 30 }
+      }
       className={cn(
-        "fixed right-6 top-[76px] z-50 w-[360px] max-w-[calc(100vw-48px)]",
-        "border-[3px] border-[#1D1D1F]",
-        "shadow-[4px_4px_0px_#1D1D1F]"
+        "fixed right-6 top-[84px] z-50 w-[360px] max-w-[calc(100vw-48px)]",
+        "rounded-xl border border-light shadow-xl overflow-hidden"
       )}
       style={{ backgroundColor: style.bg }}
       role="status"
@@ -46,7 +55,7 @@ export function TacticalAlert({ type, title, message, onDismiss }: TacticalAlert
           }}
           className={cn(
             "absolute right-3 top-3 grid size-7 place-items-center rounded-md",
-            "border-2 border-white/60 text-white/90 hover:border-white hover:text-white"
+            "border border-white/50 text-white/90 transition-colors hover:border-white hover:text-white"
           )}
           aria-label="Dismiss"
         >
@@ -63,6 +72,6 @@ export function TacticalAlert({ type, title, message, onDismiss }: TacticalAlert
           </div>
         </div>
       </div>
-    </aside>
+    </motion.aside>
   )
 }

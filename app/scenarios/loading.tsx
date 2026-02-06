@@ -1,6 +1,6 @@
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-[#F5F5F7] px-6 py-8">
+    <div className="min-h-dvh bg-bg-secondary px-6 py-8">
       <main
         className="mx-auto max-w-6xl"
         aria-busy="true"
@@ -8,18 +8,18 @@ export default function Loading() {
         aria-label="Loading scenarios"
       >
         <header className="flex items-center justify-between">
-          <div className="h-5 w-40 rounded bg-white" />
-          <div className="h-5 w-20 rounded bg-white" />
+          <div className="playbook-skeleton h-5 w-40 rounded" />
+          <div className="playbook-skeleton h-5 w-20 rounded" />
         </header>
 
         <div className="py-14 text-center">
-          <div className="mx-auto h-12 w-72 rounded bg-white md:h-16 md:w-96" />
-          <div className="mx-auto mt-4 h-5 w-full max-w-2xl rounded bg-white" />
-          <div className="mx-auto mt-2 h-5 w-5/6 max-w-xl rounded bg-white" />
+          <div className="playbook-skeleton mx-auto h-12 w-72 rounded md:h-16 md:w-96" />
+          <div className="playbook-skeleton mx-auto mt-4 h-5 w-full max-w-2xl rounded" />
+          <div className="playbook-skeleton mx-auto mt-2 h-5 w-5/6 max-w-xl rounded" />
 
           <div className="mx-auto mt-10 flex flex-wrap justify-center gap-3">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-10 w-24 rounded-[8px] bg-white" />
+              <div key={i} className="playbook-skeleton h-10 w-24 rounded-full" />
             ))}
           </div>
         </div>
@@ -28,24 +28,23 @@ export default function Loading() {
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="h-[400px] w-full max-w-[320px] animate-pulse rounded-[16px] border-2 border-[#D2D2D7] bg-white p-6"
-              style={{ boxShadow: "4px 4px 0px #1D1D1F" }}
+              className="h-[408px] w-full max-w-[340px] rounded-xl border border-light bg-tertiary p-6 shadow-md"
             >
               <div className="flex h-full flex-col">
-                <div className="h-8 w-28 rounded-[8px] border-2 border-[#1D1D1F] bg-[#D2D2D7]" />
+                <div className="playbook-skeleton h-8 w-36 rounded-full" />
 
-                <div className="mt-4 h-7 w-3/4 rounded bg-[#F5F5F7]" />
-                <div className="mt-3 h-4 w-full rounded bg-[#F5F5F7]" />
-                <div className="mt-2 h-4 w-11/12 rounded bg-[#F5F5F7]" />
-                <div className="mt-2 h-4 w-2/3 rounded bg-[#F5F5F7]" />
+                <div className="playbook-skeleton mt-4 h-7 w-3/4 rounded" />
+                <div className="playbook-skeleton mt-3 h-4 w-full rounded" />
+                <div className="playbook-skeleton mt-2 h-4 w-11/12 rounded" />
+                <div className="playbook-skeleton mt-2 h-4 w-2/3 rounded" />
 
                 <div className="mt-auto">
                   <div className="mb-4 flex gap-2">
-                    <div className="h-6 w-16 rounded-[6px] border border-[#D2D2D7] bg-[#F5F5F7]" />
-                    <div className="h-6 w-20 rounded-[6px] border border-[#D2D2D7] bg-[#F5F5F7]" />
-                    <div className="h-6 w-14 rounded-[6px] border border-[#D2D2D7] bg-[#F5F5F7]" />
+                    <div className="playbook-skeleton h-6 w-16 rounded-full" />
+                    <div className="playbook-skeleton h-6 w-20 rounded-full" />
+                    <div className="playbook-skeleton h-6 w-14 rounded-full" />
                   </div>
-                  <div className="h-12 w-full rounded-[8px] bg-[#1D1D1F]" />
+                  <div className="playbook-skeleton h-12 w-full rounded-lg" />
                 </div>
               </div>
             </div>

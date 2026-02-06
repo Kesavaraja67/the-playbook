@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import dynamic from "next/dynamic"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowLeft, RotateCcw } from "lucide-react"
+import { motion, useReducedMotion } from "framer-motion"
 
 import { ComponentCanvas, componentCardClassName } from "@/components/play/ComponentCanvas"
 import { CaseFileHeader } from "@/components/scenarios/detective/CaseFileHeader"
@@ -57,6 +58,8 @@ type ChatMessage = {
 }
 
 const MAX_MESSAGES = 100
+
+const defaultEase: [number, number, number, number] = [0.4, 0, 0.2, 1]
 
 type TacticalAlertState = Omit<React.ComponentProps<typeof TacticalAlert>, "onDismiss">
 
@@ -424,10 +427,10 @@ function getZombieInitialState(): InitialState {
   }
 
   const resources: Resource[] = [
-    { name: "Health", value: 85, color: "#FF3B30", icon: "❤️" },
-    { name: "Ammo", value: 12, color: "#FF9F0A", icon: "🔫" },
-    { name: "Food", value: 3, color: "#34C759", icon: "🍖" },
-    { name: "Water", value: 2, color: "#0071E3", icon: "💧" },
+    { name: "Health", value: 85, color: "#EF4444", icon: "❤️" },
+    { name: "Ammo", value: 12, color: "#F59E0B", icon: "🔫" },
+    { name: "Food", value: 3, color: "#10B981", icon: "🍖" },
+    { name: "Water", value: 2, color: "#4A90E2", icon: "💧" },
     { name: "Energy", value: 70, color: "#AF52DE", icon: "⚡" },
     { name: "Materials", value: 40, color: "#8E8E93", icon: "🧱" },
   ]
@@ -514,19 +517,19 @@ function getInitialState(scenarioId: string): InitialState {
         resources: [],
       } satisfies BoardState,
       resources: [
-        { name: "Relationship", value: 75, color: "#34C759", icon: "🤝" },
-        { name: "Confidence", value: 70, color: "#0071E3", icon: "🗣️" },
-        { name: "Leverage", value: 65, color: "#FF9F0A", icon: "⚖️" },
+        { name: "Relationship", value: 75, color: "#10B981", icon: "🤝" },
+        { name: "Confidence", value: 70, color: "#4A90E2", icon: "🗣️" },
+        { name: "Leverage", value: 65, color: "#F59E0B", icon: "⚖️" },
         {
           name: "Offer",
           value: Math.round((currentOffer / targetSalary) * 100),
-          color: "#0071E3",
+          color: "#4A90E2",
           icon: "💼",
         },
         {
           name: "Market",
           value: Math.round((marketRate / targetSalary) * 100),
-          color: "#FF3B30",
+          color: "#EF4444",
           icon: "📊",
         },
       ] as Resource[],
@@ -557,12 +560,12 @@ function getInitialState(scenarioId: string): InitialState {
         resources: [{ x: 2, y: 7, label: "Spare Parts" }],
       } satisfies BoardState,
       resources: [
-        { name: "Oxygen", value: 75, color: "#0071E3", icon: "⚙️" },
-        { name: "Power", value: 60, color: "#FF9F0A", icon: "⚡" },
-        { name: "Solar Output", value: 60, color: "#34C759", icon: "📡" },
-        { name: "Water", value: 65, color: "#34C759", icon: "⚙️" },
-        { name: "Food", value: 55, color: "#FF9F0A", icon: "📦" },
-        { name: "Crew Health", value: 100, color: "#34C759", icon: "⚕️" },
+        { name: "Oxygen", value: 75, color: "#4A90E2", icon: "⚙️" },
+        { name: "Power", value: 60, color: "#F59E0B", icon: "⚡" },
+        { name: "Solar Output", value: 60, color: "#10B981", icon: "📡" },
+        { name: "Water", value: 65, color: "#10B981", icon: "⚙️" },
+        { name: "Food", value: 55, color: "#F59E0B", icon: "📦" },
+        { name: "Crew Health", value: 100, color: "#10B981", icon: "⚕️" },
         { name: "Morale", value: 80, color: "#5E5CE6", icon: "📈" },
       ] as Resource[],
       actions: [
@@ -647,10 +650,10 @@ function getInitialState(scenarioId: string): InitialState {
         resources: [],
       } satisfies BoardState,
       resources: [
-        { name: "Evidence", value: 35, color: "#34C759", icon: "🧾" },
-        { name: "Leads", value: 40, color: "#0071E3", icon: "🧠" },
-        { name: "Time", value: 85, color: "#FF9F0A", icon: "⏳" },
-        { name: "Pressure", value: 45, color: "#FF3B30", icon: "🚨" },
+        { name: "Evidence", value: 35, color: "#10B981", icon: "🧾" },
+        { name: "Leads", value: 40, color: "#4A90E2", icon: "🧠" },
+        { name: "Time", value: 85, color: "#F59E0B", icon: "⏳" },
+        { name: "Pressure", value: 45, color: "#EF4444", icon: "🚨" },
       ] as Resource[],
       actions: detectiveInvestigationActions,
       messages: [initialAssistantMessage],
@@ -673,10 +676,10 @@ function getInitialState(scenarioId: string): InitialState {
       resources: [{ x: 3, y: 7, label: "Evidence" }],
     } satisfies BoardState,
     resources: [
-      { name: "Evidence", value: 25, color: "#34C759", icon: "🧾" },
-      { name: "Leads", value: 40, color: "#0071E3", icon: "🧠" },
-      { name: "Time", value: 60, color: "#FF9F0A", icon: "⏳" },
-      { name: "Pressure", value: 70, color: "#FF3B30", icon: "🚨" },
+      { name: "Evidence", value: 25, color: "#10B981", icon: "🧾" },
+      { name: "Leads", value: 40, color: "#4A90E2", icon: "🧠" },
+      { name: "Time", value: 60, color: "#F59E0B", icon: "⏳" },
+      { name: "Pressure", value: 70, color: "#EF4444", icon: "🚨" },
     ] as Resource[],
     actions: [
       { id: "interview", label: "Interview", icon: "🗣️", successRate: 65 },
@@ -691,9 +694,9 @@ function getInitialState(scenarioId: string): InitialState {
 
 function LoadingCard({ title, height }: { title: string; height: string }) {
   return (
-    <section className={cn(componentCardClassName, "animate-pulse")}>
-      <div className="h-6 w-48 rounded bg-[#D2D2D7]" aria-label={title} />
-      <div className={cn("mt-6 rounded-lg bg-[#F5F5F7]", height)} />
+    <section className={componentCardClassName}>
+      <div className="playbook-skeleton h-6 w-48 rounded" aria-label={title} />
+      <div className={cn("playbook-skeleton mt-6 rounded-lg", height)} />
     </section>
   )
 }
@@ -711,11 +714,11 @@ function ScenarioBriefingCard({ scenario }: { scenario: Scenario }) {
         <div className="flex-1">
           <h3 className="text-xl font-bold">Briefing</h3>
           <div className="mt-1 text-sm font-semibold">{scenario.title}</div>
-          <div className="mt-3 text-sm text-[#6E6E73]">{scenario.description}</div>
+          <div className="mt-3 text-sm text-text-secondary">{scenario.description}</div>
 
           {hasObjectives && (
             <div className="mt-5">
-              <div className="text-xs font-semibold text-[#6E6E73]">Objectives</div>
+              <div className="text-xs font-semibold text-text-secondary">Objectives</div>
               <ul className="mt-2 list-disc pl-5 text-sm">
                 {objectives.map((objective) => (
                   <li key={objective}>{objective}</li>
@@ -724,7 +727,7 @@ function ScenarioBriefingCard({ scenario }: { scenario: Scenario }) {
             </div>
           )}
 
-          <div className="mt-5 text-xs text-[#6E6E73]">
+          <div className="mt-5 text-xs text-text-secondary">
             Use the actions below or type your next move in the command bar to continue.
           </div>
         </div>
@@ -758,6 +761,7 @@ function StandardPlayPageContent({
   scenario: Scenario | undefined
 }) {
   const isBoardScenario = scenario?.layout === "board"
+  const shouldReduceMotion = useReducedMotion()
 
   const [day, setDay] = React.useState(1)
   const [totalDays, setTotalDays] = React.useState(7)
@@ -1744,10 +1748,10 @@ function StandardPlayPageContent({
 
   if (!scenario) {
     return (
-      <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] grid place-items-center p-6">
+      <div className="min-h-dvh bg-bg-secondary text-text-primary grid place-items-center p-6">
         <div className={cn(componentCardClassName, "max-w-[520px]")}>
           <div className="text-lg font-bold">Scenario not found</div>
-          <div className="mt-2 text-sm text-[#6E6E73]">
+          <div className="mt-2 text-sm text-text-secondary">
             The requested scenario doesn’t exist.
           </div>
           <Button className="mt-5" onClick={() => router.push("/scenarios")}>
@@ -1778,18 +1782,18 @@ function StandardPlayPageContent({
         }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F]">
+    <div className="min-h-dvh bg-bg-secondary text-text-primary">
       <motion.header
-        className="sticky top-0 z-40 h-[60px] bg-white border-b border-[#E5E5E5]"
-        initial={{ opacity: 0, y: -14 }}
+        initial={shouldReduceMotion ? false : { opacity: 0, y: -14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] as const }}
+        transition={{ duration: shouldReduceMotion ? 0 : 0.5, ease: defaultEase }}
+        className="sticky top-0 z-40 h-[64px] bg-tertiary backdrop-blur border-b border-light"
       >
         <div className="mx-auto flex h-full max-w-[1200px] items-center justify-between px-6">
           <button
             type="button"
             onClick={() => router.push("/scenarios")}
-            className="group inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F] hover:text-[#0071E3] transition-colors"
+            className="group inline-flex items-center gap-2 text-sm font-medium text-text-secondary transition-colors hover:text-accent-primary"
           >
             <ArrowLeft className="size-4 transition-transform duration-200 group-hover:-translate-x-0.5 group-hover:-rotate-12" />
             Back
@@ -1798,7 +1802,7 @@ function StandardPlayPageContent({
           <div className="text-center">
             <div className="text-sm font-bold">{headerTitle}</div>
             {progressLabel && (
-              <div className="text-xs text-[#6E6E73]">{progressLabel}</div>
+              <div className="text-xs text-text-secondary">{progressLabel}</div>
             )}
           </div>
 
@@ -1807,11 +1811,13 @@ function StandardPlayPageContent({
             onClick={() => reset(scenarioId)}
             disabled={!canReset}
             className={cn(
-              "group inline-flex items-center gap-2 text-sm font-semibold text-[#1D1D1F] transition-colors",
-              !canReset ? "cursor-not-allowed opacity-60" : "hover:text-[#0071E3]"
+              "group inline-flex items-center gap-2 text-sm font-medium text-text-secondary transition-colors",
+              !canReset
+                ? "cursor-not-allowed opacity-60"
+                : "hover:text-accent-primary"
             )}
           >
-            <RotateCcw className="size-4 transition-transform duration-300 group-active:rotate-180" />
+            <RotateCcw className="size-4 transition-transform duration-300 group-hover:rotate-12 group-active:rotate-180" />
             Reset
           </button>
         </div>
@@ -2041,17 +2047,17 @@ function StandardPlayPageContent({
               )}
 
               <section className={cn(componentCardClassName, "mt-4 p-4")}>
-                <div className="text-xs font-semibold text-[#6E6E73]">Chat</div>
+                <div className="text-xs font-semibold text-text-secondary">Chat</div>
                 <div className="mt-2 max-h-[240px] overflow-y-auto pr-2 text-sm">
                   {messages.map((msg, index) => (
                     <div key={index} className="mb-2">
                       <span className="font-semibold">{msg.role === "user" ? "You" : "AI"}:</span>{" "}
-                      <span className="text-[#1D1D1F]">{msg.content}</span>
+                      <span className="text-text-primary">{msg.content}</span>
                     </div>
                   ))}
                 </div>
                 {latestAssistantText && (
-                  <div className="mt-3 text-xs text-[#6E6E73]">Latest: {latestAssistantText}</div>
+                  <div className="mt-3 text-xs text-text-secondary">Latest: {latestAssistantText}</div>
                 )}
               </section>
             </>
@@ -2061,10 +2067,14 @@ function StandardPlayPageContent({
 
       {scenarioId === "salary-negotiation" ? null : (
         <motion.div
-          className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-[#E5E5E5] py-4"
-          initial={{ opacity: 0, y: 16 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] as const, delay: 0.05 }}
+          transition={
+            shouldReduceMotion
+              ? { duration: 0 }
+              : { duration: 0.45, ease: defaultEase, delay: 0.05 }
+          }
+          className="fixed bottom-0 inset-x-0 z-40 bg-tertiary backdrop-blur border-t border-light py-4"
         >
           <div className="mx-auto max-w-[1200px] px-6">
             <VoiceInput
@@ -2073,7 +2083,7 @@ function StandardPlayPageContent({
               onSubmit={(value) => runAction(value)}
               disabled={isBusy}
               placeholder={scenarioId === "space-station" ? "Type your decision..." : "Type your action..."}
-              inputClassName="rounded-full bg-white border-[#D2D2D7] focus:border-[#0071E3]"
+              inputClassName="rounded-full bg-tertiary border-light focus:border-accent-primary"
             />
           </div>
         </motion.div>
@@ -2086,8 +2096,8 @@ export default function PlayPage() {
   return (
     <React.Suspense
       fallback={
-        <div className="min-h-screen bg-[#F5F5F7] grid place-items-center">
-          <div className="text-sm text-[#1D1D1F]">Loading…</div>
+        <div className="min-h-dvh bg-bg-secondary grid place-items-center">
+          <div className="text-sm text-text-primary">Loading…</div>
         </div>
       }
     >
