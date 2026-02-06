@@ -1474,7 +1474,7 @@ function StandardPlayPageContent({
           }
         }
 
-        if (shouldAbort()) return
+        if (!isMountedRef.current || isCanceled()) return
 
         setMessages((prev) => {
           const next = [...prev, { role: "assistant" as const, content: aiResponse }]
