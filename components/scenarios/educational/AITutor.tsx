@@ -31,7 +31,7 @@ function getTextFromTamboMessage(message: TamboThreadMessage) {
 
   const hasNonTextContent = message.content.some((part) => part.type !== "text")
   return hasNonTextContent
-    ? "[This message includes non-text content that can’t be displayed here.]"
+    ? "[This message includes interactive content shown below that can’t be displayed as plain text.]"
     : ""
 }
 

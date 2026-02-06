@@ -16,6 +16,10 @@ const tamboMissingApiKeyWindowFlag = "__tamboMissingApiKeyLogged" as const
 
 type TamboWindow = Window & Partial<Record<typeof tamboMissingApiKeyWindowFlag, boolean>>
 
+function isPlayRoute(pathname: string) {
+  return pathname === "/play" || pathname.startsWith("/play/")
+}
+
 function ScenarioKeySync({
   pathname,
   setScenarioId,
@@ -27,8 +31,7 @@ function ScenarioKeySync({
   const scenarioParam = searchParams.get("scenario") ?? ""
 
   React.useEffect(() => {
-    const isPlayRoute = pathname === "/play" || pathname.startsWith("/play/")
-    if (!isPlayRoute) {
+    if (!isPlayRoute(pathname)) {
       setScenarioId(null)
       return
     }
@@ -46,11 +49,14 @@ function ScenarioThreadReset({ scenarioId }: { scenarioId: string | null }) {
   const lastScenarioIdRef = React.useRef<string | null>(null)
 
   React.useEffect(() => {
-    if (!scenarioId) return
-    if (lastScenarioIdRef.current === scenarioId) return
+    const lastScenarioId = lastScenarioIdRef.current
+    if (scenarioId === lastScenarioId) return
+
+    if (scenarioId) {
+      startNewThread()
+    }
 
     lastScenarioIdRef.current = scenarioId
-    startNewThread()
   }, [scenarioId, startNewThread])
 
   return null
@@ -141,7 +147,6 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
 
     return (
       <>
-        {scenarioKeySync}
         <div
           role="alert"
           className={

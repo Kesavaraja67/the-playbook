@@ -704,9 +704,18 @@ function PlayPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const requestedScenarioId = searchParams.get("scenario")
-  const scenario =
-    (requestedScenarioId ? getScenarioById(requestedScenarioId) : undefined) ?? getDefaultScenario()
+  const requestedScenario = requestedScenarioId ? getScenarioById(requestedScenarioId) : undefined
+  const scenario = requestedScenario ?? getDefaultScenario()
   const scenarioId = scenario.id
+
+  React.useEffect(() => {
+    if (!requestedScenarioId) return
+    if (requestedScenario) return
+
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("scenario", scenarioId)
+    router.replace(`/play?${params.toString()}`)
+  }, [requestedScenario, requestedScenarioId, router, scenarioId, searchParams])
 
   if (scenario && scenario.layout === "tutorial") {
     return <PythonTutorialUI scenario={scenario} />
