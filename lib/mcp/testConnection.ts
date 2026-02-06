@@ -25,7 +25,11 @@ export async function testMCPConnection(
   { timeoutMs = 10_000 }: { timeoutMs?: number } = {}
 ): Promise<McpConnectionTestResult> {
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  let didTimeout = false
+  const timeoutId = setTimeout(() => {
+    didTimeout = true
+    controller.abort()
+  }, timeoutMs)
 
   try {
     const response = await fetch(url, {
@@ -62,8 +66,8 @@ export async function testMCPConnection(
     return {
       ok: false,
       url,
-      error: isAbortError ? `Timeout after ${timeoutMs}ms` : message,
-      kind: isAbortError ? "timeout" : "network",
+      error: isAbortError && didTimeout ? `Timeout after ${timeoutMs}ms` : message,
+      kind: isAbortError && didTimeout ? "timeout" : "network",
     }
   } finally {
     clearTimeout(timeoutId)
