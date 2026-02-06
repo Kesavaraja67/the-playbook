@@ -1040,8 +1040,7 @@ function StandardPlayPageContent({
         if (!isMountedRef.current) return
         if (resetVersionRef.current !== resetVersionAtCall) return
 
-        const shouldAbort = () =>
-          !isMountedRef.current || resetVersionRef.current !== resetVersionAtCall
+        const isCanceled = () => resetVersionRef.current !== resetVersionAtCall
 
         let aiResponse = generateMockResponse(userText, scenarioAtCall)
 
@@ -1148,7 +1147,7 @@ function StandardPlayPageContent({
                 yearsExperience: 6,
                 location: "remote",
               })
-              if (shouldAbort()) return
+              if (!isMountedRef.current || isCanceled()) return
               debugTool(researchMarketDataTool.name, { jobTitle: "senior developer" }, output)
 
               setNegotiationMarketRate(output.averageSalary)
@@ -1171,7 +1170,7 @@ function StandardPlayPageContent({
                 maxBudget,
                 priority,
               })
-              if (shouldAbort()) return
+              if (!isMountedRef.current || isCanceled()) return
               debugTool(proposeCompTradeoffsTool.name, { priority }, output)
 
               const suggestions = output.suggestions
@@ -1199,7 +1198,7 @@ function StandardPlayPageContent({
                 currentOffer: negotiationCurrentOffer,
                 maxBudget,
               })
-              if (shouldAbort()) return
+              if (!isMountedRef.current || isCanceled()) return
               debugTool(presentCounterOfferTool.name, { offeredSalary, justification, tone }, output)
 
               setNegotiationCurrentOffer(output.newOffer)
@@ -1215,7 +1214,7 @@ function StandardPlayPageContent({
               })
             }
 
-            if (shouldAbort()) return
+            if (!isMountedRef.current || isCanceled()) return
             setMessages((prev) => {
               const next = [...prev, { role: "assistant" as const, content: aiResponse }]
               return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
@@ -1225,7 +1224,6 @@ function StandardPlayPageContent({
           }
 
           if (scenarioAtCall === "space-station") {
-            if (shouldAbort()) return
             setDay((d) => clamp(1, d + 1, totalDaysAtCall))
 
             const powerAvailable = getResourceValue("Power", 0)
@@ -1235,7 +1233,7 @@ function StandardPlayPageContent({
             const runRepair = async (system: Parameters<typeof repairSystemTool.tool>[0]["system"], required: number) => {
               const powerAllocated = allocatePower(required)
               const output = await repairSystemTool.tool({ system, powerAllocated })
-              if (shouldAbort()) return null
+              if (!isMountedRef.current || isCanceled()) return null
               debugTool(repairSystemTool.name, { system, powerAllocated }, output)
               return output
             }
@@ -1291,7 +1289,7 @@ function StandardPlayPageContent({
                 powerToUse: 12,
                 communicationsStatus: spaceCommsStatus,
               })
-              if (shouldAbort()) return
+              if (!isMountedRef.current || isCanceled()) return
               debugTool(attemptEmergencyContactTool.name, { communicationsStatus: spaceCommsStatus }, output)
               updateResource("Power", -Math.round(output.powerUsed * 0.4))
               aiResponse = output.message
@@ -1312,7 +1310,7 @@ function StandardPlayPageContent({
                   : "light"
 
               const output = await rationResourcesTool.tool({ rationLevel: level })
-              if (shouldAbort()) return
+              if (!isMountedRef.current || isCanceled()) return
               debugTool(rationResourcesTool.name, { rationLevel: level }, output)
 
               updateResource("Morale", output.crewMoraleImpact)
@@ -1336,7 +1334,7 @@ function StandardPlayPageContent({
               }
             }
 
-            if (shouldAbort()) return
+            if (!isMountedRef.current || isCanceled()) return
             setMessages((prev) => {
               const next = [...prev, { role: "assistant" as const, content: aiResponse }]
               return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
@@ -1358,7 +1356,6 @@ function StandardPlayPageContent({
                     : "warehouse"
 
             if (normalized.includes("move")) {
-              if (shouldAbort()) return
               nudgePlayer(Math.random() > 0.5 ? 1 : -1, Math.random() > 0.5 ? 1 : -1)
               updateResource("Water", -1)
               setAlert({
@@ -1373,7 +1370,7 @@ function StandardPlayPageContent({
                 location,
                 searchThoroughness: thoroughness,
               })
-              if (shouldAbort()) return
+              if (!isMountedRef.current || isCanceled()) return
               debugTool(searchLocationTool.name, { location, searchThoroughness: thoroughness }, output)
 
               for (const item of output.items) {
@@ -1422,7 +1419,7 @@ function StandardPlayPageContent({
                 ammoToUse,
                 zombieCount: Math.max(1, zombieCount),
               })
-              if (shouldAbort()) return
+              if (!isMountedRef.current || isCanceled()) return
               debugTool(combatZombiesTool.name, { strategy, ammoToUse, zombieCount }, output)
 
               updateResource("Ammo", -output.ammoUsed)
@@ -1440,7 +1437,7 @@ function StandardPlayPageContent({
               const materialsToUse = clamp(1, Math.round(materials / 5), 20)
 
               const output = await fortifyLocationTool.tool({ materialsToUse })
-              if (shouldAbort()) return
+              if (!isMountedRef.current || isCanceled()) return
               debugTool(fortifyLocationTool.name, { materialsToUse }, output)
 
               updateResource("Materials", -output.materialsUsed * 5)
@@ -1453,7 +1450,6 @@ function StandardPlayPageContent({
                 message: `Expected zombie damage reduction: ${output.zombieAttackReduction}%.`,
               })
             } else if (normalized.includes("rest")) {
-              if (shouldAbort()) return
               updateResource("Health", +10)
               setDay((d) => clamp(1, d + 1, totalDaysAtCall))
               setAlert({
@@ -1464,7 +1460,7 @@ function StandardPlayPageContent({
               aiResponse = generateMockResponse(userText, scenarioAtCall)
             }
 
-            if (shouldAbort()) return
+            if (!isMountedRef.current || isCanceled()) return
             setMessages((prev) => {
               const next = [...prev, { role: "assistant" as const, content: aiResponse }]
               return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
