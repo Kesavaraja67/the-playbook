@@ -1,9 +1,10 @@
-"use client"
+"use client";
 
 import * as React from "react"
 import { TamboProvider } from "@tambo-ai/react"
-import { MCPTransport } from "@tambo-ai/react/mcp"
+import { MCPTransport, TamboMcpProvider } from "@tambo-ai/react/mcp"
 
+import { TamboCitationGuard } from "@/components/providers/TamboCitationGuard"
 import { components, tools } from "@/lib/tambo-client"
 import { DEFAULT_TAMBO_MCP_SERVER_URL } from "@/lib/mcp/constants"
 
@@ -15,6 +16,7 @@ type TamboWindow = Window & Partial<Record<typeof tamboMissingApiKeyWindowFlag, 
 const mcpServers = [
   {
     name: "tambo-docs",
+    serverKey: "tambo-docs",
     description: "Tambo documentation and support (remote MCP server)",
     transport: MCPTransport.HTTP,
     url: process.env.NEXT_PUBLIC_TAMBO_MCP_URL ?? DEFAULT_TAMBO_MCP_SERVER_URL,
@@ -56,7 +58,6 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
     }
 
     win[tamboMissingApiKeyWindowFlag] = true
-
     console.warn("NEXT_PUBLIC_TAMBO_API_KEY is not set; running without TamboProvider")
   }, [apiKey])
 
@@ -84,7 +85,10 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
 
   return (
     <TamboProvider apiKey={apiKey} components={components} tools={tools} mcpServers={mcpServers}>
-      {children}
+      <TamboMcpProvider>
+        <TamboCitationGuard />
+        {children}
+      </TamboMcpProvider>
     </TamboProvider>
   )
 }

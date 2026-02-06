@@ -4,7 +4,6 @@ import { DEFAULT_TAMBO_MCP_SERVER_URL } from "./constants"
 * @deprecated Import from "./constants" instead.
 */
 export { DEFAULT_TAMBO_MCP_SERVER_URL }
-
 export type McpConnectionTestResult =
   | {
       ok: true
