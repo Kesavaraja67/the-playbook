@@ -1,10 +1,16 @@
 "use client"
 
 import * as React from "react"
+import dynamic from "next/dynamic"
 
 import { componentCardClassName } from "@/components/play/ComponentCanvas"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+
+const VoiceInput = dynamic(
+  () => import("@/components/play/VoiceInput").then((mod) => mod.VoiceInput),
+  { ssr: false }
+)
 
 type TutorMessage = {
   role: "student" | "tutor"
@@ -113,32 +119,19 @@ export function AITutor({ stepIndex, stepTitle, stepHint }: AITutorProps) {
         ))}
       </div>
 
-      <div className="mt-4 flex items-center gap-2">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key !== "Enter") return
-            if (e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return
-            if ((e.nativeEvent as KeyboardEvent).isComposing) return
-            e.preventDefault()
-            send(input)
-          }}
-          placeholder="Ask a question…"
-          className={cn(
-            "h-11 flex-1 rounded-lg border-2 border-[#D2D2D7] bg-white px-3",
-            "text-sm text-[#1D1D1F] placeholder:text-[#6E6E73]",
-            "focus:outline-none focus:border-[#0071E3]"
-          )}
-        />
-        <Button
-          onClick={() => send(input)}
-          disabled={!input.trim()}
-          className="shrink-0"
-        >
-          Send
-        </Button>
-      </div>
+      <VoiceInput
+        className="mt-4"
+        value={input}
+        onChange={setInput}
+        onSubmit={(value) => send(value)}
+        placeholder="Ask a question…"
+        sendLabel="Send"
+        inputClassName={cn(
+          "h-11 rounded-lg border-[#D2D2D7] bg-white px-3",
+          "text-[#1D1D1F] placeholder:text-[#6E6E73]",
+          "focus:border-[#0071E3]"
+        )}
+      />
 
       <div className="mt-4">
         <div className="text-xs font-semibold text-[#6E6E73]">Quick Questions</div>
