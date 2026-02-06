@@ -23,13 +23,17 @@ function getTextFromTamboMessage(message: TamboThreadMessage) {
   return message.content
     .map((part) => (part.type === "text" ? (part.text ?? "") : ""))
     .filter(Boolean)
-    .join("")
+    .join("\n")
 }
 
 export type AITutorProps = {
   stepIndex: number
   stepTitle: string
   stepHint?: string
+  /**
+   * When provided, used as the Tambo `contextKey` so the tutor thread is scoped
+   * per-scenario. Ignored by the local (non-Tambo) tutor implementation.
+   */
   scenarioId?: string
 }
 
@@ -174,6 +178,7 @@ function TamboAITutor({ stepIndex, stepTitle, stepHint, scenarioId }: AITutorPro
   const listRef = React.useRef<HTMLDivElement | null>(null)
 
   React.useEffect(() => {
+    if (!scenarioId) return
     startNewThread()
   }, [scenarioId, startNewThread])
 

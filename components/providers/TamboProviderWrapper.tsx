@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { TamboProvider } from "@tambo-ai/react"
 import { MCPTransport } from "@tambo-ai/react/mcp"
 
@@ -15,6 +15,28 @@ const tamboMissingApiKeyWindowFlag = "__tamboMissingApiKeyLogged" as const
 
 type TamboWindow = Window & Partial<Record<typeof tamboMissingApiKeyWindowFlag, boolean>>
 
+function ScenarioKeySync({
+  pathname,
+  setScenarioId,
+}: {
+  pathname: string
+  setScenarioId: (scenarioId: string | null) => void
+}) {
+  const searchParams = useSearchParams()
+
+  React.useEffect(() => {
+    if (!pathname.startsWith("/play")) {
+      setScenarioId(null)
+      return
+    }
+
+    const rawScenarioId = (searchParams.get("scenario") ?? "").trim()
+    setScenarioId(rawScenarioId.length > 0 ? rawScenarioId : "zombie-survival")
+  }, [pathname, searchParams, setScenarioId])
+
+  return null
+}
+
 export function TamboProviderWrapper({ children }: { children: React.ReactNode }) {
   // `NEXT_PUBLIC_*` env vars are exposed to the browser. This API key is expected to
   // be scoped as a public/client token (not a secret with elevated privileges).
@@ -24,19 +46,6 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
   const pathname = usePathname()
 
   const [scenarioId, setScenarioId] = React.useState<string | null>(null)
-
-  React.useEffect(() => {
-    if (!pathname.startsWith("/play")) {
-      setScenarioId(null)
-      return
-    }
-
-    const rawScenarioId = new URLSearchParams(window.location.search)
-      .get("scenario")
-      ?.trim()
-
-    setScenarioId(rawScenarioId && rawScenarioId.length > 0 ? rawScenarioId : "zombie-survival")
-  }, [pathname])
 
   const scenarioSystemPrompt = React.useMemo(() => {
     if (!scenarioId) return null
@@ -107,6 +116,9 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
 
     return (
       <>
+        <React.Suspense fallback={null}>
+          <ScenarioKeySync pathname={pathname} setScenarioId={setScenarioId} />
+        </React.Suspense>
         <div
           role="alert"
           className={
@@ -125,16 +137,21 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
   }
 
   return (
-    <TamboProvider
-      apiKey={apiKey}
-      components={components}
-      tools={tools}
-      mcpServers={mcpServers}
-      initialMessages={initialMessages}
-      contextKey={scenarioId ?? undefined}
-    >
-      <TamboCitationGuard />
-      {children}
-    </TamboProvider>
+    <>
+      <React.Suspense fallback={null}>
+        <ScenarioKeySync pathname={pathname} setScenarioId={setScenarioId} />
+      </React.Suspense>
+      <TamboProvider
+        apiKey={apiKey}
+        components={components}
+        tools={tools}
+        mcpServers={mcpServers}
+        initialMessages={initialMessages}
+        contextKey={scenarioId ?? undefined}
+      >
+        <TamboCitationGuard />
+        {children}
+      </TamboProvider>
+    </>
   )
 }
