@@ -47,39 +47,45 @@ function ScenarioThreadReset({ scenarioId }: { scenarioId: string | null }) {
 
   // Resets the active Tambo thread when switching between `/play` scenarios.
   // If a generation/tool run is in progress, defer the reset until the thread is idle.
-  const stateRef = React.useRef({ lastScenarioId: null as string | null, pendingReset: false })
+  const stateRef = React.useRef({
+    lastScenarioId: null as string | null,
+    pendingResetScenarioId: null as string | null,
+  })
 
   React.useEffect(() => {
     const state = stateRef.current
 
     if (!scenarioId) {
       state.lastScenarioId = null
-      state.pendingReset = false
+      state.pendingResetScenarioId = null
       return
     }
 
-    if (scenarioId === state.lastScenarioId) {
-      if (state.pendingReset && isIdle) {
-        state.pendingReset = false
-        startNewThread()
-      }
-      return
-    }
-
-    if (!state.lastScenarioId) {
+    if (state.pendingResetScenarioId === scenarioId && isIdle) {
+      state.pendingResetScenarioId = null
       state.lastScenarioId = scenarioId
-      state.pendingReset = false
+      startNewThread()
       return
     }
+
+    const lastScenarioId = state.lastScenarioId
+    if (!lastScenarioId) {
+      state.lastScenarioId = scenarioId
+      state.pendingResetScenarioId = null
+      return
+    }
+
+    if (scenarioId === lastScenarioId) return
 
     state.lastScenarioId = scenarioId
 
     if (isIdle) {
-      state.pendingReset = false
+      state.pendingResetScenarioId = null
       startNewThread()
-    } else {
-      state.pendingReset = true
+      return
     }
+
+    state.pendingResetScenarioId = scenarioId
   }, [isIdle, scenarioId, startNewThread])
 
   return null
