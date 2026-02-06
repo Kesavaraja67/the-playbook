@@ -42,50 +42,63 @@ function ScenarioKeySync({
   return null
 }
 
+type ScenarioThreadResetState = {
+  lastScenarioId: string | null
+  pendingResetScenarioId: string | null
+}
+
+function computeScenarioThreadReset(
+  prev: ScenarioThreadResetState,
+  scenarioId: string | null,
+  isIdle: boolean
+): { next: ScenarioThreadResetState; shouldReset: boolean } {
+  if (!scenarioId) {
+    return { next: { lastScenarioId: null, pendingResetScenarioId: null }, shouldReset: false }
+  }
+
+  if (prev.pendingResetScenarioId === scenarioId && isIdle) {
+    return {
+      next: { lastScenarioId: scenarioId, pendingResetScenarioId: null },
+      shouldReset: true,
+    }
+  }
+
+  const lastScenarioId = prev.lastScenarioId
+  if (!lastScenarioId) {
+    return { next: { lastScenarioId: scenarioId, pendingResetScenarioId: null }, shouldReset: false }
+  }
+
+  if (scenarioId === lastScenarioId) {
+    return { next: prev, shouldReset: false }
+  }
+
+  if (isIdle) {
+    return {
+      next: { lastScenarioId: scenarioId, pendingResetScenarioId: null },
+      shouldReset: true,
+    }
+  }
+
+  return {
+    next: { lastScenarioId: scenarioId, pendingResetScenarioId: scenarioId },
+    shouldReset: false,
+  }
+}
+
 function ScenarioThreadReset({ scenarioId }: { scenarioId: string | null }) {
   const { startNewThread, isIdle } = useTamboThread()
 
   // Resets the active Tambo thread when switching between `/play` scenarios.
   // If a generation/tool run is in progress, defer the reset until the thread is idle.
-  const stateRef = React.useRef({
-    lastScenarioId: null as string | null,
-    pendingResetScenarioId: null as string | null,
+  const stateRef = React.useRef<ScenarioThreadResetState>({
+    lastScenarioId: null,
+    pendingResetScenarioId: null,
   })
 
   React.useEffect(() => {
-    const state = stateRef.current
-
-    if (!scenarioId) {
-      state.lastScenarioId = null
-      state.pendingResetScenarioId = null
-      return
-    }
-
-    if (state.pendingResetScenarioId === scenarioId && isIdle) {
-      state.pendingResetScenarioId = null
-      state.lastScenarioId = scenarioId
-      startNewThread()
-      return
-    }
-
-    const lastScenarioId = state.lastScenarioId
-    if (!lastScenarioId) {
-      state.lastScenarioId = scenarioId
-      state.pendingResetScenarioId = null
-      return
-    }
-
-    if (scenarioId === lastScenarioId) return
-
-    state.lastScenarioId = scenarioId
-
-    if (isIdle) {
-      state.pendingResetScenarioId = null
-      startNewThread()
-      return
-    }
-
-    state.pendingResetScenarioId = scenarioId
+    const { next, shouldReset } = computeScenarioThreadReset(stateRef.current, scenarioId, isIdle)
+    stateRef.current = next
+    if (shouldReset) startNewThread()
   }, [isIdle, scenarioId, startNewThread])
 
   return null

@@ -13,6 +13,7 @@ import { SourceCitation } from "@/components/scenarios/educational/SourceCitatio
 const MCP_TOOL_NAME_SEPARATOR = "__"
 const CITATION_GUARD_ID_PREFIX = "tambo-citation-guard:"
 
+// Citation IDs are deterministic per assistant/tool pair so the guard remains idempotent.
 function createCitationGuardMessageId({
   assistantMessageId,
   toolMessageId,
