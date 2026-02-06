@@ -173,7 +173,7 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
         initialMessages={initialMessages}
         contextKey={scenarioId ?? undefined}
       >
-        <TamboMcpProvider contextKey={scenarioId ?? undefined}>
+        <TamboMcpProvider key={scenarioId ?? "default"} contextKey={scenarioId ?? undefined}>
           <ScenarioThreadReset scenarioId={scenarioId} />
           <TamboCitationGuard />
           {children}

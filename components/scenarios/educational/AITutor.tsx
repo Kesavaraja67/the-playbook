@@ -33,14 +33,35 @@ function getTextFromTamboMessage(message: TamboThreadMessage) {
     : ""
 }
 
+const IS_DEVELOPMENT = process.env.NODE_ENV === "development"
+
 function formatTamboSendError(error: unknown) {
   if (error instanceof Error) {
     const asAny = error as unknown as { status?: unknown }
     const status = typeof asAny.status === "number" ? asAny.status : null
-    return status ? `${error.message} (HTTP ${status})` : error.message
+
+    if (status === 401 || status === 403) {
+      return "The tutor request was not authorized. Check your Tambo API key and permissions."
+    }
+
+    if (status === 429) {
+      return "The tutor is receiving too many requests. Please wait a moment and try again."
+    }
+
+    if (status && status >= 500) {
+      return "The tutor service is having trouble right now. Please try again in a bit."
+    }
+
+    if (IS_DEVELOPMENT) {
+      return status ? `${error.message} (HTTP ${status})` : error.message
+    }
+
+    return "Something went wrong while contacting the tutor. Please try again."
   }
 
-  return String(error)
+  return IS_DEVELOPMENT
+    ? String(error)
+    : "Something went wrong while contacting the tutor. Please try again."
 }
 
 export type AITutorProps = {
@@ -228,7 +249,9 @@ function TamboAITutor({ stepIndex, stepTitle, stepHint, scenarioId }: AITutorPro
           },
         })
       } catch (err) {
-        console.error("Tambo tutor send failed", err)
+        if (IS_DEVELOPMENT) {
+          console.error("Tambo tutor send failed", err)
+        }
         setError(formatTamboSendError(err))
       }
     },
