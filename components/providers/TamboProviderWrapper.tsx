@@ -27,7 +27,7 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
 
   React.useEffect(() => {
     if (apiKey) {
-      const win = window as Window & Record<string, unknown>
+      const win = window as unknown as Record<string, unknown>
 
       try {
         window.sessionStorage.removeItem(tamboMissingApiKeyLogKey)
@@ -40,7 +40,7 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
       return
     }
 
-    const win = window as Window & Record<string, unknown>
+    const win = window as unknown as Record<string, unknown>
     if (win[tamboMissingApiKeyWindowFlag] === true) return
 
     try {
