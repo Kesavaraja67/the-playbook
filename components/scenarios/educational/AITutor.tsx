@@ -177,19 +177,11 @@ function LocalAITutor({ stepIndex, stepTitle, stepHint }: AITutorProps) {
 }
 
 function TamboAITutor({ stepIndex, stepTitle, stepHint, scenarioId }: AITutorProps) {
-  const { thread, sendThreadMessage, generationStage, generationStatusMessage, isIdle, startNewThread } =
-    useTamboThread()
+  const { thread, sendThreadMessage, generationStage, generationStatusMessage, isIdle } = useTamboThread()
 
   const [input, setInput] = React.useState("")
   const [error, setError] = React.useState<string | null>(null)
   const listRef = React.useRef<HTMLDivElement | null>(null)
-
-  React.useEffect(() => {
-    if (!scenarioId) return
-    // Intentionally starting a fresh thread when switching scenarios.
-    // `contextKey` is supplied on send so tool/citation state stays scoped.
-    startNewThread()
-  }, [scenarioId, startNewThread])
 
   const visibleMessages = React.useMemo(() => {
     return thread.messages.filter((message) => message.role === "user" || message.role === "assistant")

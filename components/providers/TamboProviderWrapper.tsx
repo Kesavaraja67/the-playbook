@@ -2,10 +2,11 @@
 
 import * as React from "react"
 import { usePathname, useSearchParams } from "next/navigation"
-import { TamboProvider } from "@tambo-ai/react"
+import { TamboProvider, useTamboThread } from "@tambo-ai/react"
 import { MCPTransport } from "@tambo-ai/react/mcp"
 
 import { TamboCitationGuard } from "@/components/providers/TamboCitationGuard"
+import { HAS_TAMBO_API_KEY, TAMBO_API_KEY } from "@/lib/config"
 import { components, tools } from "@/lib/tambo-client"
 import { DEFAULT_TAMBO_MCP_SERVER_URL } from "@/lib/mcp/constants"
 import { DEFAULT_SCENARIO_ID, getScenarioById } from "@/lib/scenarios"
@@ -38,10 +39,25 @@ function ScenarioKeySync({
   return null
 }
 
+function ScenarioThreadReset({ scenarioId }: { scenarioId: string | null }) {
+  const { startNewThread } = useTamboThread()
+  const lastScenarioIdRef = React.useRef<string | null>(null)
+
+  React.useEffect(() => {
+    if (!scenarioId) return
+    if (lastScenarioIdRef.current === scenarioId) return
+
+    lastScenarioIdRef.current = scenarioId
+    startNewThread()
+  }, [scenarioId, startNewThread])
+
+  return null
+}
+
 export function TamboProviderWrapper({ children }: { children: React.ReactNode }) {
   // `NEXT_PUBLIC_*` env vars are exposed to the browser. This API key is expected to
   // be scoped as a public/client token (not a secret with elevated privileges).
-  const apiKey = process.env.NEXT_PUBLIC_TAMBO_API_KEY
+  const apiKey = TAMBO_API_KEY
   const isDevelopment = process.env.NODE_ENV === "development"
 
   const pathname = usePathname()
@@ -118,7 +134,7 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
     console.warn("NEXT_PUBLIC_TAMBO_API_KEY is not set; running without TamboProvider")
   }, [apiKey])
 
-  if (!apiKey) {
+  if (!HAS_TAMBO_API_KEY) {
     if (!isDevelopment) return <>{children}</>
 
     return (
@@ -152,6 +168,7 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
         initialMessages={initialMessages}
         contextKey={scenarioId ?? undefined}
       >
+        <ScenarioThreadReset scenarioId={scenarioId} />
         <TamboCitationGuard />
         {children}
       </TamboProvider>
