@@ -27,6 +27,22 @@ import { ResourceMeter } from "@/components/tambo/ResourceMeter"
 import { TacticalAlert } from "@/components/tambo/TacticalAlert"
 import { Button } from "@/components/ui/button"
 import { getScenarioById, type Scenario } from "@/lib/scenarios"
+import {
+  presentCounterOfferTool,
+  proposeCompTradeoffsTool,
+  researchMarketDataTool,
+} from "@/lib/tools/negotiation"
+import {
+  attemptEmergencyContactTool,
+  rationResourcesTool,
+  repairSystemTool,
+} from "@/lib/tools/space"
+import {
+  combatZombiesTool,
+  fortifyLocationTool,
+  searchLocationTool,
+} from "@/lib/tools/zombie"
+import { randomInRange } from "@/lib/tools/utils"
 import { cn } from "@/lib/utils"
 
 const VoiceInput = dynamic(
@@ -425,6 +441,14 @@ function getZombieInitialState(): InitialState {
       description: "Search nearby for supplies",
     },
     {
+      id: "combat",
+      label: "Fight",
+      icon: "F",
+      costs: [{ resource: "Ammo", amount: 4 }],
+      successRate: 65,
+      description: "Engage nearby hostiles",
+    },
+    {
       id: "fortify",
       label: "Fortify",
       icon: "🛡️",
@@ -584,6 +608,14 @@ function getInitialState(scenarioId: string): InitialState {
           ],
         },
         {
+          id: "ration",
+          label: "Ration Supplies",
+          icon: "R",
+          costs: [
+            { resource: "Time", amount: 1 },
+          ],
+        },
+        {
           id: "call_for_help",
           label: "Call for Help",
           icon: "📡",
@@ -740,6 +772,16 @@ function StandardPlayPageContent({
   const [isLoadingActions, setIsLoadingActions] = React.useState(true)
   const [conversationStartMs, setConversationStartMs] = React.useState(() => Date.now())
 
+  const [negotiationCurrentOffer, setNegotiationCurrentOffer] = React.useState(120_000)
+  const [negotiationTargetSalary, setNegotiationTargetSalary] = React.useState(150_000)
+  const [negotiationMarketRate, setNegotiationMarketRate] = React.useState(135_000)
+  const [negotiationRelationshipScore, setNegotiationRelationshipScore] = React.useState(75)
+
+  const [spaceCommsStatus, setSpaceCommsStatus] = React.useState<
+    "online" | "degraded" | "offline"
+  >("degraded")
+  const [spaceRationing, setSpaceRationing] = React.useState({ oxygen: 0, power: 0, food: 0 })
+
   const [detectiveEvidence, setDetectiveEvidence] = React.useState<EvidenceItem[]>(() =>
     getDetectiveInitialEvidence()
   )
@@ -753,7 +795,11 @@ function StandardPlayPageContent({
 
   const initTimeoutsRef = React.useRef<Array<ReturnType<typeof setTimeout>>>([])
   const actionTimeoutsRef = React.useRef<Array<ReturnType<typeof setTimeout>>>([])
+  const isMountedRef = React.useRef(false)
   const resetVersionRef = React.useRef(0)
+  const resourcesRef = React.useRef<Resource[]>(resources)
+  const boardRef = React.useRef<BoardState | null>(board)
+  const spaceRationingRef = React.useRef(spaceRationing)
   const detectiveEvidenceRef = React.useRef<EvidenceItem[]>(detectiveEvidence)
   const detectiveSuspectsRef = React.useRef<Suspect[]>(detectiveSuspects)
   const detectiveOutOfTimeAlertShownRef = React.useRef(false)
@@ -770,7 +816,9 @@ function StandardPlayPageContent({
   }, [setAlert])
 
   React.useEffect(() => {
+    isMountedRef.current = true
     return () => {
+      isMountedRef.current = false
       for (const id of initTimeoutsRef.current) clearTimeout(id)
       initTimeoutsRef.current = []
 
@@ -786,6 +834,18 @@ function StandardPlayPageContent({
   React.useEffect(() => {
     detectiveSuspectsRef.current = detectiveSuspects
   }, [detectiveSuspects])
+
+  React.useEffect(() => {
+    resourcesRef.current = resources
+  }, [resources])
+
+  React.useEffect(() => {
+    boardRef.current = board
+  }, [board])
+
+  React.useEffect(() => {
+    spaceRationingRef.current = spaceRationing
+  }, [spaceRationing])
 
   const shouldRunDetectiveTimer =
     scenarioId === "detective-mystery" && detectiveTimeRemainingSeconds > 0
@@ -842,6 +902,22 @@ function StandardPlayPageContent({
     setAlert(init.alert)
     setInput("")
     setIsProcessing(false)
+
+    if (nextScenarioId === "salary-negotiation") {
+      const cfg = getSalaryNegotiationConfig(getScenarioById(nextScenarioId)?.initialState ?? {})
+      setNegotiationCurrentOffer(cfg.currentOffer)
+      setNegotiationTargetSalary(cfg.targetSalary)
+      setNegotiationMarketRate(cfg.marketRate)
+      setNegotiationRelationshipScore(cfg.relationshipScore)
+    } else {
+      setNegotiationCurrentOffer(120_000)
+      setNegotiationTargetSalary(150_000)
+      setNegotiationMarketRate(135_000)
+      setNegotiationRelationshipScore(75)
+    }
+
+    setSpaceCommsStatus("degraded")
+    setSpaceRationing({ oxygen: 0, power: 0, food: 0 })
 
     if (nextScenarioId === "detective-mystery") {
       setDetectiveEvidence(getDetectiveInitialEvidence())
@@ -959,11 +1035,10 @@ function StandardPlayPageContent({
     const actionIdAtCall = interviewSuspectIdAtCall ? "interview" : trimmed
 
     const scenarioAtCall = scenarioId
-      const totalDaysAtCall = totalDays
-      const resetVersionAtCall = resetVersionRef.current
-      const normalized = actionIdAtCall.toLowerCase()
-      const userText =
-        actions.find((a) => a.id === actionIdAtCall)?.label ?? trimmed
+    const totalDaysAtCall = totalDays
+    const resetVersionAtCall = resetVersionRef.current
+    const normalized = actionIdAtCall.toLowerCase()
+    const userText = actions.find((a) => a.id === actionIdAtCall)?.label ?? trimmed
 
       setMessages((prev) => {
         const next = [...prev, { role: "user" as const, content: userText }]
@@ -972,11 +1047,454 @@ function StandardPlayPageContent({
       if (options?.clearInput !== false) setInput("")
       setIsProcessing(true)
 
-      const timeoutId = setTimeout(() => {
+      const timeoutId = setTimeout(async () => {
         actionTimeoutsRef.current = actionTimeoutsRef.current.filter((id) => id !== timeoutId)
+        if (!isMountedRef.current) return
         if (resetVersionRef.current !== resetVersionAtCall) return
 
-        const aiResponse = generateMockResponse(userText, scenarioAtCall)
+        const isCanceled = () => resetVersionRef.current !== resetVersionAtCall
+
+        let aiResponse = generateMockResponse(userText, scenarioAtCall)
+
+        const debugTool = (name: string, input: unknown, output: unknown) => {
+          if (process.env.NODE_ENV === "production") return
+          console.info(`[tool] ${name}`, { input, output })
+        }
+
+        const getResourceValue = (name: string, fallback = 0) => {
+          const value = resourcesRef.current.find((r) => r.name === name)?.value
+          return typeof value === "number" && Number.isFinite(value) ? value : fallback
+        }
+
+        const pushZombies = (count: number) => {
+          if (count <= 0) return
+
+          setBoard((prev) => {
+            if (!prev) return prev
+            const gridSize = prev.gridSize ?? 10
+
+            const occupied = new Set<string>()
+            for (const enemy of prev.enemies ?? []) occupied.add(`${enemy.x},${enemy.y}`)
+            occupied.add(`${prev.playerPosition.x},${prev.playerPosition.y}`)
+
+            const availableCells: Array<{ x: number; y: number }> = []
+            for (let x = 0; x < gridSize; x += 1) {
+              for (let y = 0; y < gridSize; y += 1) {
+                const key = `${x},${y}`
+                if (!occupied.has(key)) availableCells.push({ x, y })
+              }
+            }
+
+            if (availableCells.length === 0) return prev
+
+            const nextEnemies = [...(prev.enemies ?? [])]
+            const spawnCount = Math.min(count, availableCells.length)
+            for (let i = 0; i < spawnCount; i += 1) {
+              const idx = randomInRange(0, availableCells.length - 1)
+              const cell = availableCells.splice(idx, 1)[0]
+              nextEnemies.push({ x: cell.x, y: cell.y, type: "Zombie" })
+            }
+
+            return {
+              ...prev,
+              enemies: nextEnemies,
+            }
+          })
+        }
+
+        const removeZombies = (count: number) => {
+          if (count <= 0) return
+          setBoard((prev) => {
+            if (!prev?.enemies?.length) return prev
+
+            const enemies = [...prev.enemies]
+            const toRemove = Math.min(count, enemies.length)
+            for (let i = 0; i < toRemove && enemies.length > 0; i += 1) {
+              enemies.splice(randomInRange(0, enemies.length - 1), 1)
+            }
+
+            return {
+              ...prev,
+              enemies,
+            }
+          })
+        }
+
+        try {
+          if (scenarioAtCall === "salary-negotiation") {
+            const askMatch = userText.match(
+              /\$?\s*([0-9]{2,3}(?:,[0-9]{3})+|[0-9]{5,6}|[0-9]{2,3})\s*([kK])?/
+            )
+            const rawAsk = askMatch?.[1]?.replace(/,/g, "")
+
+            let parsedAsk = rawAsk ? Number(rawAsk) : null
+            parsedAsk = typeof parsedAsk === "number" && Number.isFinite(parsedAsk) ? parsedAsk : null
+
+            if (parsedAsk !== null && askMatch?.[2]) parsedAsk *= 1000
+            if (parsedAsk !== null && !askMatch?.[2] && parsedAsk < 50_000) parsedAsk = null
+            const offeredSalary = parsedAsk ?? negotiationTargetSalary
+
+            const normalizedText = userText.toLowerCase()
+            const maxBudget = negotiationCurrentOffer + 35_000
+
+            const justification = normalizedText.includes("competing")
+              ? "competing_offer"
+              : normalizedText.includes("experience")
+                ? "experience"
+                : normalizedText.includes("skill")
+                  ? "skills"
+                  : normalizedText.includes("cost") || normalizedText.includes("col")
+                    ? "cost_of_living"
+                    : "market_data"
+
+            const tone = normalizedText.includes("collabor")
+              ? "collaborative"
+              : normalizedText.includes("must") || normalizedText.includes("non-negotiable")
+                ? "assertive"
+                : "professional"
+
+            if (actionIdAtCall === "market-data" || normalized.includes("market") || normalized.includes("data")) {
+              const output = await researchMarketDataTool.tool({
+                jobTitle: "senior developer",
+                yearsExperience: 6,
+                location: "remote",
+              })
+              if (!isMountedRef.current || isCanceled()) return
+              debugTool(researchMarketDataTool.name, { jobTitle: "senior developer" }, output)
+
+              setNegotiationMarketRate(output.averageSalary)
+              aiResponse = `Thanks for sharing. Market data suggests an average of $${output.averageSalary.toLocaleString()} (25th: $${output.percentile25.toLocaleString()}, 75th: $${output.percentile75.toLocaleString()}; confidence: ${output.confidenceLevel}).`
+              setAlert({
+                type: "info",
+                title: "Market check",
+                message: `Updated market snapshot based on ${output.dataPoints} data points.`,
+              })
+            } else if (actionIdAtCall === "benefits" || normalized.includes("benefit")) {
+              const priority = normalizedText.includes("equity")
+                ? "equity"
+                : normalizedText.includes("remote") || normalizedText.includes("flex")
+                  ? "flexibility"
+                  : "base"
+
+              const output = await proposeCompTradeoffsTool.tool({
+                currentOffer: negotiationCurrentOffer,
+                targetSalary: negotiationTargetSalary,
+                maxBudget,
+                priority,
+              })
+              if (!isMountedRef.current || isCanceled()) return
+              debugTool(proposeCompTradeoffsTool.name, { priority }, output)
+
+              const suggestions = output.suggestions
+                .map((s) => `${s.type.replace(/_/g, " ")}: ~$${s.estimatedValue.toLocaleString()}`)
+                .join(", ")
+              aiResponse = `${output.message} Options: ${suggestions}.`
+              setAlert({
+                type: "hint",
+                title: "Tradeoffs",
+                message: "Generated a non-base package suggestion to keep the discussion moving.",
+              })
+            } else if (actionIdAtCall === "accept" || normalized.includes("accept")) {
+              aiResponse =
+                "Great — I'll send the written offer and next steps shortly. Let me know if you want to review start dates or benefits details."
+              setAlert({
+                type: "success",
+                title: "Offer accepted",
+                message: "Proceeding to written offer.",
+              })
+            } else {
+              const output = await presentCounterOfferTool.tool({
+                offeredSalary,
+                justification,
+                tone,
+                currentOffer: negotiationCurrentOffer,
+                maxBudget,
+              })
+              if (!isMountedRef.current || isCanceled()) return
+              debugTool(presentCounterOfferTool.name, { offeredSalary, justification, tone }, output)
+
+              setNegotiationCurrentOffer(output.newOffer)
+              setNegotiationRelationshipScore((prev) => clamp(0, prev + output.relationshipChange, 100))
+
+              aiResponse = `${output.recruiterResponse} Updated base offer: $${output.newOffer.toLocaleString()}.`
+              setAlert({
+                type: output.offerAccepted ? "success" : "info",
+                title: "Counter-offer response",
+                message: output.offerAccepted
+                  ? "Offer is within range of the ask."
+                  : "Offer moved, but not all the way to target.",
+              })
+            }
+
+            if (!isMountedRef.current || isCanceled()) return
+            setMessages((prev) => {
+              const next = [...prev, { role: "assistant" as const, content: aiResponse }]
+              return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
+            })
+            setIsProcessing(false)
+            return
+          }
+
+          if (scenarioAtCall === "space-station") {
+            let dayClampMax = totalDaysAtCall
+
+            if (!isMountedRef.current || isCanceled()) return
+
+            const powerAvailable = getResourceValue("Power", 0)
+            const allocatePower = (required: number) =>
+              clamp(0, Math.min(required, Math.round(powerAvailable / 2)), 50)
+
+            const runRepair = async (system: Parameters<typeof repairSystemTool.tool>[0]["system"], required: number) => {
+              const powerAllocated = allocatePower(required)
+              const output = await repairSystemTool.tool({ system, powerAllocated })
+              if (!isMountedRef.current || isCanceled()) return null
+              debugTool(repairSystemTool.name, { system, powerAllocated }, output)
+              return output
+            }
+
+            if (normalized.includes("repair_o2") || normalized.includes("oxygen") || normalized.includes("o2")) {
+              const output = await runRepair("oxygen_generator", 20)
+              if (!output) return
+              updateResource("Power", -Math.round(output.powerConsumed * 0.4))
+              updateResource(
+                "Oxygen",
+                output.systemStatus === "online" ? +12 : output.systemStatus === "degraded" ? +6 : -4
+              )
+              updateResource("Morale", output.crewMoraleImpact)
+              aiResponse = output.description
+              setAlert({
+                type: output.systemStatus === "online" ? "success" : output.systemStatus === "degraded" ? "info" : "warning",
+                title: "Oxygen generator",
+                message: output.description,
+              })
+            } else if (normalized.includes("inspect_water") || normalized.includes("water")) {
+              const output = await runRepair("water_recycler", 15)
+              if (!output) return
+              updateResource("Power", -Math.round(output.powerConsumed * 0.4))
+              updateResource(
+                "Water",
+                output.systemStatus === "online" ? +10 : output.systemStatus === "degraded" ? +4 : -4
+              )
+              updateResource("Morale", output.crewMoraleImpact)
+              aiResponse = output.description
+              setAlert({
+                type: output.systemStatus === "online" ? "success" : output.systemStatus === "degraded" ? "info" : "warning",
+                title: "Water recycler",
+                message: output.description,
+              })
+            } else if (normalized.includes("realign_solar") || normalized.includes("solar")) {
+              const output = await runRepair("solar_panels", 25)
+              if (!output) return
+              updateResource("Power", -Math.round(output.powerConsumed * 0.4))
+              updateResource(
+                "Solar Output",
+                output.systemStatus === "online" ? +12 : output.systemStatus === "degraded" ? +6 : -6
+              )
+              updateResource("Power", output.systemStatus === "online" ? +8 : output.systemStatus === "degraded" ? +3 : 0)
+              updateResource("Morale", output.crewMoraleImpact)
+              aiResponse = output.description
+              setAlert({
+                type: output.systemStatus === "online" ? "success" : output.systemStatus === "degraded" ? "info" : "warning",
+                title: "Solar array",
+                message: output.description,
+              })
+            } else if (normalized.includes("call_for_help") || normalized.includes("help")) {
+              const output = await attemptEmergencyContactTool.tool({
+                powerToUse: 12,
+                communicationsStatus: spaceCommsStatus,
+              })
+              if (!isMountedRef.current || isCanceled()) return
+              debugTool(attemptEmergencyContactTool.name, { communicationsStatus: spaceCommsStatus }, output)
+              updateResource("Power", -Math.round(output.powerUsed * 0.4))
+              aiResponse = output.message
+              setAlert({
+                type: output.responseReceived ? "success" : output.contactEstablished ? "info" : "warning",
+                title: "Emergency contact",
+                message: output.message,
+              })
+
+              if (output.contactEstablished && spaceCommsStatus === "offline") {
+                setSpaceCommsStatus("degraded")
+              }
+            } else if (normalized.includes("ration")) {
+              const level = normalized.includes("severe")
+                ? "severe"
+                : normalized.includes("moderate")
+                  ? "moderate"
+                  : "light"
+
+              const output = await rationResourcesTool.tool({ rationLevel: level })
+              if (!isMountedRef.current || isCanceled()) return
+              debugTool(rationResourcesTool.name, { rationLevel: level }, output)
+
+              updateResource("Morale", output.crewMoraleImpact)
+              setSpaceRationing(output.dailyConsumptionReduction)
+              setTotalDays((prev) => prev + output.daysExtended)
+              dayClampMax = totalDaysAtCall + output.daysExtended
+
+              aiResponse = output.crewResponse
+              setAlert({
+                type: "info",
+                title: "Ration plan",
+                message: `Supplies extended by ${output.daysExtended} days.`,
+              })
+            } else {
+              const outcome = applySpaceStationDecision(normalized)
+              if (outcome) {
+                for (const delta of outcome.deltas) updateResource(delta.name, delta.delta)
+                setAlert(outcome.alert)
+                aiResponse = generateMockResponse(userText, scenarioAtCall)
+              }
+            }
+
+            const rationing = spaceRationingRef.current
+            if (rationing.oxygen) updateResource("Oxygen", rationing.oxygen)
+            if (rationing.power) updateResource("Power", rationing.power)
+            if (rationing.food) updateResource("Food", rationing.food)
+
+            if (!isMountedRef.current || isCanceled()) return
+            setDay((d) => clamp(1, d + 1, dayClampMax))
+            setMessages((prev) => {
+              const next = [...prev, { role: "assistant" as const, content: aiResponse }]
+              return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
+            })
+            setIsProcessing(false)
+            return
+          }
+
+          if (scenarioAtCall === "zombie-survival") {
+            const normalizedText = userText.toLowerCase()
+            const location = normalizedText.includes("pharmacy")
+              ? "pharmacy"
+              : normalizedText.includes("gas")
+                ? "gas_station"
+                : normalizedText.includes("apartment")
+                  ? "apartment"
+                  : normalizedText.includes("store")
+                    ? "store"
+                    : "warehouse"
+
+            if (normalized.includes("move")) {
+              nudgePlayer(Math.random() > 0.5 ? 1 : -1, Math.random() > 0.5 ? 1 : -1)
+              updateResource("Water", -1)
+              setAlert({
+                type: "info",
+                title: "Relocated",
+                message: "You changed position. Stay quiet and keep moving.",
+              })
+              aiResponse = generateMockResponse(userText, scenarioAtCall)
+            } else if (normalized.includes("scavenge") || normalized.includes("search")) {
+              const thoroughness = normalizedText.includes("thorough") ? "thorough" : "quick"
+              const output = await searchLocationTool.tool({
+                location,
+                searchThoroughness: thoroughness,
+              })
+              if (!isMountedRef.current || isCanceled()) return
+              debugTool(searchLocationTool.name, { location, searchThoroughness: thoroughness }, output)
+
+              for (const item of output.items) {
+                if (item.type === "food") updateResource("Food", item.quantity)
+                if (item.type === "water") updateResource("Water", item.quantity)
+                if (item.type === "ammo") updateResource("Ammo", item.quantity)
+                if (item.type === "materials") updateResource("Materials", item.quantity)
+                if (item.type === "medical") updateResource("Health", item.quantity * 2)
+              }
+
+              updateResource("Health", -output.healthCost)
+              updateResource("Energy", -(output.timeSpent * 5))
+
+              if (output.zombiesAttracted) pushZombies(output.zombieCount)
+
+              const itemSummary =
+                output.items.length === 0
+                  ? "no usable supplies"
+                  : output.items.map((item) => `${item.type} x${item.quantity}`).join(", ")
+
+              aiResponse = `Sweep complete at the ${location.replace(/_/g, " ")}: ${itemSummary}.`
+
+              if (output.zombiesAttracted) {
+                aiResponse += ` Noise carried. ${output.zombieCount} zombies converging.`
+              }
+
+              setAlert({
+                type: output.zombiesAttracted ? "warning" : "success",
+                title: output.zombiesAttracted ? "Zombies attracted" : "Supplies recovered",
+                message: output.zombiesAttracted
+                  ? `${output.zombieCount} hostiles incoming. Consider repositioning or engaging.`
+                  : "Area cleared quietly.",
+              })
+            } else if (normalized.includes("combat") || normalized.includes("fight")) {
+              const ammoAvailable = getResourceValue("Ammo", 0)
+              const ammoToUse = Math.max(0, Math.min(ammoAvailable, randomInRange(3, 9)))
+              const zombieCount = boardRef.current?.enemies?.length ?? 1
+              const strategy = normalizedText.includes("stealth")
+                ? "stealth"
+                : normalizedText.includes("defensive") || normalizedText.includes("careful")
+                  ? "defensive"
+                  : "aggressive"
+
+              const output = await combatZombiesTool.tool({
+                strategy,
+                ammoToUse,
+                zombieCount: Math.max(1, zombieCount),
+              })
+              if (!isMountedRef.current || isCanceled()) return
+              debugTool(combatZombiesTool.name, { strategy, ammoToUse, zombieCount }, output)
+
+              updateResource("Ammo", -output.ammoUsed)
+              updateResource("Health", -output.healthLost)
+              removeZombies(output.zombiesKilled)
+
+              aiResponse = output.description
+              setAlert({
+                type: output.success ? "success" : "warning",
+                title: "Engagement",
+                message: `${output.zombiesKilled} neutralized. Health -${output.healthLost}, ammo -${output.ammoUsed}.`,
+              })
+            } else if (normalized.includes("fortify")) {
+              const materials = getResourceValue("Materials", 0)
+              const materialsToUse = clamp(1, Math.round(materials / 5), 20)
+
+              const output = await fortifyLocationTool.tool({ materialsToUse })
+              if (!isMountedRef.current || isCanceled()) return
+              debugTool(fortifyLocationTool.name, { materialsToUse }, output)
+
+              updateResource("Materials", -output.materialsUsed * 5)
+              updateResource("Energy", -output.timeSpent * 3)
+
+              aiResponse = `Position reinforced. Fortification level ${output.fortificationLevel}/100.`
+              setAlert({
+                type: "info",
+                title: "Fortified",
+                message: `Expected zombie damage reduction: ${output.zombieAttackReduction}%.`,
+              })
+            } else if (normalized.includes("rest")) {
+              updateResource("Health", +10)
+              setDay((d) => clamp(1, d + 1, totalDaysAtCall))
+              setAlert({
+                type: "hint",
+                title: "Regroup",
+                message: "Resting helps, but time is still passing.",
+              })
+              aiResponse = generateMockResponse(userText, scenarioAtCall)
+            }
+
+            if (!isMountedRef.current || isCanceled()) return
+            setMessages((prev) => {
+              const next = [...prev, { role: "assistant" as const, content: aiResponse }]
+              return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
+            })
+            setIsProcessing(false)
+            return
+          }
+        } catch (err) {
+          if (process.env.NODE_ENV !== "production") {
+            console.warn("Tool execution failed; falling back to mock response.", err)
+          }
+        }
+
+        if (!isMountedRef.current || isCanceled()) return
+
         setMessages((prev) => {
           const next = [...prev, { role: "assistant" as const, content: aiResponse }]
           return next.length > MAX_MESSAGES ? next.slice(-MAX_MESSAGES) : next
@@ -1245,7 +1763,12 @@ function StandardPlayPageContent({
 
   const resolvedSalaryConfig =
     scenarioId === "salary-negotiation"
-      ? getSalaryNegotiationConfig(resolvedScenario.initialState)
+      ? {
+          currentOffer: negotiationCurrentOffer,
+          targetSalary: negotiationTargetSalary,
+          marketRate: negotiationMarketRate,
+          relationshipScore: negotiationRelationshipScore,
+        }
       : {
           currentOffer: 120_000,
           targetSalary: 150_000,
