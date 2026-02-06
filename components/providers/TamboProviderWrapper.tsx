@@ -9,7 +9,7 @@ import { TamboCitationGuard } from "@/components/providers/TamboCitationGuard"
 import { HAS_TAMBO_API_KEY, TAMBO_API_KEY } from "@/lib/config"
 import { components, tools } from "@/lib/tambo-client"
 import { DEFAULT_TAMBO_MCP_SERVER_URL } from "@/lib/mcp/constants"
-import { DEFAULT_SCENARIO_ID, getScenarioById } from "@/lib/scenarios"
+import { coerceScenarioId, getScenarioById } from "@/lib/scenarios"
 
 const tamboMissingApiKeyLogKey = "tambo.missingApiKeyLogged"
 const tamboMissingApiKeyWindowFlag = "__tamboMissingApiKeyLogged" as const
@@ -36,9 +36,7 @@ function ScenarioKeySync({
       return
     }
 
-    const rawScenarioId = scenarioParam.trim()
-    const candidateScenarioId = rawScenarioId.length > 0 ? rawScenarioId : DEFAULT_SCENARIO_ID
-    setScenarioId(getScenarioById(candidateScenarioId)?.id ?? DEFAULT_SCENARIO_ID)
+    setScenarioId(coerceScenarioId(scenarioParam))
   }, [pathname, scenarioParam, setScenarioId])
 
   return null

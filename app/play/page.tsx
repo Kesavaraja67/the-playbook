@@ -26,7 +26,7 @@ import { GameBoard } from "@/components/tambo/GameBoard"
 import { ResourceMeter } from "@/components/tambo/ResourceMeter"
 import { TacticalAlert } from "@/components/tambo/TacticalAlert"
 import { Button } from "@/components/ui/button"
-import { getDefaultScenario, getScenarioById, type Scenario } from "@/lib/scenarios"
+import { coerceScenarioId, getDefaultScenario, getScenarioById, type Scenario } from "@/lib/scenarios"
 import { cn } from "@/lib/utils"
 
 const VoiceInput = dynamic(
@@ -705,17 +705,15 @@ function PlayPageContent() {
   const searchParams = useSearchParams()
   const requestedScenarioId = searchParams.get("scenario")
   const requestedScenario = requestedScenarioId ? getScenarioById(requestedScenarioId) : undefined
-  const scenario = requestedScenario ?? getDefaultScenario()
-  const scenarioId = scenario.id
+  const scenarioId = coerceScenarioId(requestedScenarioId)
+  const scenario = getScenarioById(scenarioId) ?? getDefaultScenario()
 
   React.useEffect(() => {
     if (!requestedScenarioId) return
     if (requestedScenario) return
 
-    const params = new URLSearchParams(searchParams.toString())
-    params.set("scenario", scenarioId)
-    router.replace(`/play?${params.toString()}`)
-  }, [requestedScenario, requestedScenarioId, router, scenarioId, searchParams])
+    router.replace(`/play?scenario=${encodeURIComponent(scenarioId)}`)
+  }, [requestedScenario, requestedScenarioId, router, scenarioId])
 
   if (scenario && scenario.layout === "tutorial") {
     return <PythonTutorialUI scenario={scenario} />

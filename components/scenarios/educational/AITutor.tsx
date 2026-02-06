@@ -197,7 +197,11 @@ function TamboAITutor({ stepIndex, stepTitle, stepHint, scenarioId }: AITutorPro
     async (text: string) => {
       const trimmed = text.trim()
       if (!trimmed) return
-      if (!isIdle) return
+
+      if (!isIdle) {
+        setError("The tutor is still responding. Please wait for the current answer to finish.")
+        return
+      }
 
       setInput("")
       setError(null)

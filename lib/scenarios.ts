@@ -183,8 +183,23 @@ export function getScenarioById(id: string): Scenario | undefined {
   return scenarios.find((s) => s.id === id)
 }
 
+export function coerceScenarioId(rawId: string | null | undefined): string {
+  const trimmed = (rawId ?? "").trim()
+  const candidate = trimmed.length > 0 ? trimmed : DEFAULT_SCENARIO_ID
+  return getScenarioById(candidate)?.id ?? DEFAULT_SCENARIO_ID
+}
+
 export function getDefaultScenario(): Scenario {
-  return getScenarioById(DEFAULT_SCENARIO_ID) ?? scenarios[0]
+  const byId = getScenarioById(DEFAULT_SCENARIO_ID)
+  if (byId) return byId
+
+  if (process.env.NODE_ENV === "development") {
+    console.warn(
+      `DEFAULT_SCENARIO_ID ("${DEFAULT_SCENARIO_ID}") not found; falling back to first scenario.`
+    )
+  }
+
+  return scenarios[0]
 }
 
 /** Get difficulty color */
