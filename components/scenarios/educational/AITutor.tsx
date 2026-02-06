@@ -2,11 +2,9 @@
 
 import * as React from "react"
 import dynamic from "next/dynamic"
-import { useTamboThread, type TamboThreadMessage } from "@tambo-ai/react"
 
 import { componentCardClassName } from "@/components/play/ComponentCanvas"
 import { Button } from "@/components/ui/button"
-import { HAS_TAMBO_API_KEY } from "@/lib/config"
 import { cn } from "@/lib/utils"
 
 const VoiceInput = dynamic(
@@ -19,66 +17,13 @@ type TutorMessage = {
   content: string
 }
 
-function getTextFromTamboMessage(message: TamboThreadMessage) {
-  const textParts = message.content
-    .map((part) => (part.type === "text" ? (part.text ?? "") : ""))
-    .filter(Boolean)
-  if (textParts.length > 0) {
-    return textParts.join("\n")
-  }
-
-  const hasNonTextContent = message.content.some((part) => part.type !== "text")
-  return hasNonTextContent
-    ? "[This message includes interactive content shown below that can’t be displayed as plain text.]"
-    : ""
-}
-
-const IS_DEVELOPMENT = process.env.NODE_ENV === "development"
-
-function formatTamboSendError(error: unknown) {
-  if (error instanceof Error) {
-    const asAny = error as unknown as { status?: unknown }
-    const status = typeof asAny.status === "number" ? asAny.status : null
-
-    if (status === 401 || status === 403) {
-      return "The tutor request was not authorized. Check your Tambo API key and permissions."
-    }
-
-    if (status === 429) {
-      return "The tutor is receiving too many requests. Please wait a moment and try again."
-    }
-
-    if (status && status >= 500) {
-      return "The tutor service is having trouble right now. Please try again in a bit."
-    }
-
-    if (IS_DEVELOPMENT) {
-      return status ? `${error.message} (HTTP ${status})` : error.message
-    }
-
-    return "Something went wrong while contacting the tutor. Please try again."
-  }
-
-  return IS_DEVELOPMENT
-    ? String(error)
-    : "Something went wrong while contacting the tutor. Please try again."
-}
-
 export type AITutorProps = {
   stepIndex: number
   stepTitle: string
   stepHint?: string
-  /**
-   * When provided, used as the Tambo `contextKey` so the tutor thread is scoped
-   * per-scenario. Ignored by the local (non-Tambo) tutor implementation.
-   */
-  scenarioId?: string
 }
 
-function generateTutorReply(
-  input: string,
-  opts: { stepIndex: number; stepTitle: string; stepHint?: string }
-) {
+function generateTutorReply(input: string, opts: { stepIndex: number; stepTitle: string; stepHint?: string }) {
   const normalized = input.trim().toLowerCase()
 
   if (normalized.includes("variable")) {
@@ -115,7 +60,7 @@ function generateTutorReply(
   return `Got it. What part of “${opts.stepTitle}” feels confusing right now — the syntax, or the idea?`
 }
 
-function LocalAITutor({ stepIndex, stepTitle, stepHint }: AITutorProps) {
+export function AITutor({ stepIndex, stepTitle, stepHint }: AITutorProps) {
   const [messages, setMessages] = React.useState<TutorMessage[]>(() => [
     {
       role: "tutor",
@@ -205,152 +150,4 @@ function LocalAITutor({ stepIndex, stepTitle, stepHint }: AITutorProps) {
       </div>
     </section>
   )
-}
-
-function TamboAITutor({ stepIndex, stepTitle, stepHint, scenarioId }: AITutorProps) {
-  const { thread, sendThreadMessage, generationStage, generationStatusMessage, isIdle } = useTamboThread()
-
-  const [input, setInput] = React.useState("")
-  const [error, setError] = React.useState<string | null>(null)
-  const listRef = React.useRef<HTMLDivElement | null>(null)
-
-  const visibleMessages = React.useMemo(() => {
-    return thread.messages.filter((message) => message.role === "user" || message.role === "assistant")
-  }, [thread.messages])
-
-  React.useEffect(() => {
-    const el = listRef.current
-    if (!el) return
-    el.scrollTop = el.scrollHeight
-  }, [visibleMessages])
-
-  const send = React.useCallback(
-    async (text: string) => {
-      const trimmed = text.trim()
-      if (!trimmed) return
-
-      if (!isIdle) {
-        setError("The tutor is still responding. Please wait for the current answer to finish.")
-        return
-      }
-
-      setInput("")
-      setError(null)
-
-      try {
-        await sendThreadMessage(trimmed, {
-          contextKey: scenarioId,
-          additionalContext: {
-            tutorialStep: {
-              index: stepIndex,
-              title: stepTitle,
-              hint: stepHint,
-            },
-          },
-        })
-      } catch (err) {
-        if (IS_DEVELOPMENT) {
-          console.error("Tambo tutor send failed", err)
-        }
-        setError(formatTamboSendError(err))
-      }
-    },
-    [isIdle, scenarioId, sendThreadMessage, stepHint, stepIndex, stepTitle]
-  )
-
-  const quickQuestions = [
-    "How do I define a function in Python?",
-    "What's the syntax for variable assignment in Python 3.12?",
-    "How do I use return values in Python functions?",
-  ]
-
-  return (
-    <section className={componentCardClassName}>
-      <h3 className="text-xl font-bold text-[#1D1D1F]">💬 Your AI Tutor</h3>
-
-      <div
-        ref={listRef}
-        className={cn(
-          "mt-4 max-h-[240px] overflow-y-auto rounded-lg border-2 border-[#D2D2D7] bg-white p-4",
-          "text-sm text-[#1D1D1F]"
-        )}
-      >
-        {visibleMessages.length === 0 && (
-          <div className="mb-3">
-            <div className="text-xs font-semibold text-[#6E6E73]">Tutor</div>
-            <div className="mt-1 whitespace-pre-wrap leading-relaxed">
-              Hi! I’m your tutor. Ask anything — I’ll keep it beginner-friendly and help you move
-              forward.
-            </div>
-          </div>
-        )}
-
-        {visibleMessages.map((message) => {
-          const label = message.role === "user" ? "You" : "Tutor"
-          const text = getTextFromTamboMessage(message)
-
-          return (
-            <div key={message.id} className="mb-3">
-              <div className="text-xs font-semibold text-[#6E6E73]">{label}</div>
-              {text && <div className="mt-1 whitespace-pre-wrap leading-relaxed">{text}</div>}
-              {message.renderedComponent && (
-                <div className={cn(text ? "mt-3" : "mt-1")}>{message.renderedComponent}</div>
-              )}
-            </div>
-          )
-        })}
-
-        {!isIdle && (
-          <div className="text-xs text-[#6E6E73]">
-            {generationStatusMessage || `Tutor is working… (${generationStage})`}
-          </div>
-        )}
-        {error && <div className="mt-2 text-xs text-[#FF3B30]">{error}</div>}
-      </div>
-
-      <VoiceInput
-        className="mt-4"
-        value={input}
-        onChange={setInput}
-        onSubmit={(value) => {
-          void send(value)
-        }}
-        disabled={!isIdle}
-        placeholder="Ask a question…"
-        sendLabel={isIdle ? "Send" : "Working…"}
-        inputClassName={cn(
-          "h-11 rounded-lg border-[#D2D2D7] bg-white px-3",
-          "text-[#1D1D1F] placeholder:text-[#6E6E73]",
-          "focus:border-[#0071E3]"
-        )}
-      />
-
-      <div className="mt-4">
-        <div className="text-xs font-semibold text-[#6E6E73]">Quick Questions</div>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {quickQuestions.map((question) => (
-            <Button
-              key={question}
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                void send(question)
-              }}
-              disabled={!isIdle}
-            >
-              {question}
-            </Button>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-export function AITutor(props: AITutorProps) {
-  if (!HAS_TAMBO_API_KEY) {
-    return <LocalAITutor {...props} />
-  }
-
-  return <TamboAITutor {...props} />
 }
