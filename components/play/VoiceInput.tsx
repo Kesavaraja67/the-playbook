@@ -80,10 +80,13 @@ export function VoiceInput({
   }, [])
 
   const voiceMode = React.useMemo<"speech" | "tambo" | "none">(() => {
-    if (HAS_TAMBO_API_KEY && mediaRecorderSupported) return "tambo"
+    const tamboViable =
+      HAS_TAMBO_API_KEY && mediaRecorderSupported && !mediaAccessError && !transcriptionError
+
+    if (tamboViable) return "tambo"
     if (speechSupported) return "speech"
     return "none"
-  }, [mediaRecorderSupported, speechSupported])
+  }, [mediaAccessError, mediaRecorderSupported, speechSupported, transcriptionError])
 
   const isListening = isSpeechListening || isRecording
   const isBusy = disabled || isTranscribing
