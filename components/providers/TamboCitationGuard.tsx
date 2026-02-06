@@ -20,20 +20,22 @@ function createCitationGuardMessageId({
   assistantMessageId: string
   toolMessageId: string
 }) {
+  const base = `${assistantMessageId}:${toolMessageId}`
+
   if (typeof crypto !== "undefined") {
     if ("randomUUID" in crypto && typeof crypto.randomUUID === "function") {
-      return `${CITATION_GUARD_ID_PREFIX}${crypto.randomUUID()}`
+      return `${CITATION_GUARD_ID_PREFIX}${crypto.randomUUID()}:${base}`
     }
 
     if ("getRandomValues" in crypto && typeof crypto.getRandomValues === "function") {
       const bytes = new Uint8Array(16)
       crypto.getRandomValues(bytes)
       const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")
-      return `${CITATION_GUARD_ID_PREFIX}${hex}`
+      return `${CITATION_GUARD_ID_PREFIX}${hex}:${base}`
     }
   }
 
-  return `${CITATION_GUARD_ID_PREFIX}${assistantMessageId}:${toolMessageId}:${Date.now()}`
+  return `${CITATION_GUARD_ID_PREFIX}${base}:${Date.now()}`
 }
 
 function getMcpServerKeyFromToolName(toolName: string) {
@@ -167,7 +169,7 @@ export function TamboCitationGuard() {
       toolMessageId: toolMessage.id,
     })
 
-    const citationMessage: TamboThreadMessage = {
+    const citationMessageBase: TamboThreadMessage = {
       id,
       threadId: assistantMessage.threadId,
       role: "assistant",
@@ -190,11 +192,14 @@ export function TamboCitationGuard() {
       },
     }
 
-    citationMessage.renderedComponent = (
-      <TamboMessageProvider message={citationMessage}>
-        <SourceCitation source={source} url={url} fetchedAt={fetchedAt} />
-      </TamboMessageProvider>
-    )
+    const citationMessage: TamboThreadMessage = {
+      ...citationMessageBase,
+      renderedComponent: (
+        <TamboMessageProvider message={citationMessageBase}>
+          <SourceCitation source={source} url={url} fetchedAt={fetchedAt} />
+        </TamboMessageProvider>
+      ),
+    }
 
     void addThreadMessage(citationMessage, false)
   }, [addThreadMessage, mcpServerInfos, mcpServerKeys, thread.messages])
