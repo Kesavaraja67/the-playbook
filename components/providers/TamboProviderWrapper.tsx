@@ -25,7 +25,15 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
   const isDevelopment = process.env.NODE_ENV === "development"
 
   React.useEffect(() => {
-    if (apiKey) return
+    if (apiKey) {
+      try {
+        window.sessionStorage.removeItem(tamboMissingApiKeyLogKey)
+      } catch {
+        // Ignore sessionStorage failures (for example: restricted storage environments).
+      }
+
+      return
+    }
 
     try {
       if (window.sessionStorage.getItem(tamboMissingApiKeyLogKey) === "true") return
