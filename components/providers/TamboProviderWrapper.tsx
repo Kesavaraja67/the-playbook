@@ -8,7 +8,9 @@ import { components, tools } from "@/lib/tambo-client"
 import { DEFAULT_TAMBO_MCP_SERVER_URL } from "@/lib/mcp/constants"
 
 const tamboMissingApiKeyLogKey = "tambo.missingApiKeyLogged"
-const tamboMissingApiKeyWindowFlag = "__tamboMissingApiKeyLogged"
+const tamboMissingApiKeyWindowFlag = "__tamboMissingApiKeyLogged" as const
+
+type TamboWindow = Window & Partial<Record<typeof tamboMissingApiKeyWindowFlag, boolean>>
 
 const mcpServers = [
   {
@@ -27,7 +29,7 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
 
   React.useEffect(() => {
     if (apiKey) {
-      const win = window as unknown as Record<string, unknown>
+      const win = window as unknown as TamboWindow
 
       try {
         window.sessionStorage.removeItem(tamboMissingApiKeyLogKey)
@@ -40,7 +42,7 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
       return
     }
 
-    const win = window as unknown as Record<string, unknown>
+    const win = window as unknown as TamboWindow
     if (win[tamboMissingApiKeyWindowFlag] === true) return
 
     try {
