@@ -30,21 +30,20 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
   const isDevelopment = process.env.NODE_ENV === "development"
 
   React.useEffect(() => {
-    if (apiKey) {
-      const win = window as unknown as TamboWindow
+    if (typeof window === "undefined") return
 
+    const win = window as TamboWindow
+
+    if (apiKey) {
       try {
         window.sessionStorage.removeItem(tamboMissingApiKeyLogKey)
       } catch {
         // Ignore sessionStorage failures (for example: restricted storage environments).
       }
 
-      delete win[tamboMissingApiKeyWindowFlag]
-
       return
     }
 
-    const win = window as unknown as TamboWindow
     if (win[tamboMissingApiKeyWindowFlag] === true) return
 
     try {
