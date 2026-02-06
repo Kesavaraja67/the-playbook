@@ -33,6 +33,16 @@ function getTextFromTamboMessage(message: TamboThreadMessage) {
     : ""
 }
 
+function formatTamboSendError(error: unknown) {
+  if (error instanceof Error) {
+    const asAny = error as unknown as { status?: unknown }
+    const status = typeof asAny.status === "number" ? asAny.status : null
+    return status ? `${error.message} (HTTP ${status})` : error.message
+  }
+
+  return String(error)
+}
+
 export type AITutorProps = {
   stepIndex: number
   stepTitle: string
@@ -218,7 +228,8 @@ function TamboAITutor({ stepIndex, stepTitle, stepHint, scenarioId }: AITutorPro
           },
         })
       } catch (err) {
-        setError(err instanceof Error ? err.message : String(err))
+        console.error("Tambo tutor send failed", err)
+        setError(formatTamboSendError(err))
       }
     },
     [isIdle, scenarioId, sendThreadMessage, stepHint, stepIndex, stepTitle]

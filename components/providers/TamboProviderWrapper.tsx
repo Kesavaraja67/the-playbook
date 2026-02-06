@@ -3,7 +3,7 @@
 import * as React from "react"
 import { usePathname, useSearchParams } from "next/navigation"
 import { TamboProvider, useTamboThread } from "@tambo-ai/react"
-import { MCPTransport } from "@tambo-ai/react/mcp"
+import { MCPTransport, TamboMcpProvider } from "@tambo-ai/react/mcp"
 
 import { TamboCitationGuard } from "@/components/providers/TamboCitationGuard"
 import { HAS_TAMBO_API_KEY, TAMBO_API_KEY } from "@/lib/config"
@@ -173,9 +173,11 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
         initialMessages={initialMessages}
         contextKey={scenarioId ?? undefined}
       >
-        <ScenarioThreadReset scenarioId={scenarioId} />
-        <TamboCitationGuard />
-        {children}
+        <TamboMcpProvider contextKey={scenarioId ?? undefined}>
+          <ScenarioThreadReset scenarioId={scenarioId} />
+          <TamboCitationGuard />
+          {children}
+        </TamboMcpProvider>
       </TamboProvider>
     </>
   )
