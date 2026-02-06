@@ -1,8 +1,9 @@
 "use client"
 
 import * as React from "react"
+import dynamic from "next/dynamic"
 import { useRouter, useSearchParams } from "next/navigation"
-import { ArrowLeft, RotateCcw, Send } from "lucide-react"
+import { ArrowLeft, RotateCcw } from "lucide-react"
 
 import { ComponentCanvas, componentCardClassName } from "@/components/play/ComponentCanvas"
 import { CaseFileHeader } from "@/components/scenarios/detective/CaseFileHeader"
@@ -25,7 +26,6 @@ import { GameBoard } from "@/components/tambo/GameBoard"
 import { ResourceMeter } from "@/components/tambo/ResourceMeter"
 import { TacticalAlert } from "@/components/tambo/TacticalAlert"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { getScenarioById, type Scenario } from "@/lib/scenarios"
 import {
   presentCounterOfferTool,
@@ -44,6 +44,11 @@ import {
 } from "@/lib/tools/zombie"
 import { randomInRange } from "@/lib/tools/utils"
 import { cn } from "@/lib/utils"
+
+const VoiceInput = dynamic(
+  () => import("@/components/play/VoiceInput").then((mod) => mod.VoiceInput),
+  { ssr: false }
+)
 
 type ChatMessage = {
   role: "user" | "assistant"
@@ -1736,15 +1741,6 @@ function StandardPlayPageContent({
       actionTimeoutsRef.current.push(timeoutId)
   }
 
-  const trySubmitNegotiationInput = (e?: React.SyntheticEvent) => {
-    const text = input.trim()
-    if (!text || isBusy) return
-
-    e?.preventDefault()
-    setInput("")
-    runAction(text, { clearInput: false })
-  }
-
   if (!scenario) {
     return (
       <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] grid place-items-center p-6">
@@ -1919,42 +1915,15 @@ function StandardPlayPageContent({
                     {isBusy && <div className="text-xs font-semibold text-secondary">Busy…</div>}
                   </div>
 
-                  <div className="mt-4 flex items-end gap-3">
-                    <Textarea
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        const isPlainEnter =
-                          e.key === "Enter" &&
-                          !e.shiftKey &&
-                          !e.altKey &&
-                          !e.ctrlKey &&
-                          !e.metaKey
-
-                        if (!isPlainEnter) return
-                        if (e.nativeEvent.isComposing) return
-                        trySubmitNegotiationInput(e)
-                      }}
-                      disabled={isBusy}
-                      placeholder="Write your response…"
-                      className="min-h-12"
-                    />
-                    <button
-                      type="button"
-                      onClick={trySubmitNegotiationInput}
-                      disabled={isBusy || !input.trim()}
-                      className={cn(
-                        "grid size-12 place-items-center rounded-lg",
-                        "bg-accent-primary text-inverse",
-                        "shadow-[2px_2px_0px_#1D1D1F]",
-                        "hover:bg-accent-primary-dark",
-                        "disabled:cursor-not-allowed disabled:opacity-60"
-                      )}
-                      aria-label="Send"
-                    >
-                      <Send className="size-4" />
-                    </button>
-                  </div>
+                  <VoiceInput
+                    className="mt-4"
+                    value={input}
+                    onChange={setInput}
+                    onSubmit={(value) => runAction(value)}
+                    disabled={isBusy}
+                    placeholder="Write your response…"
+                    multiline
+                  />
 
                   <div className="mt-4">
                     <div className="text-xs font-semibold text-secondary">Quick Responses</div>
@@ -2085,52 +2054,16 @@ function StandardPlayPageContent({
       </main>
 
       {scenarioId === "salary-negotiation" ? null : (
-        <div className="fixed bottom-0 inset-x-0 z-40 h-[80px] bg-white border-t-2 border-[#D2D2D7]">
-          <div className="mx-auto flex h-full max-w-[1200px] items-center gap-3 px-6">
-            <input
+        <div className="fixed bottom-0 inset-x-0 z-40 bg-white border-t-2 border-[#D2D2D7] py-4">
+          <div className="mx-auto max-w-[1200px] px-6">
+            <VoiceInput
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                const isPlainEnter =
-                  e.key === "Enter" &&
-                  !e.shiftKey &&
-                  !e.altKey &&
-                  !e.ctrlKey &&
-                  !e.metaKey
-
-                if (!isPlainEnter) return
-                if (e.nativeEvent.isComposing) return
-                if (!input.trim()) return
-
-                e.preventDefault()
-                runAction(input)
-              }}
-            disabled={isBusy}
-            placeholder={scenarioId === "space-station" ? "Type your decision..." : "Type your action..."}
-            className={cn(
-              "h-12 flex-1 rounded-full border-2 border-[#D2D2D7] bg-white px-4",
-              "text-sm text-[#1D1D1F] placeholder:text-[#6E6E73]",
-              "focus:outline-none focus:border-[#0071E3]",
-              "disabled:cursor-not-allowed disabled:opacity-60"
-            )}
-          />
-          <button
-            type="button"
-            onClick={() => {
-              if (!isBusy) runAction(input)
-            }}
-            disabled={isBusy}
-            className={cn(
-              "grid size-12 place-items-center rounded-lg",
-              "bg-[#0071E3] text-white",
-              "shadow-[2px_2px_0px_#1D1D1F]",
-              "hover:bg-[#005BB5]",
-              "disabled:bg-[#0071E3]/60 disabled:cursor-not-allowed"
-            )}
-            aria-label="Send"
-          >
-            <Send className="size-4" />
-          </button>
+              onChange={setInput}
+              onSubmit={(value) => runAction(value)}
+              disabled={isBusy}
+              placeholder={scenarioId === "space-station" ? "Type your decision..." : "Type your action..."}
+              inputClassName="rounded-full bg-white border-[#D2D2D7] focus:border-[#0071E3]"
+            />
           </div>
         </div>
       )}
