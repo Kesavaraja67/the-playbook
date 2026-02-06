@@ -10,9 +10,17 @@ import {
 
 import { SourceCitation } from "@/components/scenarios/educational/SourceCitation"
 
+const MCP_TOOL_NAME_SEPARATOR = "__"
+
 function getMcpServerKeyFromToolName(toolName: string) {
-  const separatorIndex = toolName.indexOf("__")
-  if (separatorIndex <= 0) return null
+  const separatorIndex = toolName.indexOf(MCP_TOOL_NAME_SEPARATOR)
+  if (separatorIndex <= 0) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("TamboCitationGuard: unexpected MCP tool name format", { toolName })
+    }
+
+    return null
+  }
   return toolName.slice(0, separatorIndex)
 }
 
@@ -90,9 +98,16 @@ export function TamboCitationGuard() {
     }
 
     const mcpToolResponses = turnMessages
-      .filter((message) => message.role === "tool" && typeof message.tool_call_id === "string")
+      .filter(
+        (
+          message
+        ): message is TamboThreadMessage & {
+          role: "tool"
+          tool_call_id: string
+        } => message.role === "tool" && typeof message.tool_call_id === "string"
+      )
       .map((message) => {
-        const toolName = toolCallById.get(message.tool_call_id ?? "")
+        const toolName = toolCallById.get(message.tool_call_id)
         return { toolName, message }
       })
       .filter(({ toolName }) => typeof toolName === "string")
@@ -126,9 +141,9 @@ export function TamboCitationGuard() {
     const id =
       typeof crypto !== "undefined" && "randomUUID" in crypto
         ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+        : `citation-${Date.now()}-${Math.random().toString(16).slice(2)}`
 
-    const citationMessage: TamboThreadMessage = {
+    const citationMessageBase: TamboThreadMessage = {
       id,
       threadId: assistantMessage.threadId,
       role: "assistant",
@@ -151,11 +166,14 @@ export function TamboCitationGuard() {
       },
     }
 
-    citationMessage.renderedComponent = (
-      <TamboMessageProvider message={citationMessage}>
-        <SourceCitation source={source} url={url} fetchedAt={fetchedAt} />
-      </TamboMessageProvider>
-    )
+    const citationMessage: TamboThreadMessage = {
+      ...citationMessageBase,
+      renderedComponent: (
+        <TamboMessageProvider message={citationMessageBase}>
+          <SourceCitation source={source} url={url} fetchedAt={fetchedAt} />
+        </TamboMessageProvider>
+      ),
+    }
 
     void addThreadMessage(citationMessage, false)
   }, [addThreadMessage, mcpServerInfos, mcpServerKeys, thread.messages])

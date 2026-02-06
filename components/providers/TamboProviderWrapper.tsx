@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import * as React from "react"
 import { TamboProvider } from "@tambo-ai/react"
@@ -40,6 +40,8 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
       } catch {
         // Ignore sessionStorage failures (for example: restricted storage environments).
       }
+
+      delete win[tamboMissingApiKeyWindowFlag]
 
       return
     }

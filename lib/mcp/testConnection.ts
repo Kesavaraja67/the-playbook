@@ -67,15 +67,16 @@ export async function testMCPConnection(
       serverInfo,
     }
   } catch (error) {
-    const isAbortError = error instanceof Error && error.name === "AbortError"
-
     const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error)
+
+    const isAbortError = error instanceof Error && error.name === "AbortError"
+    const isTimeout = didTimeout && isAbortError
 
     return {
       ok: false,
       url,
-      error: isAbortError && didTimeout ? `Timeout after ${timeoutMs}ms` : message,
-      kind: isAbortError && didTimeout ? "timeout" : "network",
+      error: isTimeout ? `Timeout after ${timeoutMs}ms` : message,
+      kind: isTimeout ? "timeout" : "network",
     }
   } finally {
     clearTimeout(timeoutId)
