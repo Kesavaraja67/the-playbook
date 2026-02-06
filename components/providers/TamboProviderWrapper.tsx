@@ -8,7 +8,6 @@ import { components, tools } from "@/lib/tambo-client"
 import { DEFAULT_TAMBO_MCP_SERVER_URL } from "@/lib/mcp/constants"
 
 const tamboMissingApiKeyLogKey = "tambo.missingApiKeyLogged"
-
 const mcpServers = [
   {
     name: "tambo-docs",
@@ -35,11 +34,15 @@ export function TamboProviderWrapper({ children }: { children: React.ReactNode }
       return
     }
 
-    try {
-      if (window.sessionStorage.getItem(tamboMissingApiKeyLogKey) === "true") return
-      window.sessionStorage.setItem(tamboMissingApiKeyLogKey, "true")
-    } catch {
-      // Ignore sessionStorage failures (for example: restricted storage environments).
+    if (typeof window !== "undefined") {
+      try {
+        if (window.sessionStorage.getItem(tamboMissingApiKeyLogKey) === "true") return
+        window.sessionStorage.setItem(tamboMissingApiKeyLogKey, "true")
+      } catch {
+        const w = window as typeof window & { __tamboMissingApiKeyLogged?: boolean }
+        if (w.__tamboMissingApiKeyLogged) return
+        w.__tamboMissingApiKeyLogged = true
+      }
     }
 
     console.warn("NEXT_PUBLIC_TAMBO_API_KEY is not set; running without TamboProvider")
