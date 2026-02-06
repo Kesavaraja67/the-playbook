@@ -47,7 +47,7 @@ export function CleanPortal() {
   const [isTransitioning, setIsTransitioning] = useState(false)
   const shouldReduceMotion = useReducedMotion()
 
-  const navTimeoutRef = useRef<number | null>(null)
+  const navTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isActiveRef = useRef(true)
 
   useEffect(() => {
@@ -68,7 +68,7 @@ export function CleanPortal() {
     setPlaybookTransitionFlag()
 
     const delayMs = shouldReduceMotion ? 0 : 650
-    navTimeoutRef.current = window.setTimeout(() => {
+    navTimeoutRef.current = setTimeout(() => {
       if (!isActiveRef.current) return
       router.push("/scenarios")
     }, delayMs)
