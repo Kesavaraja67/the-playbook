@@ -812,7 +812,6 @@ function StandardPlayPageContent({
     isMountedRef.current = true
     return () => {
       isMountedRef.current = false
-
       for (const id of initTimeoutsRef.current) clearTimeout(id)
       initTimeoutsRef.current = []
 
@@ -1038,7 +1037,8 @@ function StandardPlayPageContent({
 
       const timeoutId = setTimeout(async () => {
         actionTimeoutsRef.current = actionTimeoutsRef.current.filter((id) => id !== timeoutId)
-        if (!isMountedRef.current || resetVersionRef.current !== resetVersionAtCall) return
+        if (!isMountedRef.current) return
+        if (resetVersionRef.current !== resetVersionAtCall) return
 
         const shouldAbort = () =>
           !isMountedRef.current || resetVersionRef.current !== resetVersionAtCall
@@ -1065,26 +1065,23 @@ function StandardPlayPageContent({
             for (const enemy of prev.enemies ?? []) existing.add(`${enemy.x},${enemy.y}`)
             existing.add(`${prev.playerPosition.x},${prev.playerPosition.y}`)
 
-            const nextEnemies = [...(prev.enemies ?? [])]
-
-            for (let i = 0; i < count; i += 1) {
-              let placed = false
-              let x = 0
-              let y = 0
-
-              for (let attempt = 0; attempt < 50; attempt += 1) {
-                x = randomInRange(0, gridSize - 1)
-                y = randomInRange(0, gridSize - 1)
+            const availableCells: Array<{ x: number; y: number }> = []
+            for (let x = 0; x < gridSize; x += 1) {
+              for (let y = 0; y < gridSize; y += 1) {
                 const key = `${x},${y}`
-                if (existing.has(key)) continue
-                existing.add(key)
-                placed = true
-                break
+                if (!existing.has(key)) availableCells.push({ x, y })
               }
+            }
 
-              if (!placed) break
+            if (availableCells.length === 0) return prev
 
-              nextEnemies.push({ x, y, type: "Zombie" })
+            const nextEnemies = [...(prev.enemies ?? [])]
+            for (let i = 0; i < count && availableCells.length > 0; i += 1) {
+              const idx = randomInRange(0, availableCells.length - 1)
+              const cell = availableCells.splice(idx, 1)[0]
+              if (!cell) break
+
+              nextEnemies.push({ x: cell.x, y: cell.y, type: "Zombie" })
             }
 
             return {
@@ -1113,8 +1110,17 @@ function StandardPlayPageContent({
 
         try {
           if (scenarioAtCall === "salary-negotiation") {
-            const askMatch = userText.match(/\$?\s*([0-9]{2,3}(?:,[0-9]{3})+)/)
-            const parsedAsk = askMatch?.[1] ? Number(askMatch[1].replace(/,/g, "")) : null
+            const askMatch = userText.match(
+              /\$?\s*([0-9]{2,3}(?:,[0-9]{3})+|[0-9]{5,6}|[0-9]{2,3})\s*([kK])?/
+            )
+            const rawAsk = askMatch?.[1]?.replace(/,/g, "")
+
+            let parsedAsk = rawAsk ? Number(rawAsk) : null
+            parsedAsk = typeof parsedAsk === "number" && Number.isFinite(parsedAsk) ? parsedAsk : null
+
+            if (parsedAsk !== null && askMatch?.[2]) parsedAsk *= 1000
+            if (parsedAsk !== null && !askMatch?.[2] && parsedAsk < 50_000) parsedAsk = null
+
             const offeredSalary = parsedAsk ?? negotiationTargetSalary
 
             const normalizedText = userText.toLowerCase()
@@ -1471,6 +1477,8 @@ function StandardPlayPageContent({
             console.warn("Tool execution failed; falling back to mock response.", err)
           }
         }
+
+        if (shouldAbort()) return
 
         setMessages((prev) => {
           const next = [...prev, { role: "assistant" as const, content: aiResponse }]
