@@ -11,6 +11,30 @@ import {
 import { SourceCitation } from "@/components/scenarios/educational/SourceCitation"
 
 const MCP_TOOL_NAME_SEPARATOR = "__"
+const CITATION_GUARD_ID_PREFIX = "tambo-citation-guard:"
+
+function createCitationGuardMessageId({
+  assistantMessageId,
+  toolMessageId,
+}: {
+  assistantMessageId: string
+  toolMessageId: string
+}) {
+  if (typeof crypto !== "undefined") {
+    if ("randomUUID" in crypto && typeof crypto.randomUUID === "function") {
+      return `${CITATION_GUARD_ID_PREFIX}${crypto.randomUUID()}`
+    }
+
+    if ("getRandomValues" in crypto && typeof crypto.getRandomValues === "function") {
+      const bytes = new Uint8Array(16)
+      crypto.getRandomValues(bytes)
+      const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")
+      return `${CITATION_GUARD_ID_PREFIX}${hex}`
+    }
+  }
+
+  return `${CITATION_GUARD_ID_PREFIX}${assistantMessageId}:${toolMessageId}:${Date.now()}`
+}
 
 function getMcpServerKeyFromToolName(toolName: string) {
   const separatorIndex = toolName.indexOf(MCP_TOOL_NAME_SEPARATOR)
@@ -138,12 +162,12 @@ export function TamboCitationGuard() {
 
     const fetchedAt = toolMessage.createdAt
 
-    const id =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `citation-${Date.now()}-${Math.random().toString(16).slice(2)}`
+    const id = createCitationGuardMessageId({
+      assistantMessageId: assistantMessage.id,
+      toolMessageId: toolMessage.id,
+    })
 
-    const citationMessageBase: TamboThreadMessage = {
+    const citationMessage: TamboThreadMessage = {
       id,
       threadId: assistantMessage.threadId,
       role: "assistant",
@@ -166,14 +190,11 @@ export function TamboCitationGuard() {
       },
     }
 
-    const citationMessage: TamboThreadMessage = {
-      ...citationMessageBase,
-      renderedComponent: (
-        <TamboMessageProvider message={citationMessageBase}>
-          <SourceCitation source={source} url={url} fetchedAt={fetchedAt} />
-        </TamboMessageProvider>
-      ),
-    }
+    citationMessage.renderedComponent = (
+      <TamboMessageProvider message={citationMessage}>
+        <SourceCitation source={source} url={url} fetchedAt={fetchedAt} />
+      </TamboMessageProvider>
+    )
 
     void addThreadMessage(citationMessage, false)
   }, [addThreadMessage, mcpServerInfos, mcpServerKeys, thread.messages])
