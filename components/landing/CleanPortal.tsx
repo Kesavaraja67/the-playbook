@@ -33,7 +33,7 @@ export function CleanPortal() {
 
     navTimeoutRef.current = setTimeout(() => {
       router.push("/scenarios")
-    }, 650)
+    }, 420)
   }
 
   return (

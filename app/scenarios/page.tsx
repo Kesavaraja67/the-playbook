@@ -81,7 +81,7 @@ export default function ScenariosPage() {
 
     navTimeoutRef.current = setTimeout(() => {
       router.push(`/play?scenario=${scenario.id}`)
-    }, 520)
+    }, 360)
   }
 
   const handleCategoryChange = (nextCategory: ScenarioCategoryFilter) => {
@@ -134,7 +134,7 @@ export default function ScenariosPage() {
                     className="h-full bg-[#0071E3]"
                     initial={{ width: "20%" }}
                     animate={{ width: "100%" }}
-                    transition={{ duration: 0.5, ease: easeOut }}
+                    transition={{ duration: 0.35, ease: easeOut }}
                   />
                 </div>
               </div>

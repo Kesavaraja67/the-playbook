@@ -9,8 +9,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          "ds-button-primary hover:-translate-y-0.5 active:translate-y-0",
+        default: "ds-button-primary",
         destructive:
           "bg-accent-danger text-inverse border-2 border-dark shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
         outline:

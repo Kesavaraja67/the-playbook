@@ -13,11 +13,11 @@ export function AppMotionShell({ children }: { children: React.ReactNode }) {
         <motion.div
           key={pathname}
           className="min-h-screen"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -12 }}
+          exit={{ opacity: 0, y: -10 }}
           transition={{
-            duration: 0.45,
+            duration: 0.3,
             ease: [0.4, 0, 0.2, 1] as const,
           }}
         >
