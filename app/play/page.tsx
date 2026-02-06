@@ -26,7 +26,7 @@ import { GameBoard } from "@/components/tambo/GameBoard"
 import { ResourceMeter } from "@/components/tambo/ResourceMeter"
 import { TacticalAlert } from "@/components/tambo/TacticalAlert"
 import { Button } from "@/components/ui/button"
-import { coerceScenarioId, getDefaultScenario, getScenarioById, type Scenario } from "@/lib/scenarios"
+import { getScenarioById, type Scenario } from "@/lib/scenarios"
 import { cn } from "@/lib/utils"
 
 const VoiceInput = dynamic(
@@ -703,16 +703,8 @@ function ScenarioBriefingCard({ scenario }: { scenario: Scenario }) {
 function PlayPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const requestedScenarioId = searchParams.get("scenario")
-  const scenarioId = coerceScenarioId(requestedScenarioId)
-  const scenario = getScenarioById(scenarioId) ?? getDefaultScenario()
-
-  React.useEffect(() => {
-    if (!requestedScenarioId) return
-    if (requestedScenarioId === scenarioId) return
-
-    router.replace(`/play?scenario=${encodeURIComponent(scenarioId)}`)
-  }, [requestedScenarioId, router, scenarioId])
+  const scenarioId = searchParams.get("scenario") || "zombie-survival"
+  const scenario = getScenarioById(scenarioId)
 
   if (scenario && scenario.layout === "tutorial") {
     return <PythonTutorialUI scenario={scenario} />
