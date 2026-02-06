@@ -1,5 +1,10 @@
 import { DEFAULT_TAMBO_MCP_SERVER_URL } from "./constants"
 
+/**
+* @deprecated Import from "./constants" instead.
+*/
+export { DEFAULT_TAMBO_MCP_SERVER_URL }
+
 export type McpConnectionTestResult =
   | {
       ok: true
@@ -50,9 +55,7 @@ export async function testMCPConnection(
       serverInfo,
     }
   } catch (error) {
-    const isAbortError =
-      (error instanceof DOMException && error.name === "AbortError") ||
-      (error instanceof Error && error.name === "AbortError")
+    const isAbortError = controller.signal.aborted || (error instanceof Error && error.name === "AbortError")
 
     const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error)
 
