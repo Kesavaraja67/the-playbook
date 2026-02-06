@@ -789,7 +789,7 @@ function StandardPlayPageContent({
 
   const initTimeoutsRef = React.useRef<Array<ReturnType<typeof setTimeout>>>([])
   const actionTimeoutsRef = React.useRef<Array<ReturnType<typeof setTimeout>>>([])
-  const isMountedRef = React.useRef(true)
+  const isMountedRef = React.useRef(false)
   const resetVersionRef = React.useRef(0)
   const resourcesRef = React.useRef<Resource[]>(resources)
   const boardRef = React.useRef<BoardState | null>(board)
@@ -1096,7 +1096,8 @@ function StandardPlayPageContent({
             if (!prev?.enemies?.length) return prev
 
             const enemies = [...prev.enemies]
-            for (let i = 0; i < count && enemies.length > 0; i += 1) {
+            const toRemove = Math.min(count, enemies.length)
+            for (let i = 0; i < toRemove && enemies.length > 0; i += 1) {
               enemies.splice(randomInRange(0, enemies.length - 1), 1)
             }
 
