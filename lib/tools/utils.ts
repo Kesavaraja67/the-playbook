@@ -11,11 +11,10 @@ export function rollDice(sides: number): number {
 }
 
 export function successCheck(probability: number): boolean {
-  if (!Number.isFinite(probability)) {
-    throw new Error("successCheck: probability must be a finite number")
-  }
-
-  const p = Math.min(1, Math.max(0, probability))
+  const p = Math.min(
+    1,
+    Math.max(0, Number.isFinite(probability) ? probability : 0)
+  )
   return Math.random() < p
 }
 
