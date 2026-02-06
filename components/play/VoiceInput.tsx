@@ -68,23 +68,22 @@ export function VoiceInput({
   const recognitionRef = React.useRef<SpeechRecognitionLike | null>(null)
   const voiceBaseValueRef = React.useRef("")
 
-  const [speechSupported, setSpeechSupported] = React.useState(false)
-  const [mediaRecorderSupported, setMediaRecorderSupported] = React.useState(false)
+  const initialSpeechSupported =
+    typeof window !== "undefined" && Boolean(getSpeechRecognitionCtor())
+  const initialMediaRecorderSupported = typeof window !== "undefined" && "MediaRecorder" in window
+
+  const [speechSupported] = React.useState(initialSpeechSupported)
+  const [mediaRecorderSupported] = React.useState(initialMediaRecorderSupported)
   const [isSpeechListening, setIsSpeechListening] = React.useState(false)
   const [speechError, setSpeechError] = React.useState<string | null>(null)
 
-  React.useEffect(() => {
-    if (typeof window === "undefined") return
-    setSpeechSupported(Boolean(getSpeechRecognitionCtor()))
-    setMediaRecorderSupported("MediaRecorder" in window)
-  }, [])
-
   const voiceMode = React.useMemo<"speech" | "tambo" | "none">(() => {
-    const tamboViable =
-      HAS_TAMBO_API_KEY && mediaRecorderSupported && !mediaAccessError && !transcriptionError
+    const tamboConfigured = HAS_TAMBO_API_KEY && mediaRecorderSupported
+    const tamboHealthy = tamboConfigured && !mediaAccessError && !transcriptionError
 
-    if (tamboViable) return "tambo"
+    if (tamboHealthy) return "tambo"
     if (speechSupported) return "speech"
+    if (tamboConfigured) return "tambo"
     return "none"
   }, [mediaAccessError, mediaRecorderSupported, speechSupported, transcriptionError])
 
@@ -137,8 +136,8 @@ export function VoiceInput({
           }
         | null
 
-      let finalText = ""
-      let interimText = ""
+      const finalParts: string[] = []
+      const interimParts: string[] = []
 
       const results = normalizedEvent?.results
 
@@ -146,17 +145,17 @@ export function VoiceInput({
 
       for (let i = normalizedEvent?.resultIndex ?? 0; i < results.length; i += 1) {
         const result = results[i]
-        const transcriptValue = result?.[0]?.transcript ?? ""
+        const transcriptValue = (result?.[0]?.transcript ?? "").trim()
         if (!transcriptValue) continue
 
         if (result.isFinal) {
-          finalText += transcriptValue
+          finalParts.push(transcriptValue)
         } else {
-          interimText += transcriptValue
+          interimParts.push(transcriptValue)
         }
       }
 
-      const spoken = `${finalText}${interimText}`.replace(/\s+/g, " ").trim()
+      const spoken = [...finalParts, ...interimParts].join(" ").replace(/\s+/g, " ").trim()
       const base = voiceBaseValueRef.current
       const combined = base ? `${base} ${spoken}`.trim() : spoken
       onChange(combined)
@@ -206,15 +205,14 @@ export function VoiceInput({
   }, [isBusy, startRecording, startSpeechRecognition, value, voiceMode])
 
   const stopVoice = React.useCallback(() => {
-    if (voiceMode === "speech") {
+    if (isSpeechListening) {
       stopSpeechRecognition()
-      return
     }
 
-    if (voiceMode === "tambo") {
+    if (isRecording) {
       stopRecording()
     }
-  }, [stopRecording, stopSpeechRecognition, voiceMode])
+  }, [isRecording, isSpeechListening, stopRecording, stopSpeechRecognition])
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (e.nativeEvent.isComposing) return
