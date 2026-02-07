@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { z } from "zod"
+import { motion, useReducedMotion } from "framer-motion"
 
 import { componentCardClassName } from "@/components/play/ComponentCanvas"
 import { cn } from "@/lib/utils"
@@ -31,12 +32,36 @@ export type ActionMatrixProps = z.input<typeof actionMatrixSchema> & {
 
 type Action = z.infer<typeof actionSchema>
 
+const defaultEase: [number, number, number, number] = [0.4, 0, 0.2, 1]
+
+const containerVariants = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 18 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: defaultEase,
+    },
+  },
+}
+
 function formatCosts(costs: Action["costs"]) {
   if (!costs || costs.length === 0) return null
   return costs.map((c) => `${c.resource} -${c.amount}`).join(" • ")
 }
 
 export function ActionMatrix({ actions, onActionClick, disabled = false }: ActionMatrixProps) {
+  const shouldReduceMotion = useReducedMotion()
   const [activeActionId, setActiveActionId] = React.useState<string | null>(null)
 
   React.useEffect(() => {
@@ -47,15 +72,20 @@ export function ActionMatrix({ actions, onActionClick, disabled = false }: Actio
 
   return (
     <section className={componentCardClassName}>
-      <h3 className="text-[#1D1D1F] text-xl font-bold mb-4">⚡ Actions</h3>
+      <h3 className="mb-4 text-xl font-semibold text-text-primary">⚡ Actions</h3>
 
       {disabled && (
-        <div className="-mt-2 mb-4 text-xs text-[#6E6E73]">
+        <div className="-mt-2 mb-4 text-xs text-text-secondary">
           Actions are temporarily disabled.
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <motion.div
+        variants={containerVariants}
+        initial={shouldReduceMotion ? false : "hidden"}
+        animate="show"
+        className="grid grid-cols-2 gap-4 md:grid-cols-4"
+      >
         {actions.map((action) => {
           const isActive = action.id === activeActionId
           const costs = formatCosts(action.costs)
@@ -66,7 +96,7 @@ export function ActionMatrix({ actions, onActionClick, disabled = false }: Actio
               : null
 
           return (
-            <button
+            <motion.button
               key={action.id}
               type="button"
               disabled={disabled}
@@ -76,55 +106,103 @@ export function ActionMatrix({ actions, onActionClick, disabled = false }: Actio
                 setActiveActionId(action.id)
                 onActionClick?.(action.id)
               }}
+              variants={itemVariants}
               className={cn(
-                "rounded-lg border-2 p-4 text-left transition-all",
-                "shadow-[2px_2px_0px_#1D1D1F]",
+                "group rounded-xl border p-4 text-left shadow-sm",
+                "transition-[border-color,background-color,box-shadow,transform] duration-200 ease-out",
                 disabled && "cursor-not-allowed opacity-60",
                 isActive
-                  ? "border-[#0071E3] bg-[#0071E3] text-white"
+                  ? "border-accent-primary bg-accent-primary text-text-inverse shadow-md"
                   : disabled
-                    ? "border-[#D2D2D7] bg-[#F5F5F7] text-[#1D1D1F]"
-                    : "border-[#D2D2D7] bg-[#F5F5F7] text-[#1D1D1F] hover:border-[#0071E3] hover:-translate-y-0.5"
+                    ? "border-light bg-bg-secondary text-text-primary"
+                    : "border-light bg-bg-secondary text-text-primary hover:border-medium hover:shadow-md"
               )}
+              whileHover={
+                disabled || isActive || shouldReduceMotion
+                  ? undefined
+                  : {
+                      y: -4,
+                      boxShadow: "var(--shadow-md)",
+                    }
+              }
+              whileTap={
+                disabled || shouldReduceMotion
+                  ? undefined
+                  : {
+                      scale: 0.96,
+                      y: 0,
+                    }
+              }
+              transition={{ type: "spring", stiffness: 420, damping: 30 }}
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <div className="text-[32px] leading-none" aria-hidden>
+                  <div
+                    className={cn(
+                      "text-[32px] leading-none transition-transform duration-200",
+                      isActive
+                        ? "scale-[1.03]"
+                        : "group-hover:-translate-y-1 group-hover:rotate-3"
+                    )}
+                    aria-hidden
+                  >
                     {action.icon}
                   </div>
-                  <div className="mt-2 text-sm font-bold">{action.label}</div>
+                  <div className="mt-2 text-sm font-semibold">{action.label}</div>
                 </div>
               </div>
 
               {costs && (
-                <div className={cn("mt-2 text-xs", isActive ? "text-white/90" : "text-[#6E6E73]")}>
+                <div
+                  className={cn(
+                    "mt-2 text-xs",
+                    isActive ? "text-text-inverse/90" : "text-text-secondary"
+                  )}
+                >
                   {costs}
                 </div>
               )}
 
               {typeof successRate === "number" && (
                 <div className="mt-3">
-                  <div className={cn("flex items-center justify-between text-xs", isActive ? "text-white/90" : "text-[#6E6E73]")}>
+                  <div
+                    className={cn(
+                      "flex items-center justify-between text-xs",
+                      isActive ? "text-text-inverse/90" : "text-text-secondary"
+                    )}
+                  >
                     <span>Success</span>
-                    <span className={cn("font-semibold", isActive ? "text-white" : "text-[#1D1D1F]")}>
+                    <span
+                      className={cn(
+                        "font-semibold",
+                        isActive ? "text-text-inverse" : "text-text-primary"
+                      )}
+                    >
                       {Math.round(successRate)}%
                     </span>
                   </div>
-                  <div className={cn("mt-1 h-2 w-full rounded-full", isActive ? "bg-white/30" : "bg-[#D2D2D7]")}>
-                    <div
+                  <div
+                    className={cn(
+                      "mt-1 h-2 w-full rounded-full overflow-hidden",
+                      isActive ? "bg-white/25" : "bg-border-light"
+                    )}
+                  >
+                    <motion.div
                       className={cn(
                         "h-2 rounded-full",
-                        isActive ? "bg-white" : "bg-[#0071E3]"
+                        isActive ? "bg-white" : "bg-accent-primary"
                       )}
-                      style={{ width: `${successRate}%` }}
+                      initial={shouldReduceMotion ? false : { width: 0 }}
+                      animate={{ width: `${successRate}%` }}
+                      transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: defaultEase }}
                     />
                   </div>
                 </div>
               )}
-            </button>
+            </motion.button>
           )
         })}
-      </div>
+      </motion.div>
     </section>
   )
 }

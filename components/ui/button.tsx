@@ -5,18 +5,19 @@ import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-accent-primary",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-accent-primary disabled:pointer-events-none disabled:opacity-50 shrink-0 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-out active:scale-[0.98] motion-reduce:transition-none motion-reduce:transform-none",
   {
     variants: {
       variant: {
         default: "ds-button-primary",
         destructive:
-          "bg-accent-danger text-inverse border-2 border-dark",
+          "bg-accent-danger text-inverse border border-medium shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
         outline:
-          "bg-primary text-primary border-2 border-medium shadow-sm hover:bg-secondary",
+          "bg-tertiary text-primary border border-light shadow-sm hover:border-medium hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
         secondary:
-          "bg-secondary text-primary border-2 border-medium shadow-sm hover:bg-tertiary",
-        ghost: "bg-primary text-primary border-2 border-transparent hover:border-medium",
+          "bg-secondary text-primary border border-light shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0",
+        ghost:
+          "bg-transparent text-primary border border-transparent hover:bg-secondary hover:border-light",
         link: "text-accent-primary underline-offset-4 hover:underline",
       },
       size: {

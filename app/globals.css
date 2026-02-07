@@ -5,9 +5,51 @@
 @import "../src/styles/utilities.css";
 @import "../src/styles/components.css";
 
+@keyframes playbook-ambient-shift {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1.02);
+  }
+  50% {
+    transform: translate3d(2%, 1%, 0) scale(1.04);
+  }
+  100% {
+    transform: translate3d(-2%, -1%, 0) scale(1.02);
+  }
+}
+
+.app-ambient {
+  position: relative;
+  isolation: isolate;
+}
+
+.app-ambient::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  filter: blur(40px);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(74, 144, 226, 0.12), transparent 55%),
+    radial-gradient(circle at 80% 35%, rgba(100, 116, 139, 0.09), transparent 60%),
+    radial-gradient(circle at 45% 80%, rgba(16, 185, 129, 0.07), transparent 55%);
+  animation: playbook-ambient-shift 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+.app-ambient > :where(:not(.fixed):not(.absolute):not(.relative):not(.sticky)) {
+  position: relative;
+  z-index: 1;
+}
+
 @layer base {
   * {
     border-color: var(--border-light);
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 
   :where(button, [role="button"], a, input, select, textarea):focus-visible {
@@ -18,7 +60,78 @@
   body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
+    font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+      BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .app-ambient::before {
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes playbook-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+.playbook-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.04) 0%,
+    rgba(0, 0, 0, 0.08) 50%,
+    rgba(0, 0, 0, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: playbook-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes playbook-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-playbook-float {
+  animation: playbook-float 2s ease-in-out infinite;
+}
+
+@keyframes playbook-wiggle {
+  0% {
+    transform: rotate(-2deg) translateY(0);
+  }
+  50% {
+    transform: rotate(2deg) translateY(-2px);
+  }
+  100% {
+    transform: rotate(-2deg) translateY(0);
+  }
+}
+
+.animate-playbook-wiggle {
+  animation: playbook-wiggle 2.4s ease-in-out infinite;
 }
 
 @keyframes voice-input-pulse-ring {

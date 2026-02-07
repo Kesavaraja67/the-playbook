@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { ArrowRight } from "lucide-react"
 
 import { scenarioCategoryMeta, type ScenarioCategory } from "@/lib/scenarios"
+import { cn } from "@/lib/utils"
 
 interface ScenarioCardProps {
   title: string
@@ -11,6 +12,7 @@ interface ScenarioCardProps {
   category: ScenarioCategory
   tags: string[]
   onClick: () => void
+  disabled?: boolean
 }
 
 export function ScenarioCard({
@@ -19,55 +21,97 @@ export function ScenarioCard({
   category,
   tags,
   onClick,
+  disabled = false,
 }: ScenarioCardProps) {
+  const categoryMeta = scenarioCategoryMeta[category]
+
   return (
     <motion.button
       type="button"
       aria-label={`Start scenario: ${title}`}
-      className="group h-[400px] w-full max-w-[320px] cursor-pointer appearance-none rounded-[16px] border-2 border-[#D2D2D7] bg-white p-6 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3] focus-visible:ring-offset-2"
-      style={{ boxShadow: "4px 4px 0px #1D1D1F" }}
-      whileHover={{
-        boxShadow: "8px 8px 0px #1D1D1F",
-        x: -2,
-        y: -2,
+      disabled={disabled}
+      onClick={() => {
+        if (disabled) return
+        onClick()
       }}
-      transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      onClick={onClick}
+      className={cn(
+        "group relative h-[408px] w-full max-w-[340px] appearance-none overflow-hidden rounded-xl border border-light bg-tertiary p-6 text-left shadow-md",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg-secondary",
+        disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"
+      )}
+      whileHover={
+        disabled
+          ? undefined
+          : {
+              y: -12,
+              boxShadow: "var(--shadow-xl)",
+              borderColor: "rgba(74,144,226,0.28)",
+            }
+      }
+      whileTap={
+        disabled
+          ? undefined
+          : {
+              scale: 0.98,
+              y: -6,
+            }
+      }
+      transition={{ type: "spring", stiffness: 420, damping: 30 }}
     >
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-80"
+        style={{
+          background: `radial-gradient(circle at 18% 12%, ${categoryMeta.color}22, transparent 55%)`,
+        }}
+      />
+
       <div className="flex h-full flex-col">
-        <div
-          className="inline-flex w-fit items-center rounded-[8px] border-2 border-[#1D1D1F] px-4 py-2"
-          style={{ backgroundColor: scenarioCategoryMeta[category].color }}
-        >
-          <span className="text-[12px] font-bold uppercase tracking-wide text-white">
-            {scenarioCategoryMeta[category].label}
+        <div className="inline-flex w-fit items-center gap-2 rounded-full border border-light bg-bg-secondary px-4 py-2">
+          <span
+            aria-hidden
+            className="size-2 rounded-full"
+            style={{ backgroundColor: categoryMeta.color }}
+          />
+          <span className="text-[12px] font-semibold uppercase tracking-wide text-text-secondary">
+            {categoryMeta.label}
           </span>
         </div>
 
-        <h3 className="mt-4 text-[24px] font-bold text-[#1D1D1F]">{title}</h3>
+        <h3 className="mt-4 text-[22px] font-semibold tracking-tight text-text-primary">{title}</h3>
 
-        <p className="mt-2 line-clamp-3 text-[14px] leading-[1.5] text-[#6E6E73]">
-          {description}
-        </p>
+        <p className="mt-2 line-clamp-3 text-[14px] leading-[1.55] text-text-secondary">{description}</p>
 
         <div className="mt-auto">
           <div className="mb-4 flex flex-wrap gap-2">
             {tags.slice(0, 3).map((tag) => (
               <span
                 key={`${title}-${tag}`}
-                className="rounded-[6px] border border-[#D2D2D7] bg-[#F5F5F7] px-3 py-1 text-[12px] text-[#6E6E73]"
+                className="rounded-full border border-light bg-bg-secondary px-3 py-1 text-[12px] text-text-secondary transition-colors duration-200 group-hover:bg-bg-primary"
               >
                 {tag}
               </span>
             ))}
           </div>
 
-          <div
-            className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-[#1D1D1F] px-4 py-3 text-[16px] font-bold text-white transition-colors duration-200 group-hover:bg-[#0071E3] group-focus-visible:bg-[#0071E3]"
-            aria-hidden="true"
-          >
-            Start Scenario
-            <ArrowRight className="h-5 w-5" />
+          <div aria-hidden="true" className="flex items-center justify-center">
+            <div
+              className={cn(
+                "inline-flex w-full items-center justify-center gap-2 rounded-lg bg-bg-dark px-4 py-3 text-[15px] font-semibold text-text-inverse",
+                "transition-[background-color,box-shadow,transform] duration-200 ease-out",
+                "group-hover:bg-accent-primary group-hover:shadow-md"
+              )}
+            >
+              Start Scenario
+              <span
+                className={cn(
+                  "inline-flex transition-transform duration-200",
+                  disabled ? undefined : "group-hover:translate-x-1"
+                )}
+              >
+                <ArrowRight className="h-5 w-5" />
+              </span>
+            </div>
           </div>
         </div>
       </div>

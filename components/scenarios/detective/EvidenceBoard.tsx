@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 
 import { componentCardClassName } from "@/components/play/ComponentCanvas"
 import { cn } from "@/lib/utils"
@@ -23,6 +24,7 @@ export type EvidenceBoardProps = {
 }
 
 export function EvidenceBoard({ evidence, className, onInspectEvidence }: EvidenceBoardProps) {
+  const shouldReduceMotion = useReducedMotion()
   const [selectedId, setSelectedId] = React.useState<string>(() => evidence.find((item) => item.collected)?.id ?? "")
 
   const selected = React.useMemo(
@@ -40,12 +42,12 @@ export function EvidenceBoard({ evidence, className, onInspectEvidence }: Eviden
     <section className={cn(componentCardClassName, className)}>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-xl font-bold text-[#1D1D1F]">Evidence Board</h3>
-          <div className="mt-1 text-xs text-[#6E6E73]">
+          <h3 className="text-xl font-semibold text-text-primary">Evidence Board</h3>
+          <div className="mt-1 text-xs text-text-secondary">
             Click a piece of evidence to inspect details.
           </div>
         </div>
-        <div className="text-xs font-semibold text-[#6E6E73]">
+        <div className="text-xs font-semibold text-text-secondary">
           Collected {evidence.filter((item) => item.collected).length}/{evidence.length}
         </div>
       </div>
@@ -56,7 +58,7 @@ export function EvidenceBoard({ evidence, className, onInspectEvidence }: Eviden
           const isSelected = item.id === selectedId
 
           return (
-            <button
+            <motion.button
               key={item.id}
               type="button"
               disabled={isDisabled}
@@ -66,60 +68,130 @@ export function EvidenceBoard({ evidence, className, onInspectEvidence }: Eviden
                 onInspectEvidence?.(item.id)
               }}
               className={cn(
-                "rounded-lg border-2 p-4 text-left transition-all",
-                "shadow-[2px_2px_0px_#1D1D1F]",
+                "rounded-xl border p-4 text-left shadow-sm",
+                "transition-[border-color,box-shadow,transform,background-color] duration-200 ease-out",
                 isDisabled
-                  ? "cursor-not-allowed border-[#D2D2D7] bg-[#F5F5F7] opacity-60"
-                  : "border-[#D2D2D7] bg-white hover:border-[#0071E3] hover:-translate-y-0.5",
-                isSelected && !isDisabled ? "border-[#0071E3]" : ""
+                  ? "cursor-not-allowed border-light bg-bg-secondary opacity-60"
+                  : "border-light bg-tertiary hover:border-medium hover:shadow-md",
+                isSelected && !isDisabled ? "border-accent-primary" : ""
               )}
+              whileHover={
+                isDisabled || shouldReduceMotion
+                  ? undefined
+                  : {
+                      y: -6,
+                      boxShadow: "var(--shadow-lg)",
+                    }
+              }
+              whileTap={
+                isDisabled || shouldReduceMotion
+                  ? undefined
+                  : {
+                      scale: 0.98,
+                      y: -2,
+                    }
+              }
+              transition={{ type: "spring", stiffness: 420, damping: 30 }}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="text-3xl" aria-hidden>
-                  {item.icon}
-                </div>
-                {item.collected ? (
-                  <span className="rounded-full border-2 border-[#34C759] bg-white px-2 py-0.5 text-[11px] font-semibold text-[#34C759]">
-                    Collected
-                  </span>
-                ) : (
-                  <span className="rounded-full border-2 border-[#D2D2D7] bg-[#F5F5F7] px-2 py-0.5 text-[11px] font-semibold text-[#6E6E73]">
-                    Unfound
-                  </span>
-                )}
-              </div>
+              <div style={{ perspective: 1200 }}>
+                <motion.div
+                  className="relative"
+                  style={{ transformStyle: "preserve-3d" }}
+                  animate={shouldReduceMotion ? undefined : { rotateY: isSelected ? 180 : 0 }}
+                  transition={{ duration: shouldReduceMotion ? 0 : 0.55, ease: [0.4, 0, 0.2, 1] }}
+                >
+                  <div style={{ backfaceVisibility: "hidden" }}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="text-3xl" aria-hidden>
+                        {item.icon}
+                      </div>
+                      {item.collected ? (
+                        <motion.span
+                          initial={shouldReduceMotion ? false : { scale: 0.9, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ duration: shouldReduceMotion ? 0 : 0.25, ease: [0.4, 0, 0.2, 1] }}
+                          className="rounded-full border border-accent-success bg-tertiary px-2 py-0.5 text-[11px] font-semibold text-accent-success"
+                        >
+                          Collected
+                        </motion.span>
+                      ) : (
+                        <span className="rounded-full border border-light bg-bg-secondary px-2 py-0.5 text-[11px] font-semibold text-text-secondary">
+                          Unfound
+                        </span>
+                      )}
+                    </div>
 
-              <div className="mt-3">
-                <div className="text-sm font-bold text-[#1D1D1F]">{item.title}</div>
-                <div className="mt-1 text-xs text-[#6E6E73]">{item.summary}</div>
+                    <div className="mt-3">
+                      <div className="text-sm font-semibold text-text-primary">{item.title}</div>
+                      <div className="mt-1 text-xs text-text-secondary">{item.summary}</div>
+                    </div>
+                  </div>
+
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      transform: "rotateY(180deg)",
+                      backfaceVisibility: "hidden",
+                    }}
+                  >
+                    <div className="flex h-full flex-col justify-between">
+                      <div>
+                        <div className="text-xs font-semibold text-text-secondary">INSPECT</div>
+                        <div className="mt-2 text-sm font-semibold text-text-primary">
+                          {item.icon} {item.title}
+                        </div>
+                        <div className="mt-2 text-xs text-text-secondary line-clamp-3">{item.details}</div>
+                      </div>
+                      <div className="mt-4 text-xs font-semibold text-accent-primary">
+                        View details ↓
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
-            </button>
+            </motion.button>
           )
         })}
       </div>
 
-      <div className="mt-5 rounded-lg border-2 border-[#D2D2D7] bg-[#F5F5F7] p-4">
-        {selected ? (
-          <div>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="text-xs font-semibold text-[#6E6E73]">INSPECTION</div>
-                <div className="mt-1 text-sm font-bold text-[#1D1D1F]">
-                  {selected.icon} {selected.title}
+      <div className="mt-5 rounded-xl border border-light bg-bg-secondary p-4 shadow-sm">
+        <AnimatePresence mode="wait" initial={false}>
+          {selected ? (
+            <motion.div
+              key={selected.id}
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0, y: -10 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.3, ease: [0.4, 0, 0.2, 1] }}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-xs font-semibold text-text-secondary">INSPECTION</div>
+                  <div className="mt-1 text-sm font-semibold text-text-primary">
+                    {selected.icon} {selected.title}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[11px] font-semibold text-text-secondary">Location</div>
+                  <div className="text-xs font-semibold text-text-primary">{selected.location}</div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-[11px] font-semibold text-[#6E6E73]">Location</div>
-                <div className="text-xs font-semibold text-[#1D1D1F]">{selected.location}</div>
-              </div>
-            </div>
 
-            <div className="mt-3 text-sm text-[#1D1D1F]">{selected.details}</div>
-            <div className="mt-3 text-xs text-[#6E6E73]">Logged: {selected.timestamp}</div>
-          </div>
-        ) : (
-          <div className="text-sm text-[#6E6E73]">Collect evidence to begin an inspection.</div>
-        )}
+              <div className="mt-3 text-sm text-text-primary">{selected.details}</div>
+              <div className="mt-3 text-xs text-text-secondary">Logged: {selected.timestamp}</div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="empty"
+              initial={shouldReduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.25, ease: [0.4, 0, 0.2, 1] }}
+              className="text-sm text-text-secondary"
+            >
+              Collect evidence to begin an inspection.
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   )

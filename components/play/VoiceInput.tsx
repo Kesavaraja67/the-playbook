@@ -281,9 +281,9 @@ export function VoiceInput({
               placeholder={isListening ? "Listening…" : placeholder}
               disabled={isBusy || isListening}
               className={cn(
-                "h-12 w-full rounded-lg border-2 border-light bg-primary px-4",
+                "h-12 w-full rounded-lg border border-light bg-tertiary px-4",
                 "text-sm text-primary placeholder:text-tertiary",
-                "focus:outline-none focus:border-accent-primary",
+                "transition-[border-color,box-shadow,transform] duration-200 ease-out focus:outline-none focus:border-accent-primary focus:shadow-md focus:scale-[1.01] motion-reduce:transition-none motion-reduce:transform-none",
                 "disabled:cursor-not-allowed disabled:opacity-60",
                 inputClassName
               )}
@@ -294,7 +294,7 @@ export function VoiceInput({
             <button
               type="button"
               onClick={() => onChange("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary hover:text-primary"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-tertiary transition-colors hover:text-primary"
               aria-label="Clear input"
             >
               <X className="size-4" />
@@ -330,7 +330,7 @@ export function VoiceInput({
       </div>
 
       {isListening ? (
-        <div className="mt-3 rounded-lg border-2 border-accent-info bg-tertiary p-3">
+        <div className="mt-3 rounded-lg border border-accent-info bg-tertiary p-3">
           <div className="flex items-center gap-3">
             <div className="relative flex items-center justify-center">
               <div className="size-2 rounded-full bg-accent-info animate-pulse" />
@@ -349,7 +349,7 @@ export function VoiceInput({
       ) : null}
 
       {voiceMode === "none" ? (
-        <div className="mt-3 rounded-lg border-2 border-accent-warning bg-tertiary p-3">
+        <div className="mt-3 rounded-lg border border-accent-warning bg-tertiary p-3">
           <div className="flex items-start gap-3">
             <AlertTriangle className="size-4 text-accent-warning mt-0.5 shrink-0" />
             <div className="text-xs">
@@ -363,21 +363,21 @@ export function VoiceInput({
       ) : null}
 
       {speechError ? (
-        <div className="mt-3 rounded-lg border-2 border-accent-warning bg-tertiary p-3 text-xs">
+        <div className="mt-3 rounded-lg border border-accent-warning bg-tertiary p-3 text-xs">
           <div className="font-semibold text-primary">Voice input error</div>
           <div className="mt-1 text-secondary">{speechError}</div>
         </div>
       ) : null}
 
       {mediaAccessError ? (
-        <div className="mt-3 rounded-lg border-2 border-accent-warning bg-tertiary p-3 text-xs">
+        <div className="mt-3 rounded-lg border border-accent-warning bg-tertiary p-3 text-xs">
           <div className="font-semibold text-primary">Microphone access error</div>
           <div className="mt-1 text-secondary">{mediaAccessError}</div>
         </div>
       ) : null}
 
       {transcriptionError ? (
-        <div className="mt-3 rounded-lg border-2 border-accent-warning bg-tertiary p-3 text-xs">
+        <div className="mt-3 rounded-lg border border-accent-warning bg-tertiary p-3 text-xs">
           <div className="font-semibold text-primary">Transcription error</div>
           <div className="mt-1 text-secondary">{transcriptionError}</div>
         </div>

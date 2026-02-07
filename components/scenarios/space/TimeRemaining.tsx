@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
+import { motion, useReducedMotion } from "framer-motion"
 
 import { componentCardClassName } from "@/components/play/ComponentCanvas"
-import { cn } from "@/lib/utils"
 
 function clamp(min: number, value: number, max: number) {
   if (!Number.isFinite(value)) return min
@@ -11,12 +11,13 @@ function clamp(min: number, value: number, max: number) {
 }
 
 function urgencyColor(pctComplete: number) {
-  if (pctComplete <= 40) return "#34C759"
-  if (pctComplete <= 75) return "#FF9F0A"
-  return "#FF3B30"
+  if (pctComplete <= 40) return "#10B981"
+  if (pctComplete <= 75) return "#F59E0B"
+  return "#EF4444"
 }
 
 export function TimeRemaining({ day, totalDays }: { day: number; totalDays: number }) {
+  const shouldReduceMotion = useReducedMotion()
   const safeTotal = Math.max(1, Math.floor(totalDays))
   const safeDay = clamp(1, Math.floor(day), safeTotal)
   const pctComplete = clamp(0, Math.round((safeDay / safeTotal) * 100), 100)
@@ -26,22 +27,25 @@ export function TimeRemaining({ day, totalDays }: { day: number; totalDays: numb
     <section className={componentCardClassName}>
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h3 className="text-[#1D1D1F] text-xl font-bold">⏱️ Time Remaining</h3>
-          <div className="mt-1 text-xs text-[#6E6E73]">{safeTotal} days until resupply</div>
+          <h3 className="text-xl font-semibold text-text-primary">⏱️ Time Remaining</h3>
+          <div className="mt-1 text-xs text-text-secondary">{safeTotal} days until resupply</div>
         </div>
         <div className="text-right">
-          <div className="font-mono text-lg font-bold text-[#1D1D1F]">
+          <div className="font-mono text-lg font-semibold text-text-primary">
             Day {safeDay}/{safeTotal}
           </div>
-          <div className="mt-1 text-xs font-semibold text-[#6E6E73]">{pctComplete}% elapsed</div>
+          <div className="mt-1 text-xs font-semibold text-text-secondary">{pctComplete}% elapsed</div>
         </div>
       </div>
 
       <div className="mt-4">
-        <div className="h-3 w-full rounded-full bg-[#D2D2D7]">
-          <div
-            className={cn("h-3 rounded-full")}
-            style={{ width: `${pctComplete}%`, backgroundColor: barColor }}
+        <div className="h-3 w-full overflow-hidden rounded-full bg-border-light">
+          <motion.div
+            className="h-3 rounded-full"
+            style={{ backgroundColor: barColor }}
+            initial={shouldReduceMotion ? false : { width: 0 }}
+            animate={{ width: `${pctComplete}%` }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: [0.4, 0, 0.2, 1] }}
           />
         </div>
       </div>

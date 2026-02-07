@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { motion, useReducedMotion } from "framer-motion"
 
 import { componentCardClassName } from "@/components/play/ComponentCanvas"
 import { cn } from "@/lib/utils"
@@ -34,6 +35,7 @@ export function CaseFileHeader({
   evidenceTotal,
   className,
 }: CaseFileHeaderProps) {
+  const shouldReduceMotion = useReducedMotion()
   const formattedTime = React.useMemo(
     () => formatTime(timeRemainingSeconds),
     [timeRemainingSeconds]
@@ -49,48 +51,60 @@ export function CaseFileHeader({
             🕵️
           </div>
           <div>
-            <div className="text-xs font-semibold text-[#6E6E73]">CASE FILE</div>
-            <h3 className="mt-1 text-xl font-bold text-[#1D1D1F]">{caseTitle}</h3>
-            <p className="mt-2 text-sm text-[#6E6E73]">{caseSummary}</p>
+            <div className="text-xs font-semibold text-text-secondary">CASE FILE</div>
+            <h3 className="mt-1 text-xl font-semibold text-text-primary">{caseTitle}</h3>
+            <p className="mt-2 text-sm text-text-secondary">{caseSummary}</p>
           </div>
         </div>
 
         <div className="shrink-0 text-right">
-          <div className="text-xs font-semibold text-[#6E6E73]">TIME REMAINING</div>
-          <div
+          <div className="text-xs font-semibold text-text-secondary">TIME REMAINING</div>
+          <motion.div
             className={cn(
-              "mt-1 text-lg font-bold",
+              "mt-1 text-lg font-semibold",
               urgency === "high"
-                ? "text-[#FF3B30]"
+                ? "text-accent-danger"
                 : urgency === "medium"
-                  ? "text-[#FF9F0A]"
-                  : "text-[#1D1D1F]"
+                  ? "text-accent-warning"
+                  : "text-text-primary"
             )}
+            animate={
+              shouldReduceMotion || urgency !== "high"
+                ? undefined
+                : {
+                    scale: [1, 1.03, 1],
+                  }
+            }
+            transition={
+              shouldReduceMotion || urgency !== "high"
+                ? { duration: 0 }
+                : { duration: 1.2, repeat: Infinity, ease: "easeInOut" }
+            }
           >
             {formattedTime}
-          </div>
+          </motion.div>
         </div>
       </div>
 
       <div className="mt-5 grid gap-3 md:grid-cols-3">
-        <div className="rounded-lg border-2 border-[#D2D2D7] bg-[#F5F5F7] p-4">
-          <div className="text-xs font-semibold text-[#6E6E73]">Suspects</div>
-          <div className="mt-2 text-2xl font-bold text-[#1D1D1F]">{suspectCount}</div>
-          <div className="mt-2 text-xs text-[#6E6E73]">Keep their stories straight.</div>
+        <div className="rounded-xl border border-light bg-bg-secondary p-4 shadow-sm">
+          <div className="text-xs font-semibold text-text-secondary">Suspects</div>
+          <div className="mt-2 text-2xl font-semibold text-text-primary">{suspectCount}</div>
+          <div className="mt-2 text-xs text-text-secondary">Keep their stories straight.</div>
         </div>
-        <div className="rounded-lg border-2 border-[#D2D2D7] bg-[#F5F5F7] p-4">
-          <div className="text-xs font-semibold text-[#6E6E73]">Evidence</div>
-          <div className="mt-2 text-2xl font-bold text-[#1D1D1F]">
+        <div className="rounded-xl border border-light bg-bg-secondary p-4 shadow-sm">
+          <div className="text-xs font-semibold text-text-secondary">Evidence</div>
+          <div className="mt-2 text-2xl font-semibold text-text-primary">
             {evidenceCollected}/{evidenceTotal}
           </div>
-          <div className="mt-2 text-xs text-[#6E6E73]">Collect and connect the dots.</div>
+          <div className="mt-2 text-xs text-text-secondary">Collect and connect the dots.</div>
         </div>
-        <div className="rounded-lg border-2 border-[#D2D2D7] bg-[#F5F5F7] p-4">
-          <div className="text-xs font-semibold text-[#6E6E73]">Case status</div>
-          <div className="mt-2 text-2xl font-bold text-[#1D1D1F]">
+        <div className="rounded-xl border border-light bg-bg-secondary p-4 shadow-sm">
+          <div className="text-xs font-semibold text-text-secondary">Case status</div>
+          <div className="mt-2 text-2xl font-semibold text-text-primary">
             {urgency === "high" ? "Critical" : urgency === "medium" ? "Active" : "Open"}
           </div>
-          <div className="mt-2 text-xs text-[#6E6E73]">No mistakes. No do-overs.</div>
+          <div className="mt-2 text-xs text-text-secondary">No mistakes. No do-overs.</div>
         </div>
       </div>
     </section>

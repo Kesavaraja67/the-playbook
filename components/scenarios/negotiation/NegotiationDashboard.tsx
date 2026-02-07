@@ -1,4 +1,5 @@
 import * as React from "react"
+import { motion, useReducedMotion } from "framer-motion"
 
 import { cn } from "@/lib/utils"
 
@@ -39,6 +40,7 @@ export function NegotiationDashboard({
   relationshipScore,
   className,
 }: NegotiationDashboardProps) {
+  const shouldReduceMotion = useReducedMotion()
   const offerPct =
     targetSalary > 0
       ? clampPct((currentOffer / targetSalary) * 100)
@@ -58,8 +60,13 @@ export function NegotiationDashboard({
             {formatUsd(targetSalary)}
           </div>
         </div>
-        <div className="mt-2 h-2 w-full overflow-hidden rounded-full border-2 border-light bg-secondary">
-          <div className="h-full bg-accent-primary" style={{ width: `${offerPct}%` }} />
+        <div className="mt-2 h-2 w-full overflow-hidden rounded-full border border-light bg-secondary">
+          <motion.div
+            className="h-full bg-accent-primary"
+            initial={shouldReduceMotion ? false : { width: 0 }}
+            animate={{ width: `${offerPct}%` }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: [0.4, 0, 0.2, 1] }}
+          />
         </div>
         {typeof marketRate === "number" && Number.isFinite(marketRate) ? (
           <div className="mt-2 text-xs text-secondary">
@@ -89,8 +96,13 @@ export function NegotiationDashboard({
             <span aria-hidden>{relationship.emoji}</span> {relationship.label} ({Math.round(relationshipPct)}/100)
           </div>
         </div>
-        <div className="mt-2 h-2 w-full overflow-hidden rounded-full border-2 border-light bg-secondary">
-          <div className="h-full bg-accent-success" style={{ width: `${relationshipPct}%` }} />
+        <div className="mt-2 h-2 w-full overflow-hidden rounded-full border border-light bg-secondary">
+          <motion.div
+            className="h-full bg-accent-success"
+            initial={shouldReduceMotion ? false : { width: 0 }}
+            animate={{ width: `${relationshipPct}%` }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.6, ease: [0.4, 0, 0.2, 1] }}
+          />
         </div>
       </div>
     </div>
