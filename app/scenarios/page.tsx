@@ -49,14 +49,18 @@ export default function ScenariosPage() {
   const router = useRouter()
   const shouldReduceMotion = useReducedMotion()
 
-  const [showTransitionOverlay, setShowTransitionOverlay] = useState(() =>
-    consumePlaybookTransitionFlag(),
-  )
+  const [showTransitionOverlay, setShowTransitionOverlay] = useState(false)
   const [category, setCategory] = useState<ScenarioCategoryFilter>("all")
   const [pendingScenario, setPendingScenario] = useState<Scenario | null>(null)
 
   const navTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isActiveRef = useRef(true)
+
+  useEffect(() => {
+    if (consumePlaybookTransitionFlag()) {
+      setShowTransitionOverlay(true)
+    }
+  }, [])
 
   useEffect(() => {
     isActiveRef.current = true
