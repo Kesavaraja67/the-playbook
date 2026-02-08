@@ -420,7 +420,8 @@ function getZombieInitialState(): InitialState {
     playerPosition: { x: 5, y: 5 },
     enemies: [
       { x: 3, y: 4, type: "Zombie" },
-      { x: 6, y: 6, type: "Zombie" },
+      { x: 7, y: 2, type: "Zombie" },
+      { x: 2, y: 8, type: "Zombie" },
     ],
     resources: [{ x: 8, y: 3, type: "Loot" }],
   }

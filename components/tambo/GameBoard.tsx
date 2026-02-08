@@ -83,8 +83,7 @@ function MarkerDot({
       className={cn(
         "group relative absolute left-0 top-0 grid place-items-center rounded-full text-xl text-white",
         "border border-light shadow-sm",
-        "transition-[box-shadow,transform] duration-200 ease-out",
-        className
+        "transition-[box-shadow,transform] duration-200 ease-out"
       )}
       style={{ width: size, height: size, backgroundColor: bg }}
       aria-label={label}
@@ -116,16 +115,19 @@ function MarkerDot({
             }
       }
     >
-      <span aria-hidden>{icon}</span>
-      <div
-        className={cn(
-          "pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2",
-          "whitespace-nowrap rounded-md border border-light bg-tertiary px-2 py-1",
-          "text-xs font-medium text-text-primary shadow-md",
-          "opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-        )}
-      >
-        {label}
+
+      <div className={cn("grid h-full w-full place-items-center rounded-full", className)}>
+        <span aria-hidden>{icon}</span>
+        <div
+          className={cn(
+            "pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2",
+            "whitespace-nowrap rounded-md border border-light bg-tertiary px-2 py-1",
+            "text-xs font-medium text-text-primary shadow-md",
+            "opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+          )}
+        >
+          {label}
+        </div>
       </div>
     </motion.div>
   )
