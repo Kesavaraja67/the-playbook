@@ -58,7 +58,9 @@ export default function ScenariosPage() {
 
   useEffect(() => {
     if (consumePlaybookTransitionFlag()) {
-      setShowTransitionOverlay(true)
+      // Defer state update to avoid synchronous render warning
+      const id = requestAnimationFrame(() => setShowTransitionOverlay(true))
+      return () => cancelAnimationFrame(id)
     }
   }, [])
 
